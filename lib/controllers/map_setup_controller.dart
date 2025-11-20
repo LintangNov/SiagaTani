@@ -1,89 +1,100 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:flutter_map/flutter_map.dart';
-import 'package:latlong2/latlong.dart';
-import 'package:geolocator/geolocator.dart';
-import '../models/surrounding_pin_model.dart';
-import '../services/firestore_service.dart';
+import 'package:flutter_map/flutter_map.dart'; // Versi 8.2.2
+import 'package:latlong2/latlong.dart';      // Versi 0.9.1
+import 'package:geolocator/geolocator.dart';  // Versi 14.0.2
 
 class MapSetupController extends GetxController {
-  final FirestoreService _firestoreService = FirestoreService();
-  
-  // State Map
+  // --- STATE UTAMA ---
   final MapController mapController = MapController();
-  var currentCenter = LatLng(-6.200, 106.816).obs; // Default Jakarta
-  var existingPins = <SurroundingPinModel>[].obs;
-  var isLoading = true.obs;
+  
+  // Lokasi Lahan Kita (Pin Merah - Center)
+  var myFarmLocation = Rxn<LatLng>(); 
+  
+  // Lokasi Tanaman Sekitar (Pin Kuning - List)
+  var surroundingPins = <Marker>[].obs; 
+  
+  // Helper untuk UI "Gojek Style"
+  var currentCenter = const LatLng(-7.795, 110.369).obs; // Default Jogja
 
   @override
   void onInit() {
     super.onInit();
-    _locateUser();
-    bindPinsStream();
+    _getCurrentLocation();
   }
 
-  // 1. Ambil Lokasi User saat Masuk
-  void _locateUser() async {
-    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) return;
+  // 1. Ambil Lokasi Saat Ini (GPS)
+  Future<void> _getCurrentLocation() async {
+    try {
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) return;
 
-    LocationPermission permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) return;
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) return;
+      }
+      
+      Position position = await Geolocator.getCurrentPosition();
+      LatLng userPos = LatLng(position.latitude, position.longitude);
+      
+      currentCenter.value = userPos;
+      // Pindahkan kamera peta ke lokasi user
+      mapController.move(userPos, 16.0);
+    } catch (e) {
+      print("Gagal ambil GPS: $e");
     }
-
-    Position pos = await Geolocator.getCurrentPosition();
-    currentCenter.value = LatLng(pos.latitude, pos.longitude);
-    mapController.move(currentCenter.value, 16.0); // Zoom ke user
-    isLoading.value = false;
   }
 
-  // 2. Dengarkan Data Pin dari Firestore (Realtime)
-  void bindPinsStream() {
-    existingPins.bindStream(_firestoreService.getPinsStream());
+  // 2. Fungsi saat Map Digeser (Untuk Lahan Saya)
+  // PERBAIKAN: Gunakan MapCamera, bukan MapPosition
+  void onPositionChanged(MapCamera camera, bool hasGesture) {
+    currentCenter.value = camera.center;
   }
 
-  // 3. Fungsi Saat User Tap di Peta (Tambah Pin)
-  void onMapTap(TapPosition tapPosition, LatLng latlng) {
-    _showAddPinDialog(latlng);
+  // 3. Simpan Lokasi Lahan Saya
+  void saveMyFarmLocation() {
+    myFarmLocation.value = currentCenter.value;
+    Get.snackbar(
+      "Tersimpan", 
+      "Lokasi lahan utama berhasil dikunci!",
+      backgroundColor: Colors.green,
+      colorText: Colors.white,
+    );
   }
 
-  void _showAddPinDialog(LatLng location) {
-    String selectedPlant = "Terong"; // Default
-
+  // 4. Tambah Pin Tanaman Sekitar (Tap di Peta)
+  void addSurroundingPin(LatLng point) {
+    // Tampilkan Dialog Pilih Tanaman
     Get.defaultDialog(
       title: "Tanaman Apa Ini?",
       content: Column(
         children: [
-          Text("Lokasi: ${location.latitude.toStringAsFixed(4)}, ${location.longitude.toStringAsFixed(4)}"),
-          SizedBox(height: 10),
-          DropdownButtonFormField<String>(
-            value: selectedPlant,
-            items: ["Terong", "Pepaya", "Jagung", "Tembakau", "Lainnya"]
-                .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-                .toList(),
-            onChanged: (val) => selectedPlant = val!,
-            decoration: InputDecoration(labelText: "Jenis Tanaman"),
-          ),
+          _buildPlantOption(point, "Jagung", Icons.grass),
+          _buildPlantOption(point, "Tembakau", Icons.smoking_rooms),
+          _buildPlantOption(point, "Lainnya", Icons.park),
         ],
       ),
-      textConfirm: "Simpan Pin",
-      textCancel: "Batal",
-      onConfirm: () {
-        _savePinToDb(location, selectedPlant);
-        Get.back();
-      },
     );
   }
 
-  void _savePinToDb(LatLng location, String type) async {
-    var newPin = SurroundingPinModel(
-      plantType: type,
-      latitude: location.latitude,
-      longitude: location.longitude,
+  Widget _buildPlantOption(LatLng point, String label, IconData icon) {
+    return ListTile(
+      leading: Icon(icon, color: Colors.orange),
+      title: Text(label),
+      onTap: () {
+        // Tambahkan ke List Marker
+        surroundingPins.add(
+          Marker(
+            point: point,
+            width: 40,
+            height: 40,
+            // Di versi 8+, Marker child tetap didukung
+            child: const Icon(Icons.location_on, color: Colors.orange, size: 40),
+          ),
+        );
+        Get.back(); // Tutup dialog
+      },
     );
-    await _firestoreService.addSurroundingPin(newPin);
-    Get.snackbar("Sukses", "Pin $type ditambahkan!");
   }
 }

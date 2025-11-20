@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart'; // Pastikan sudah add package google_fonts
+import 'package:siaga_tani/view/main_screen.dart';
 import 'package:siaga_tani/view/question.dart'; // Karena kamu pakai GetX di projectmu
 import 'package:get/get.dart';
 
@@ -153,10 +154,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             if (_currentPage == _onboardingData.length - 1) {
                               // --- BAGIAN INI YANG DIGANTI ---
                               // Menggunakan Get.off() supaya user gak bisa kembali (back) ke onboarding lagi
-                              Get.off(
-                                () => const QuestionnaireScreen(),
-                                transition: Transition
-                                    .rightToLeft, // Tambah animasi biar transisinya halus
+                              // Get.off(
+                              //   () => const QuestionnaireScreen(),
+                              //   transition: Transition
+                              //       .rightToLeft, // Tambah animasi biar transisinya halus
+                              //   duration: const Duration(milliseconds: 500),
+                              // );
+                              Get.offAll(
+                                () => const MainScreen(),
+                                transition: Transition.fade,
                                 duration: const Duration(milliseconds: 500),
                               );
                             } else {

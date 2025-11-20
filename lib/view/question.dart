@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart'; // v8.2.2
+import 'package:latlong2/latlong.dart'; // v0.9.1
 import 'package:google_fonts/google_fonts.dart';
 import 'package:get/get.dart';
+import 'package:siaga_tani/controllers/map_setup_controller.dart';
 
 class QuestionnaireScreen extends StatefulWidget {
   const QuestionnaireScreen({super.key});
@@ -11,24 +14,23 @@ class QuestionnaireScreen extends StatefulWidget {
 
 class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
   final PageController _pageController = PageController();
-  
-  // Menyimpan jawaban user. Key: index halaman, Value: data jawaban
+  // Panggil controller map kita
+  final MapSetupController _mapController = Get.put(MapSetupController());
+
   final Map<int, dynamic> _answers = {};
-  
   int _currentPage = 0;
 
   // --- DATA PERTANYAAN ---
   final List<Map<String, dynamic>> _questions = [
     {
       "question": "Fase tanaman cabai Anda saat ini?",
-      "type": "grid", // Tampilan kotak-kotak (seperti bendera di referensi)
+      "type": "grid",
       "options": [
         {"label": "Bibit", "icon": "🌱"},
         {"label": "Vegetatif", "icon": "🌿"},
         {"label": "Berbunga", "icon": "🌼"},
-        {"label": "Berbuah Muda", "icon": "🌶️"},
-        {"label": "Berbuah Matang", "icon": "🔥"},
-      ]
+        {"label": "Berbuah", "icon": "🌶️"},
+      ],
     },
     {
       "question": "Varietas cabai apa yang Anda tanam?",
@@ -38,373 +40,504 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
         {"label": "Cabai Keriting", "icon": "〰️"},
         {"label": "Cabai Besar", "icon": "🔴"},
         {"label": "Lainnya", "icon": "❓"},
-      ]
+      ],
     },
     {
       "question": "Bagaimana pola tanam di lahan Anda?",
-      "type": "list", // Tampilan list memanjang ke bawah (seperti level di referensi)
+      "type": "list",
       "options": [
-        {"label": "Monokultur", "sub": "Hanya satu jenis tanaman (cabai saja)"},
-        {"label": "Tumpangsari", "sub": "Cabai diselingi tanaman lain"},
-        {"label": "Polikultur", "sub": "Campuran banyak jenis tanaman"},
-      ]
+        {"label": "Monokultur", "sub": "Hanya satu jenis tanaman"},
+        {"label": "Tumpangsari", "sub": "Diselingi tanaman lain"},
+        {"label": "Polikultur", "sub": "Campuran banyak jenis"},
+      ],
     },
     {
       "question": "Apakah lahan pernah terserang hama?",
       "type": "list",
       "options": [
-        {"label": "Ya, Pernah", "sub": "Ada riwayat serangan sebelumnya"},
-        {"label": "Tidak Pernah", "sub": "Lahan aman / lahan baru"},
-        {"label": "Tidak Tahu", "sub": "Saya lupa / belum tahu"},
-      ]
+        {"label": "Ya, Pernah", "sub": "Ada riwayat serangan"},
+        {"label": "Tidak Pernah", "sub": "Lahan aman"},
+        {"label": "Tidak Tahu", "sub": "Saya lupa"},
+      ],
     },
     {
       "question": "Apakah Anda menggunakan Mulsa Plastik?",
       "type": "list",
       "options": [
-        {"label": "Ya, Pakai", "sub": "Menggunakan penutup tanah plastik"},
-        {"label": "Tidak", "sub": "Tanah terbuka tanpa mulsa"},
-      ]
+        {"label": "Ya, Pakai", "sub": "Penutup tanah plastik"},
+        {"label": "Tidak", "sub": "Tanah terbuka"},
+      ],
     },
-    // --- PERTANYAAN TERAKHIR: LOKASI (GPS) ---
+
+    // --- HALAMAN 6: LOKASI LAHAN UTAMA (GOJEK STYLE) ---
     {
-      "question": "Terakhir, di mana lokasi lahan Anda?",
-      "type": "location", // Tipe khusus untuk tombol GPS
-      "options": [] 
+      "question": "Tentukan titik lokasi lahan Anda",
+      "type": "map_main",
+      "desc": "Geser peta hingga pin merah berada tepat di lahan Anda.",
+    },
+
+    // --- HALAMAN 7: LOKASI PENDUKUNG (GENSHIN STYLE) ---
+    {
+      "question": "Ada tanaman apa di sekitar lahan?",
+      "type": "map_surrounding",
+      "desc":
+          "Tap pada peta untuk menandai lahan tetangga. Tekan Lanjut jika tidak ada.",
     },
   ];
 
   @override
   Widget build(BuildContext context) {
-    // Warna Tema
-    final primaryColor = const Color(0xFF2C3312); // Hijau tua gelap
-    final accentColor = const Color(0xFF4CAF50); // Hijau cerah
-    final bgColor = const Color(0xFFF1F8E9); // Hijau sangat muda (background)
+    final primaryColor = const Color(0xFF2C3312);
+    final accentColor = const Color(0xFF4CAF50);
 
     return Scaffold(
-      backgroundColor: bgColor,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_new_rounded, color: primaryColor),
-          onPressed: () {
-            if (_currentPage > 0) {
-              _pageController.previousPage(
-                  duration: const Duration(milliseconds: 300), curve: Curves.ease);
-            } else {
-              Get.back();
-            }
-          },
-        ),
-        title: LinearProgressIndicator(
-          value: (_currentPage + 1) / _questions.length,
-          backgroundColor: Colors.grey[300],
-          valueColor: AlwaysStoppedAnimation<Color>(accentColor),
-          borderRadius: BorderRadius.circular(10),
-          minHeight: 6,
-        ),
-      ),
-      body: SafeArea(
-        child: Column(
-          children: [
-            Expanded(
-              child: PageView.builder(
-                controller: _pageController,
-                physics: const NeverScrollableScrollPhysics(), // User harus pilih dulu baru bisa geser
-                onPageChanged: (index) => setState(() => _currentPage = index),
-                itemCount: _questions.length,
-                itemBuilder: (context, index) {
-                  final q = _questions[index];
-                  return Padding(
-                    padding: const EdgeInsets.all(24.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Pertanyaan
-                        Text(
-                          q['question'],
-                          style: GoogleFonts.poppins(
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold,
-                            color: primaryColor,
-                            height: 1.3,
-                          ),
+      body: Stack(
+        children: [
+          // PAGE VIEW CONTROLLER
+          PageView.builder(
+            controller: _pageController,
+            physics: const NeverScrollableScrollPhysics(),
+            onPageChanged: (index) => setState(() => _currentPage = index),
+            itemCount: _questions.length,
+            itemBuilder: (context, index) {
+              final q = _questions[index];
+
+              // JIKA HALAMAN PETA
+              if (q['type'] == 'map_main') {
+                return _buildMapMainStep(q);
+              } else if (q['type'] == 'map_surrounding') {
+                return _buildMapSurroundingStep(q);
+              }
+
+              // JIKA HALAMAN KUESIONER BIASA
+              return SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildHeader(primaryColor, accentColor),
+                      const SizedBox(height: 30),
+                      Text(
+                        q['question'],
+                        style: GoogleFonts.poppins(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                          color: primaryColor,
                         ),
-                        const SizedBox(height: 30),
+                      ),
+                      const SizedBox(height: 30),
 
-                        // Render Pilihan Sesuai Tipe
-                        if (q['type'] == 'grid')
-                          Expanded(
-                            child: GridView.count(
-                              crossAxisCount: 2,
-                              mainAxisSpacing: 15,
-                              crossAxisSpacing: 15,
-                              childAspectRatio: 1.3,
-                              children: (q['options'] as List).map((opt) {
-                                return _buildGridOption(
-                                  opt['label'], 
-                                  opt['icon'], 
-                                  index, 
-                                  accentColor
-                                );
-                              }).toList(),
-                            ),
-                          )
-                        else if (q['type'] == 'list')
-                          Expanded(
-                            child: ListView(
-                              children: (q['options'] as List).map((opt) {
-                                return _buildListOption(
-                                  opt['label'], 
-                                  opt['sub'], 
-                                  index, 
-                                  accentColor
-                                );
-                              }).toList(),
-                            ),
-                          )
-                        else if (q['type'] == 'location')
-                          _buildLocationInput(accentColor),
-                      ],
-                    ),
-                  );
-                },
-              ),
-            ),
+                      if (q['type'] == 'grid')
+                        _buildGridOptions(q, index, accentColor)
+                      else if (q['type'] == 'list')
+                        _buildListOptions(q, index, accentColor),
 
-            // Tombol Lanjut (Hanya muncul jika halaman terakhir / GPS)
-            Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: SizedBox(
-                width: double.infinity,
-                height: 55,
-                child: ElevatedButton(
-                  onPressed: _isButtonEnabled() ? _nextPage : null,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: primaryColor,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    disabledBackgroundColor: Colors.grey[400],
-                  ),
-                  child: Text(
-                    _currentPage == _questions.length - 1 
-                        ? "Selesai & Masuk Dashboard" 
-                        : "Lanjut",
-                    style: GoogleFonts.poppins(
-                      fontSize: 16, 
-                      fontWeight: FontWeight.w600, 
-                      color: Colors.white
-                    ),
+                      const Spacer(),
+                      _buildNextButton(primaryColor),
+                    ],
                   ),
                 ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // --- WIDGET BUILDERS ---
-
-  // 1. Tampilan Kotak (Seperti bendera di referensi)
-  Widget _buildGridOption(String label, String icon, int pageIndex, Color activeColor) {
-    bool isSelected = _answers[pageIndex] == label;
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          _answers[pageIndex] = label;
-        });
-      },
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        decoration: BoxDecoration(
-          color: isSelected ? Colors.white : Colors.white.withOpacity(0.8),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: isSelected ? activeColor : Colors.transparent,
-            width: 2,
+              );
+            },
           ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            )
-          ],
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(icon, style: const TextStyle(fontSize: 32)),
-            const SizedBox(height: 8),
-            Text(
-              label,
-              textAlign: TextAlign.center,
-              style: GoogleFonts.poppins(
-                fontSize: 14,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                color: Colors.black87,
-              ),
-            ),
-            if (isSelected)
-              // Icon centang kecil di pojok (opsional)
-              Transform.translate(
-                offset: const Offset(0, 5),
-                child: Icon(Icons.check_circle, color: activeColor, size: 16),
-              )
-          ],
-        ),
-      ),
-    );
-  }
-
-  // 2. Tampilan List Memanjang (Seperti level di referensi)
-  Widget _buildListOption(String label, String sub, int pageIndex, Color activeColor) {
-    bool isSelected = _answers[pageIndex] == label;
-    return GestureDetector(
-      onTap: () => setState(() => _answers[pageIndex] = label),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: isSelected ? activeColor : Colors.transparent,
-            width: 2,
-          ),
-          boxShadow: const [
-             BoxShadow(
-              color: Colors.black12, 
-              blurRadius: 6, 
-              offset: Offset(0, 2)
-            )
-          ],
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    label,
-                    style: GoogleFonts.poppins(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black87,
-                    ),
-                  ),
-                  Text(
-                    sub,
-                    style: GoogleFonts.poppins(
-                      fontSize: 12,
-                      color: Colors.grey[600],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            if (isSelected)
-              Icon(Icons.check_circle_rounded, color: activeColor)
-            else
-              Icon(Icons.circle_outlined, color: Colors.grey[300]),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // 3. Tampilan Khusus GPS (Halaman Terakhir)
-  Widget _buildLocationInput(Color activeColor) {
-    bool hasLocation = _answers[_currentPage] != null;
-
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.location_on_rounded, size: 80, color: Colors.grey[400]),
-          const SizedBox(height: 20),
-          Text(
-            "Kami butuh lokasi lahan untuk\nmemprediksi cuaca.",
-            textAlign: TextAlign.center,
-            style: GoogleFonts.poppins(color: Colors.grey[600]),
-          ),
-          const SizedBox(height: 30),
-          
-          // Tombol Ambil GPS
-          SizedBox(
-            width: double.infinity,
-            height: 50,
-            child: OutlinedButton.icon(
-              onPressed: () async {
-                // Simulasi Ambil GPS (Nanti pasang logic Geolocator di sini)
-                await Future.delayed(const Duration(seconds: 1));
-                setState(() {
-                  _answers[_currentPage] = "Lat: -7.795, Long: 110.369"; // Dummy
-                });
-                Get.snackbar("Sukses", "Lokasi berhasil ditemukan!", 
-                  backgroundColor: activeColor.withOpacity(0.8), colorText: Colors.white);
-              },
-              icon: const Icon(Icons.my_location),
-              label: Text(hasLocation ? "Perbarui Lokasi" : "Gunakan GPS Saat Ini"),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: activeColor,
-                side: BorderSide(color: activeColor),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              ),
-            ),
-          ),
-          
-          if (hasLocation) ...[
-            const SizedBox(height: 15),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.green[50],
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.check, size: 16, color: Colors.green),
-                  const SizedBox(width: 8),
-                  Text(
-                    "Lokasi tersimpan: Yogyakarta",
-                    style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.w500),
-                  ),
-                ],
-              ),
-            )
-          ]
         ],
       ),
     );
   }
 
-  // --- LOGIC ---
+  // --- 🌍 WIDGET PETA 1: GOJEK STYLE ---
+  Widget _buildMapMainStep(Map<String, dynamic> q) {
+    return Stack(
+      children: [
+        Obx(
+          () => FlutterMap(
+            mapController: _mapController.mapController,
+            options: MapOptions(
+              initialCenter: _mapController.currentCenter.value,
+              initialZoom: 15.0,
+              // PERBAIKAN: Parameter callback mengikuti flutter_map v8.x
+              onPositionChanged: _mapController.onPositionChanged,
+            ),
+            children: [
+              TileLayer(
+                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                userAgentPackageName: 'com.example.siaga_tani',
+              ),
+            ],
+          ),
+        ),
 
-  bool _isButtonEnabled() {
-    // Tombol 'Lanjut' hanya aktif kalau halaman ini sudah dijawab
-    // Kecuali halaman GPS, tombol 'Lanjut' berubah jadi 'Selesai' dan wajib ada lokasi
-    return _answers.containsKey(_currentPage);
+        // PIN TENGAH (FIXED)
+        const Center(
+          child: Padding(
+            padding: EdgeInsets.only(bottom: 40),
+            child: Icon(Icons.location_on, color: Colors.red, size: 50),
+          ),
+        ),
+
+        // PANEL BAWAH
+        Positioned(
+          bottom: 0,
+          left: 0,
+          right: 0,
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
+              boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10)],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "Lokasi Lahan Utama",
+                  style: GoogleFonts.poppins(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(q['desc'], style: GoogleFonts.poppins(color: Colors.grey)),
+                const SizedBox(height: 20),
+
+                SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      _mapController.saveMyFarmLocation();
+                      _nextPage();
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF2C3312),
+                    ),
+                    child: Text(
+                      "Konfirmasi Lokasi",
+                      style: GoogleFonts.poppins(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // --- 🌍 WIDGET PETA 2: DATA PENDUKUNG ---
+  Widget _buildMapSurroundingStep(Map<String, dynamic> q) {
+    return Stack(
+      children: [
+        Obx(
+          () => FlutterMap(
+            options: MapOptions(
+              initialCenter:
+                  _mapController.myFarmLocation.value ??
+                  const LatLng(-7.795, 110.369),
+              initialZoom: 15.0,
+              // v8.x onTap signature: (tapPos, latLng)
+              onTap: (tapPos, latLng) {
+                _mapController.addSurroundingPin(latLng);
+              },
+            ),
+            children: [
+              TileLayer(
+                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                userAgentPackageName: 'com.example.siaga_tani',
+              ),
+              // LAYER MARKER (Pin Merah & Kuning)
+              MarkerLayer(
+                markers: [
+                  // Pin Lahan Utama
+                  if (_mapController.myFarmLocation.value != null)
+                    Marker(
+                      point: _mapController.myFarmLocation.value!,
+                      width: 50,
+                      height: 50,
+                      child: const Icon(
+                        Icons.location_on,
+                        color: Colors.red,
+                        size: 50,
+                      ),
+                    ),
+                  // Pin Tanaman Sekitar (dari Controller)
+                  ..._mapController.surroundingPins,
+                ],
+              ),
+            ],
+          ),
+        ),
+
+        // PANEL BAWAH
+        Positioned(
+          bottom: 0,
+          left: 0,
+          right: 0,
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  "Data Pendukung (Opsional)",
+                  style: GoogleFonts.poppins(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Get.snackbar(
+                        "Sukses",
+                        "Data Lahan & Lingkungan Tersimpan!",
+                      );
+                      Get.back(); // KEMBALI KE DASHBOARD
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF4CAF50),
+                    ),
+                    child: Text(
+                      "Selesai & Simpan",
+                      style: GoogleFonts.poppins(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // --- HELPER WIDGETS ---
+  Widget _buildHeader(Color primary, Color accent) {
+    return Row(
+      children: [
+        IconButton(
+          icon: Icon(Icons.arrow_back_ios_new_rounded, color: primary),
+          onPressed: () {
+            if (_currentPage > 0)
+              _pageController.previousPage(
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.ease,
+              );
+            else
+              Get.back();
+          },
+        ),
+        Expanded(
+          child: LinearProgressIndicator(
+            value: (_currentPage + 1) / _questions.length,
+            backgroundColor: Colors.grey[300],
+            valueColor: AlwaysStoppedAnimation<Color>(accent),
+            borderRadius: BorderRadius.circular(10),
+            minHeight: 6,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildNextButton(Color color) {
+    return SizedBox(
+      width: double.infinity,
+      height: 55,
+      child: ElevatedButton(
+        onPressed: _answers.containsKey(_currentPage) ? _nextPage : null,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: color,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          disabledBackgroundColor: Colors.grey[400],
+        ),
+        child: Text(
+          "Lanjut",
+          style: GoogleFonts.poppins(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: Colors.white,
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Render Grid untuk Pertanyaan Pilihan (Versi Perbaikan Layout)
+  Widget _buildGridOptions(
+    Map<String, dynamic> q,
+    int index,
+    Color activeColor,
+  ) {
+    return Expanded(
+      child: GridView.builder(
+        // Menggunakan BouncingScrollPhysics agar terasa premium,
+        // tapi kalau itemnya sedikit dia tidak akan kemana-mana.
+        physics: const BouncingScrollPhysics(),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2, // 2 Kolom
+          mainAxisSpacing: 15, // Jarak vertikal antar kotak
+          crossAxisSpacing: 15, // Jarak horizontal antar kotak
+          // PERBAIKAN UTAMA: Ubah rasio dari 1.3 ke 1.0 atau 1.1
+          // Agar kotak lebih tinggi dan muat menampung Icon + Teks tanpa terpotong
+          childAspectRatio: 1.1,
+        ),
+        itemCount: (q['options'] as List).length,
+        itemBuilder: (context, i) {
+          final opt = q['options'][i];
+          bool isSelected = _answers[index] == opt['label'];
+
+          return GestureDetector(
+            onTap: () => setState(() => _answers[index] = opt['label']),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              // PERBAIKAN: Tambah padding di dalam kotak agar teks tidak mepet pinggir
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? Colors.white
+                    : Colors.white.withOpacity(0.8),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: isSelected ? activeColor : Colors.transparent,
+                  width: 2,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // Icon Besar
+                  Text(
+                    opt['icon'],
+                    style: const TextStyle(
+                      fontSize: 36,
+                    ), // Sedikit diperbesar biar jelas
+                  ),
+                  const SizedBox(height: 12), // Jarak aman antara icon dan teks
+                  // Teks Label
+                  Text(
+                    opt['label'],
+                    textAlign: TextAlign.center, // Pastikan teks rata tengah
+                    style: GoogleFonts.poppins(
+                      fontSize: 14,
+                      fontWeight: isSelected
+                          ? FontWeight.w600
+                          : FontWeight.normal,
+                      color: Colors.black87,
+                    ),
+                    maxLines: 2, // Izinkan 2 baris jika teks panjang
+                    overflow:
+                        TextOverflow.ellipsis, // Titik-titik jika kepanjangan
+                  ),
+
+                  // Opsional: Tambah icon centang jika dipilih biar makin jelas
+                  if (isSelected) ...[
+                    const SizedBox(height: 5),
+                    Icon(Icons.check_circle, size: 18, color: activeColor),
+                  ],
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  // Render List untuk Pertanyaan Pilihan Panjang (Sama kayak sebelumnya)
+  Widget _buildListOptions(
+    Map<String, dynamic> q,
+    int index,
+    Color activeColor,
+  ) {
+    return Expanded(
+      child: ListView(
+        children: (q['options'] as List).map((opt) {
+          bool isSelected = _answers[index] == opt['label'];
+          return GestureDetector(
+            onTap: () => setState(() => _answers[index] = opt['label']),
+            child: Container(
+              margin: const EdgeInsets.only(bottom: 12),
+              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: isSelected ? activeColor : Colors.transparent,
+                  width: 2,
+                ),
+                boxShadow: const [
+                  BoxShadow(color: Colors.black12, blurRadius: 6),
+                ],
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          opt['label'],
+                          style: GoogleFonts.poppins(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        Text(
+                          opt['sub'],
+                          style: GoogleFonts.poppins(
+                            fontSize: 12,
+                            color: Colors.grey,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (isSelected)
+                    Icon(Icons.check_circle_rounded, color: activeColor)
+                  else
+                    Icon(Icons.circle_outlined, color: Colors.grey[300]),
+                ],
+              ),
+            ),
+          );
+        }).toList(),
+      ),
+    );
   }
 
   void _nextPage() {
     if (_currentPage < _questions.length - 1) {
       _pageController.nextPage(
-        duration: const Duration(milliseconds: 300), 
-        curve: Curves.easeIn
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeIn,
       );
-    } else {
-      // FINISH
-      print("Semua Jawaban: $_answers");
-      // Simpan ke controller/database, lalu:
-      // Get.offAllNamed('/dashboard'); 
-      Get.snackbar("Selesai", "Setup lahan berhasil!");
     }
   }
 }
