@@ -14,13 +14,13 @@ class MapSetupController extends GetxController {
   var myFarmLocation = Rxn<LatLng>(); 
   var surroundingPins = <Marker>[].obs; 
   
-  // --- PERBAIKAN DI SINI: Tambahkan .obs ---
+  // --- PERBAIKAN DI SINI: Tambahkan .obs agar bisa dipantau Obx ---
   var surroundingData = <Map<String, dynamic>>[].obs; 
-  // ----------------------------------------
+  // --------------------------------------------------------------
 
   var currentCenter = const LatLng(-7.795, 110.369).obs;
   
-  // STATE ALAMAT (BARU)
+  // STATE ALAMAT
   var currentAddress = "Geser pin untuk lokasi...".obs;
   var isLoadingAddress = false.obs;
   
@@ -65,7 +65,6 @@ class MapSetupController extends GetxController {
   }
 
   // 2. Fungsi saat Map Digeser (Logic Debounce)
-  // Menggunakan MapCamera karena flutter_map v8.x
   void onPositionChanged(MapCamera camera, bool hasGesture) {
     currentCenter.value = camera.center;
     
@@ -132,6 +131,7 @@ class MapSetupController extends GetxController {
       leading: Icon(_getIconForPlant(label), color: Colors.orange),
       title: Text(label),
       onTap: () {
+        // Tambah Marker ke Peta
         surroundingPins.add(
           Marker(
             point: point,
@@ -141,7 +141,7 @@ class MapSetupController extends GetxController {
           ),
         );
         
-        // List ini sekarang Observable (.obs), jadi Obx di UI akan otomatis update
+        // Tambah Data ke List (Sekarang sudah .obs, jadi aman dipanggil Obx)
         surroundingData.add({
           "type": label,
           "lat": point.latitude,
