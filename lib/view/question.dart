@@ -126,14 +126,14 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
                           color: primaryColor,
                         ),
                       ),
-                      const SizedBox(height: 30),
 
+                      const SizedBox(height: 30),
                       if (q['type'] == 'grid')
                         _buildGridOptions(q, index, accentColor)
                       else if (q['type'] == 'list')
                         _buildListOptions(q, index, accentColor),
 
-                      const Spacer(),
+                      const SizedBox(height: 30),
                       _buildNextButton(primaryColor),
                     ],
                   ),
@@ -383,6 +383,7 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
   }
 
   // Render Grid untuk Pertanyaan Pilihan (Versi Perbaikan Layout)
+  // Render Grid yang AMAN dari Crop (Ada Padding Bawah & Scroll Aktif)
   Widget _buildGridOptions(
     Map<String, dynamic> q,
     int index,
@@ -390,16 +391,20 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
   ) {
     return Expanded(
       child: GridView.builder(
-        // Menggunakan BouncingScrollPhysics agar terasa premium,
-        // tapi kalau itemnya sedikit dia tidak akan kemana-mana.
+        // 1. PENTING: Aktifkan scroll. Kalau layar pendek, user bisa geser ke atas
+        // supaya item paling bawah tidak ketutupan.
         physics: const BouncingScrollPhysics(),
+
+        // 2. PENTING: Tambahkan padding bawah (bottom: 20)
+        // Ini kuncinya biar bayangan/border bawah TIDAK KEPOTONG
+        padding: const EdgeInsets.only(top: 10, bottom: 20, left: 4, right: 4),
+
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2, // 2 Kolom
-          mainAxisSpacing: 15, // Jarak vertikal antar kotak
-          crossAxisSpacing: 15, // Jarak horizontal antar kotak
-          // PERBAIKAN UTAMA: Ubah rasio dari 1.3 ke 1.0 atau 1.1
-          // Agar kotak lebih tinggi dan muat menampung Icon + Teks tanpa terpotong
-          childAspectRatio: 1.1,
+          crossAxisCount: 2,
+          mainAxisSpacing: 15,
+          crossAxisSpacing: 15,
+          // Rasio 1.0 (Kotak) atau 1.1 (Agak tinggi dikit) paling aman
+          childAspectRatio: 1.0,
         ),
         itemCount: (q['options'] as List).length,
         itemBuilder: (context, i) {
@@ -410,8 +415,8 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
             onTap: () => setState(() => _answers[index] = opt['label']),
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 200),
-              // PERBAIKAN: Tambah padding di dalam kotak agar teks tidak mepet pinggir
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+              // Padding dalam kotak biar teks ga nabrak pinggir
+              padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: isSelected
                     ? Colors.white
@@ -425,6 +430,7 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
                   BoxShadow(
                     color: Colors.black.withOpacity(0.05),
                     blurRadius: 10,
+                    // Bayangan ke bawah (y: 4). Kalau ga ada padding bawah di GridView, ini pasti kepotong.
                     offset: const Offset(0, 4),
                   ),
                 ],
@@ -432,18 +438,14 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // Icon Besar
                   Text(
                     opt['icon'],
-                    style: const TextStyle(
-                      fontSize: 36,
-                    ), // Sedikit diperbesar biar jelas
+                    style: const TextStyle(fontSize: 38), // Ukuran Icon
                   ),
-                  const SizedBox(height: 12), // Jarak aman antara icon dan teks
-                  // Teks Label
+                  const SizedBox(height: 12),
                   Text(
                     opt['label'],
-                    textAlign: TextAlign.center, // Pastikan teks rata tengah
+                    textAlign: TextAlign.center,
                     style: GoogleFonts.poppins(
                       fontSize: 14,
                       fontWeight: isSelected
@@ -451,15 +453,13 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
                           : FontWeight.normal,
                       color: Colors.black87,
                     ),
-                    maxLines: 2, // Izinkan 2 baris jika teks panjang
-                    overflow:
-                        TextOverflow.ellipsis, // Titik-titik jika kepanjangan
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
 
-                  // Opsional: Tambah icon centang jika dipilih biar makin jelas
                   if (isSelected) ...[
-                    const SizedBox(height: 5),
-                    Icon(Icons.check_circle, size: 18, color: activeColor),
+                    const SizedBox(height: 6),
+                    Icon(Icons.check_circle, size: 20, color: activeColor),
                   ],
                 ],
               ),
