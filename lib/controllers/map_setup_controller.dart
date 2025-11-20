@@ -1,26 +1,38 @@
+import 'dart:async'; // Untuk Timer
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:flutter_map/flutter_map.dart'; // Versi 8.2.2
-import 'package:latlong2/latlong.dart';      // Versi 0.9.1
-import 'package:geolocator/geolocator.dart';  // Versi 14.0.2
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:geocoding/geocoding.dart'; // Pastikan import ini ada
+import '../utils/farm_constants.dart';
 
 class MapSetupController extends GetxController {
-  // --- STATE UTAMA ---
   final MapController mapController = MapController();
   
-  // Lokasi Lahan Kita (Pin Merah - Center)
+  // State
   var myFarmLocation = Rxn<LatLng>(); 
-  
-  // Lokasi Tanaman Sekitar (Pin Kuning - List)
   var surroundingPins = <Marker>[].obs; 
+  var surroundingData = <Map<String, dynamic>>[]; 
+  var currentCenter = const LatLng(-7.795, 110.369).obs;
   
-  // Helper untuk UI "Gojek Style"
-  var currentCenter = const LatLng(-7.795, 110.369).obs; // Default Jogja
+  // STATE ALAMAT (BARU)
+  var currentAddress = "Geser pin untuk lokasi...".obs;
+  var isLoadingAddress = false.obs;
+  
+  // Timer untuk Debounce (biar gak panggil API terus-terusan pas geser)
+  Timer? _debounce;
 
   @override
   void onInit() {
     super.onInit();
     _getCurrentLocation();
+  }
+
+  @override
+  void onClose() {
+    _debounce?.cancel();
+    super.onClose();
   }
 
   // 1. Ambil Lokasi Saat Ini (GPS)
@@ -39,62 +51,111 @@ class MapSetupController extends GetxController {
       LatLng userPos = LatLng(position.latitude, position.longitude);
       
       currentCenter.value = userPos;
-      // Pindahkan kamera peta ke lokasi user
       mapController.move(userPos, 16.0);
+      
+      // Langsung cari alamat saat pertama kali dapat lokasi
+      _getAddressFromLatLng(userPos.latitude, userPos.longitude);
+      
     } catch (e) {
       print("Gagal ambil GPS: $e");
     }
   }
 
-  // 2. Fungsi saat Map Digeser (Untuk Lahan Saya)
-  // PERBAIKAN: Gunakan MapCamera, bukan MapPosition
+  // 2. Fungsi saat Map Digeser (Logic Debounce)
   void onPositionChanged(MapCamera camera, bool hasGesture) {
     currentCenter.value = camera.center;
+    
+    // Kalau sedang ada timer berjalan, batalkan (artinya user masih geser)
+    if (_debounce?.isActive ?? false) _debounce!.cancel();
+
+    // Mulai timer baru. Jika user diam selama 800ms, baru cari alamat
+    _debounce = Timer(const Duration(milliseconds: 800), () {
+      _getAddressFromLatLng(camera.center.latitude, camera.center.longitude);
+    });
+  }
+
+  // Helper: Cari Alamat dari Koordinat
+  Future<void> _getAddressFromLatLng(double lat, double lng) async {
+    isLoadingAddress.value = true;
+    try {
+      List<Placemark> placemarks = await placemarkFromCoordinates(lat, lng);
+      if (placemarks.isNotEmpty) {
+        Placemark place = placemarks[0];
+        // Format: "Jalan X, Desa Y"
+        String street = place.street ?? "";
+        String subLoc = place.subLocality ?? "";
+        String loc = place.locality ?? "";
+        
+        currentAddress.value = "$street, $subLoc, $loc".replaceAll(RegExp(r'^, | , '), '');
+      } else {
+        currentAddress.value = "Alamat tidak ditemukan";
+      }
+    } catch (e) {
+      currentAddress.value = "Koordinat: ${lat.toStringAsFixed(4)}, ${lng.toStringAsFixed(4)}";
+    } finally {
+      isLoadingAddress.value = false;
+    }
   }
 
   // 3. Simpan Lokasi Lahan Saya
   void saveMyFarmLocation() {
     myFarmLocation.value = currentCenter.value;
+    // Kita bisa juga simpan address ke variable global/storage kalau perlu
     Get.snackbar(
-      "Tersimpan", 
-      "Lokasi lahan utama berhasil dikunci!",
+      "Lokasi Tersimpan", 
+      "Lokasi: ${currentAddress.value}",
       backgroundColor: Colors.green,
       colorText: Colors.white,
+      snackPosition: SnackPosition.BOTTOM,
     );
   }
 
-  // 4. Tambah Pin Tanaman Sekitar (Tap di Peta)
+  // 4. Tambah Pin Tanaman Sekitar
   void addSurroundingPin(LatLng point) {
-    // Tampilkan Dialog Pilih Tanaman
     Get.defaultDialog(
-      title: "Tanaman Apa Ini?",
-      content: Column(
-        children: [
-          _buildPlantOption(point, "Jagung", Icons.grass),
-          _buildPlantOption(point, "Tembakau", Icons.smoking_rooms),
-          _buildPlantOption(point, "Lainnya", Icons.park),
-        ],
+      title: "Tanaman Tetangga",
+      content: SizedBox(
+        height: 300,
+        child: SingleChildScrollView(
+          child: Column(
+            children: FarmConstants.hostPlants.map((plant) {
+              return _buildPlantOption(point, plant);
+            }).toList(),
+          ),
+        ),
       ),
     );
   }
 
-  Widget _buildPlantOption(LatLng point, String label, IconData icon) {
+  Widget _buildPlantOption(LatLng point, String label) {
     return ListTile(
-      leading: Icon(icon, color: Colors.orange),
+      leading: Icon(_getIconForPlant(label), color: Colors.orange),
       title: Text(label),
       onTap: () {
-        // Tambahkan ke List Marker
         surroundingPins.add(
           Marker(
             point: point,
             width: 40,
             height: 40,
-            // Di versi 8+, Marker child tetap didukung
             child: const Icon(Icons.location_on, color: Colors.orange, size: 40),
           ),
         );
-        Get.back(); // Tutup dialog
+        surroundingData.add({
+          "type": label,
+          "lat": point.latitude,
+          "lng": point.longitude,
+        });
+        Get.back(); 
       },
     );
+  }
+
+  IconData _getIconForPlant(String type) {
+    switch (type) {
+      case "Jagung": return Icons.grass;
+      case "Mangga": 
+      case "Jeruk": return Icons.park; 
+      default: return Icons.local_florist; 
+    }
   }
 }

@@ -2,29 +2,31 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 class FarmModel {
   String? id;
-  final String farmName; // User bisa namai misal "Lahan Belakang"
+  final String farmName;
+  final String address; // <--- FIELD BARU
   final double latitude;
   final double longitude;
-  final String landSize; // "100 m2"
+  final String landSize;
 
   // A. Informasi Lahan
-  final String variety; // "Cabai Rawit", "Cabai Merah Besar"
-  final String hostPlantsNearby; // "Ya", "Tidak", "Tidak Tahu"
+  final String variety;
+  final String hostPlantsNearby;
   final bool isMulchUsed;
-  final String plantingPattern; // "Monokultur", "Tumpangsari", dll
-  final String pestHistory; // "Pernah", "Tidak Pernah"
+  final String plantingPattern;
+  final String pestHistory;
 
   // B. Fase Tanaman
-  final String currentPhase; // "Bibit", "Vegetatif", "Berbunga", "Berbuah Muda", "Berbuah Matang"
+  final String currentPhase;
 
   // C. Kegiatan Budidaya
   final bool recentlySprayedPesticide;
-  final String pesticideType; // Opsional
-  final String wateringIntensity; // "Rendah", "Sedang", "Tinggi"
+  final String pesticideType;
+  final String wateringIntensity;
 
   FarmModel({
     this.id,
     required this.farmName,
+    required this.address, // <--- Tambahkan di Constructor
     required this.latitude,
     required this.longitude,
     required this.landSize,
@@ -43,7 +45,8 @@ class FarmModel {
   Map<String, dynamic> toMap() {
     return {
       'farmName': farmName,
-      'location': GeoPoint(latitude, longitude), // Format Firestore
+      'address': address, // <--- Simpan ke Firestore
+      'location': GeoPoint(latitude, longitude),
       'landSize': landSize,
       'variety': variety,
       'hostPlantsNearby': hostPlantsNearby,
@@ -64,6 +67,7 @@ class FarmModel {
     return FarmModel(
       id: documentId,
       farmName: map['farmName'] ?? 'Lahan Tanpa Nama',
+      address: map['address'] ?? 'Alamat tidak diketahui', // <--- Ambil dari Firestore
       latitude: geoPoint.latitude,
       longitude: geoPoint.longitude,
       landSize: map['landSize'] ?? '',

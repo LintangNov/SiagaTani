@@ -1,50 +1,58 @@
 import 'package:get/get.dart';
 import '../models/farm_model.dart';
 import '../models/weather_model.dart';
+import '../models/prediction_result.dart';
+import '../models/surrounding_pin_model.dart'; // Import model pin
 import '../services/dummy_weather_service.dart';
 import '../services/prediction_service.dart';
+import '../services/firestore_service.dart'; // Import firestore service
 
 class PredictionController extends GetxController {
   final DummyWeatherService _weatherService = DummyWeatherService();
   final PredictionService _predictionService = PredictionService();
+  final FirestoreService _firestoreService = FirestoreService();
 
-  // Data Lahan yang sedang dilihat (di-pass dari Dashboard)
   late FarmModel farm;
-
-  // State
   var predictionResults = <PredictionResult>[].obs;
   var isAnalyzing = false.obs;
-  var weatherData = Rxn<WeatherModel>(); // Cuaca spesifik saat analisis
+  var weatherData = Rxn<WeatherModel>();
 
   @override
   void onInit() {
     super.onInit();
-    // Ambil data Farm yang dikirim via arguments Get.toNamed
     if (Get.arguments != null && Get.arguments is FarmModel) {
       farm = Get.arguments;
     }
   }
 
-  // Fungsi Utama: Jalankan Analisis
   Future<void> runAnalysis() async {
     isAnalyzing.value = true;
-    predictionResults.clear(); // Reset hasil lama
+    predictionResults.clear();
 
     try {
-      // 1. Ambil data parameter cuaca (Dummy)
-      // Di aplikasi nyata, ini bisa ambil API cuaca berdasarkan koordinat farm.latitude
+      // 1. Ambil Data Cuaca
       WeatherModel weather = await _weatherService.getCurrentWeather();
       weatherData.value = weather;
 
-      // 2. Jalankan Algoritma Prediksi
-      // Menggabungkan Data Lahan (Input User) + Data Cuaca (Dummy)
-      List<PredictionResult> results = _predictionService.analyzeRisk(farm, weather);
+      // 2. Ambil Data Tanaman Sekitar (Untuk Cek Inang)
+      // Kita ambil semua pin di sekitar (logika filter jarak 1km bisa dilakukan di service/controller ini)
+      List<SurroundingPinModel> pins = await _firestoreService.getAllPins();
       
-      // 3. Update UI
+      // Konversi ke list String nama tanaman untuk mempermudah service
+      // (Di aplikasi real, tambahkan logika filter jarak latitude/longitude di sini)
+      List<String> nearbyPlants = pins.map((e) => e.plantType).toList();
+
+      // 3. Jalankan Analisis dengan Data Lengkap
+      List<PredictionResult> results = _predictionService.analyzeRisk(
+        farm, 
+        weather, 
+        nearbyPlants
+      );
+      
       predictionResults.assignAll(results);
       
     } catch (e) {
-      Get.snackbar("Error", "Gagal melakukan analisis: $e");
+      Get.snackbar("Error", "Gagal analisis: $e");
     } finally {
       isAnalyzing.value = false;
     }
