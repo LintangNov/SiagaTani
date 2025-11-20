@@ -29,7 +29,7 @@ class PredictionService {
     return "RENDAH";
   }
 
-  List<PredictionResult> analyzeRisk(FarmModel farm, WeatherModel weather) {
+  List<PredictionResult> analyzeRisk(FarmModel? farm, WeatherModel weather) {
     List<PredictionResult> results = [];
 
     // ============================================================

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart'; // Pastikan sudah add package google_fonts
-import 'package:get/get.dart'; // Karena kamu pakai GetX di projectmu
+import 'package:siaga_tani/view/question.dart'; // Karena kamu pakai GetX di projectmu
+import 'package:get/get.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -37,7 +38,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       // Warna background atas (Langit/Hijau muda)
-      backgroundColor: const Color(0xFFE0F2F1), 
+      backgroundColor: const Color(0xFFE0F2F1),
       body: SafeArea(
         child: Column(
           children: [
@@ -71,7 +72,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           const SizedBox(width: 20),
                           _buildFloatingIcon(Icons.water_drop, Colors.blue),
                         ],
-                      )
+                      ),
                     ],
                   );
                 },
@@ -98,7 +99,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   ],
                 ),
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 30),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 30,
+                    vertical: 30,
+                  ),
                   child: Column(
                     children: [
                       // Judul
@@ -108,12 +112,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         style: GoogleFonts.poppins(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
-                          color: const Color(0xFF2C3312), // Warna hijau tua dark
+                          color: const Color(
+                            0xFF2C3312,
+                          ), // Warna hijau tua dark
                           height: 1.2,
                         ),
                       ),
                       const SizedBox(height: 16),
-                      
+
                       // Deskripsi
                       Text(
                         _onboardingData[_currentPage]['desc'],
@@ -123,7 +129,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           color: Colors.grey[600],
                         ),
                       ),
-                      
+
                       const Spacer(),
 
                       // Indikator Slide (Titik-titik)
@@ -145,9 +151,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           onPressed: () {
                             // Aksi kalau tombol ditekan
                             if (_currentPage == _onboardingData.length - 1) {
-                              // Kalau halaman terakhir, pindah ke Home/Login
-                              // Get.offAllNamed('/home'); 
-                              print("Masuk ke Home!");
+                              // --- BAGIAN INI YANG DIGANTI ---
+                              // Menggunakan Get.off() supaya user gak bisa kembali (back) ke onboarding lagi
+                              Get.off(
+                                () => const QuestionnaireScreen(),
+                                transition: Transition
+                                    .rightToLeft, // Tambah animasi biar transisinya halus
+                                duration: const Duration(milliseconds: 500),
+                              );
                             } else {
                               // Kalau belum, geser ke halaman berikutnya
                               _pageController.nextPage(
@@ -157,7 +168,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             }
                           },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF3E2723), // Coklat tua kayak di gambar
+                            backgroundColor: const Color(
+                              0xFF3E2723,
+                            ), // Coklat tua kayak di gambar
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(30),
                             ),
@@ -167,9 +180,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Text(
-                                _currentPage == _onboardingData.length - 1 
-                                  ? "Mulai Sekarang" 
-                                  : "Lanjut",
+                                _currentPage == _onboardingData.length - 1
+                                    ? "Mulai Sekarang"
+                                    : "Lanjut",
                                 style: GoogleFonts.poppins(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w600,
@@ -177,7 +190,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                 ),
                               ),
                               const SizedBox(width: 10),
-                              const Icon(Icons.arrow_forward, color: Colors.white),
+                              const Icon(
+                                Icons.arrow_forward,
+                                color: Colors.white,
+                              ),
                             ],
                           ),
                         ),
@@ -201,7 +217,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       height: 6,
       width: _currentPage == index ? 25 : 6, // Kalau aktif jadi panjang
       decoration: BoxDecoration(
-        color: _currentPage == index ? const Color(0xFF4CAF50) : Colors.grey[300],
+        color: _currentPage == index
+            ? const Color(0xFF4CAF50)
+            : Colors.grey[300],
         borderRadius: BorderRadius.circular(3),
       ),
     );
@@ -215,7 +233,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         color: Colors.white,
         shape: BoxShape.circle,
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 8)
+          BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 8),
         ],
       ),
       child: Icon(icon, color: color),

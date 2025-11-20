@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:siaga_tani/view/splash_screen.dart';
+import 'package:get/get.dart'; // 1. Pastikan import ini ada
 import 'firebase_options.dart';
 
 void main() async {
@@ -16,9 +17,12 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    // 2. Ganti MaterialApp menjadi GetMaterialApp
+    return GetMaterialApp( 
+      debugShowCheckedModeBanner: false,
       title: 'SiagaTani',
       theme: ThemeData(primarySwatch: Colors.green),
+      // Home tetap ke HomePage (yang isinya Splash Screen)
       home: const HomePage(),
     );
   }
@@ -29,6 +33,6 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return OnboardingScreen();
+    return const OnboardingScreen();
   }
 }
