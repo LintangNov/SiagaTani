@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:siaga_tani/view/splash_screen.dart';
 import 'firebase_options.dart';
 
 void main() async {
@@ -28,8 +29,6 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(child: Text("Firebase")),
-    );
+    return OnboardingScreen();
   }
 }
