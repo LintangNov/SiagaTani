@@ -4,7 +4,7 @@ import 'package:get/get.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:geocoding/geocoding.dart'; // Pastikan import ini ada
+import 'package:geocoding/geocoding.dart'; 
 import '../utils/farm_constants.dart';
 
 class MapSetupController extends GetxController {
@@ -13,14 +13,18 @@ class MapSetupController extends GetxController {
   // State
   var myFarmLocation = Rxn<LatLng>(); 
   var surroundingPins = <Marker>[].obs; 
-  var surroundingData = <Map<String, dynamic>>[]; 
+  
+  // --- PERBAIKAN DI SINI: Tambahkan .obs ---
+  var surroundingData = <Map<String, dynamic>>[].obs; 
+  // ----------------------------------------
+
   var currentCenter = const LatLng(-7.795, 110.369).obs;
   
   // STATE ALAMAT (BARU)
   var currentAddress = "Geser pin untuk lokasi...".obs;
   var isLoadingAddress = false.obs;
   
-  // Timer untuk Debounce (biar gak panggil API terus-terusan pas geser)
+  // Timer untuk Debounce
   Timer? _debounce;
 
   @override
@@ -53,7 +57,6 @@ class MapSetupController extends GetxController {
       currentCenter.value = userPos;
       mapController.move(userPos, 16.0);
       
-      // Langsung cari alamat saat pertama kali dapat lokasi
       _getAddressFromLatLng(userPos.latitude, userPos.longitude);
       
     } catch (e) {
@@ -62,13 +65,12 @@ class MapSetupController extends GetxController {
   }
 
   // 2. Fungsi saat Map Digeser (Logic Debounce)
+  // Menggunakan MapCamera karena flutter_map v8.x
   void onPositionChanged(MapCamera camera, bool hasGesture) {
     currentCenter.value = camera.center;
     
-    // Kalau sedang ada timer berjalan, batalkan (artinya user masih geser)
     if (_debounce?.isActive ?? false) _debounce!.cancel();
 
-    // Mulai timer baru. Jika user diam selama 800ms, baru cari alamat
     _debounce = Timer(const Duration(milliseconds: 800), () {
       _getAddressFromLatLng(camera.center.latitude, camera.center.longitude);
     });
@@ -81,7 +83,6 @@ class MapSetupController extends GetxController {
       List<Placemark> placemarks = await placemarkFromCoordinates(lat, lng);
       if (placemarks.isNotEmpty) {
         Placemark place = placemarks[0];
-        // Format: "Jalan X, Desa Y"
         String street = place.street ?? "";
         String subLoc = place.subLocality ?? "";
         String loc = place.locality ?? "";
@@ -100,7 +101,6 @@ class MapSetupController extends GetxController {
   // 3. Simpan Lokasi Lahan Saya
   void saveMyFarmLocation() {
     myFarmLocation.value = currentCenter.value;
-    // Kita bisa juga simpan address ke variable global/storage kalau perlu
     Get.snackbar(
       "Lokasi Tersimpan", 
       "Lokasi: ${currentAddress.value}",
@@ -140,11 +140,14 @@ class MapSetupController extends GetxController {
             child: const Icon(Icons.location_on, color: Colors.orange, size: 40),
           ),
         );
+        
+        // List ini sekarang Observable (.obs), jadi Obx di UI akan otomatis update
         surroundingData.add({
           "type": label,
           "lat": point.latitude,
           "lng": point.longitude,
         });
+        
         Get.back(); 
       },
     );

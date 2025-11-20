@@ -1,95 +1,75 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:geolocator/geolocator.dart';
-import 'package:geocoding/geocoding.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:siaga_tani/controllers/map_setup_controller.dart'; // Import Map Controller
 import '../models/farm_model.dart';
-import '../models/surrounding_pin_model.dart';
 import '../services/firestore_service.dart';
+import '../view/farm_detail_screen.dart';
 
 class FarmController extends GetxController {
   final FirestoreService _firestoreService = FirestoreService();
 
+  // --- INPUT FORM ---
   final nameController = TextEditingController();
   final sizeController = TextEditingController();
   
-  var selectedLocation = Rxn<LatLng>(); 
-  var address = "Belum memilih lokasi".obs; // Ini akan terisi otomatis
-  var isLoadingLocation = false.obs;
   var isSaving = false.obs;
 
-  // Values
+  // Values (Sesuai inputan kuesioner)
   var selectedVariety = "Cabai Rawit".obs;
   var selectedPattern = "Monokultur".obs;
   var selectedPhase = "Vegetatif".obs;
   var selectedWatering = "Sedang".obs;
-  var isMulchUsed = false.obs;
+  var isMulchUsed = "Tidak".obs; // String biar cocok dengan UI
   var pestHistory = "Tidak Pernah".obs;
   var recentlySprayed = false.obs;
 
-  Future<void> getCurrentLocation() async {
-    isLoadingLocation.value = true;
-    try {
-      Position position = await Geolocator.getCurrentPosition(
-          desiredAccuracy: LocationAccuracy.high);
-      selectedLocation.value = LatLng(position.latitude, position.longitude);
-      // Panggil geocoding untuk dapat teks alamat
-      await _getAddressFromLatLng(position.latitude, position.longitude);
-    } finally {
-      isLoadingLocation.value = false;
-    }
-  }
-  
-  Future<void> _getAddressFromLatLng(double lat, double lng) async {
-    try {
-      List<Placemark> placemarks = await placemarkFromCoordinates(lat, lng);
-      if (placemarks.isNotEmpty) {
-        Placemark place = placemarks[0];
-        // Update variable address agar tampil di UI dan siap disimpan
-        address.value = "${place.subLocality}, ${place.locality}";
-      } else {
-        address.value = "Lokasi tidak dikenal";
-      }
-    } catch (e) {
-      address.value = "Koordinat: $lat, $lng";
-    }
-  }
+  // --- HAPUS: getCurrentLocation & _getAddressFromLatLng ---
+  // (Karena logika ini sudah dipindah ke MapSetupController biar lebih canggih/debounce)
 
   Future<void> saveFarm() async {
-    if (nameController.text.isEmpty || selectedLocation.value == null) {
-      Get.snackbar("Gagal", "Nama lahan dan Lokasi wajib diisi!");
+    // 1. Ambil Data dari MapSetupController
+    final MapSetupController mapController = Get.find<MapSetupController>();
+    
+    // Validasi Lokasi
+    if (mapController.myFarmLocation.value == null) {
+      Get.snackbar("Gagal", "Lokasi lahan belum ditentukan di peta!");
       return;
     }
 
     isSaving.value = true;
     try {
-      // Cek Inang (Logika sebelumnya)
-      List<SurroundingPinModel> allPins = await _firestoreService.getAllPins();
+      // 2. LOGIKA CEK INANG (Data Pendukung)
+      // Kita cek dari pin yang BARU SAJA ditambahkan user di peta
       bool hasHostNearby = false;
-      final Distance distanceCalc = const Distance();
-
-      for (var pin in allPins) {
-        double distanceInMeters = distanceCalc.as(
-          LengthUnit.Meter,
-          selectedLocation.value!, 
-          LatLng(pin.latitude, pin.longitude), 
-        );
-        if (distanceInMeters <= 1000 && pin.plantType != 'Lainnya') {
-          hasHostNearby = true;
-          break; 
-        }
+      
+      // Cek daftar pin di MapController
+      if (mapController.surroundingData.isNotEmpty) {
+        // Kalau ada pin selain 'Lainnya', anggap ada inang
+        hasHostNearby = mapController.surroundingData.any((data) => data['type'] != 'Lainnya');
       }
 
-      // Buat Object FarmModel dengan Alamat
+      // 3. Auto-Generate Nama jika kosong (Karena di UI Questionnaire tidak ada input nama)
+      String finalName = nameController.text.isEmpty 
+          ? "Lahan ${selectedVariety.value}" 
+          : nameController.text;
+
+      String finalSize = sizeController.text.isEmpty 
+          ? "1000 m2" // Default size
+          : sizeController.text;
+
+      // 4. Buat Object FarmModel
       FarmModel newFarm = FarmModel(
-        farmName: nameController.text,
-        address: address.value, // <--- SIMPAN ALAMAT TEKS DI SINI
-        latitude: selectedLocation.value!.latitude,
-        longitude: selectedLocation.value!.longitude,
-        landSize: sizeController.text,
+        farmName: finalName,
+        // Ambil alamat yang sudah di-geocode otomatis oleh MapController
+        address: mapController.currentAddress.value, 
+        latitude: mapController.myFarmLocation.value!.latitude,
+        longitude: mapController.myFarmLocation.value!.longitude,
+        landSize: finalSize,
         variety: selectedVariety.value,
+        // Hasil logika inang otomatis
         hostPlantsNearby: hasHostNearby ? "Ya" : "Tidak", 
-        isMulchUsed: isMulchUsed.value,
+        isMulchUsed: isMulchUsed.value == "Ya, Pakai",
         plantingPattern: selectedPattern.value,
         pestHistory: pestHistory.value,
         currentPhase: selectedPhase.value,
@@ -97,13 +77,22 @@ class FarmController extends GetxController {
         wateringIntensity: selectedWatering.value,
       );
 
+      // 5. Simpan ke Firestore
       await _firestoreService.addFarm(newFarm);
       
-      Get.back(); 
-      Get.snackbar("Sukses", "Lahan di ${address.value} tersimpan!");
+      // 6. Navigasi ke Dashboard Detail (Langsung Analisis)
+      Get.off(() => const FarmDetailScreen(), arguments: newFarm);
+      
+      Get.snackbar(
+        "Sukses", 
+        "Lahan berhasil disimpan di ${newFarm.address}!",
+        backgroundColor: Colors.green,
+        colorText: Colors.white,
+      );
       
     } catch (e) {
       Get.snackbar("Error", "Gagal menyimpan: $e");
+      print(e);
     } finally {
       isSaving.value = false;
     }
