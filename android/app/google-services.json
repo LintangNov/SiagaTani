@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "902797635993",
+    "project_id": "siagatani-ea8a5",
+    "storage_bucket": "siagatani-ea8a5.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:902797635993:android:3f08dc9242494f0326e308",
+        "android_client_info": {
+          "package_name": "com.example.siaga_tani"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCW8VxjKv0-exMeZXjnS6pRK7lAKRTnTic"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
