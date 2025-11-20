@@ -1,11 +1,12 @@
-// File: lib/models/prediction_result.dart
+// Tambahkan Enum ini di luar class
+enum RiskLevel { low, moderate, high, severe }
 
 class PredictionResult {
   final String pestName;
-  final double percentage;   // Contoh: 0.85 (85%)
-  final String riskLevel;    // "RENDAH", "SEDANG", "TINGGI"
+  final double percentage;   // 0.0 - 1.0
+  final RiskLevel riskLevel; // Menggunakan Enum
   final String description;
-  final List<String> preventionSteps; // List saran
+  final List<String> preventionSteps;
 
   PredictionResult({
     required this.pestName,
@@ -14,7 +15,17 @@ class PredictionResult {
     required this.description,
     required this.preventionSteps,
   });
-  
-  // Helper untuk memformat persentase ke string "85.2%"
+
+  // Helper untuk format persentase
   String get formattedPercentage => "${(percentage * 100).toStringAsFixed(1)}%";
+  
+  // Helper untuk mendapatkan string level (untuk UI lama jika perlu)
+  String get riskLevelString {
+    switch (riskLevel) {
+      case RiskLevel.low: return "RENDAH";
+      case RiskLevel.moderate: return "SEDANG";
+      case RiskLevel.high: return "TINGGI";
+      case RiskLevel.severe: return "BAHAYA";
+    }
+  }
 }

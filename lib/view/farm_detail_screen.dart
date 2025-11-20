@@ -5,6 +5,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import '../models/farm_model.dart';
 import '../controllers/prediction_controller.dart';
+import '../models/prediction_result.dart';
 
 class FarmDetailScreen extends StatelessWidget {
   const FarmDetailScreen({super.key});
@@ -204,9 +205,28 @@ class FarmDetailScreen extends StatelessWidget {
   }
 
   // WIDGET: Pest Analysis Card (Merah jika Tinggi)
-  Widget _buildPestCard(result) {
-    Color cardColor = result.riskLevel == "TINGGI" ? Colors.red[50]! : Colors.orange[50]!;
-    Color textColor = result.riskLevel == "TINGGI" ? Colors.red[800]! : Colors.orange[800]!;
+  Widget _buildPestCard(PredictionResult result) {
+    // Logika Warna Baru menggunakan Enum
+    Color cardColor;
+    Color textColor;
+
+    switch (result.riskLevel) {
+      case RiskLevel.severe: // BAHAYA
+        cardColor = Colors.red.shade50;
+        textColor = Colors.red.shade900;
+        break;
+      case RiskLevel.high: // TINGGI
+        cardColor = Colors.orange.shade50;
+        textColor = Colors.deepOrange.shade800;
+        break;
+      case RiskLevel.moderate: // SEDANG
+        cardColor = Colors.yellow.shade50;
+        textColor = Colors.orange.shade900;
+        break;
+      default: // RENDAH
+        cardColor = Colors.green.shade50;
+        textColor = Colors.green.shade800;
+    }
 
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
@@ -218,12 +238,15 @@ class FarmDetailScreen extends StatelessWidget {
           Row(children: [
             Icon(Icons.warning_amber_rounded, color: textColor),
             const SizedBox(width: 10),
-            Text(result.pestName, style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: textColor)),
-            const Spacer(),
+            Expanded(child: Text(result.pestName, style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: textColor))),
             Text(result.formattedPercentage, style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: textColor)),
           ]),
           const SizedBox(height: 8),
           Text(result.description, style: GoogleFonts.poppins(fontSize: 12, color: Colors.black87)),
+          const SizedBox(height: 8),
+          // Tampilkan 1 saran pencegahan utama
+          if (result.preventionSteps.isNotEmpty)
+             Text("Saran: ${result.preventionSteps.first}", style: GoogleFonts.poppins(fontSize: 11, fontStyle: FontStyle.italic, color: textColor)),
         ],
       ),
     );
