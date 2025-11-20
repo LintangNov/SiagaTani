@@ -33,6 +33,7 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
         {"label": "Vegetatif", "icon": "🌿"},
         {"label": "Berbunga", "icon": "🌼"},
         {"label": "Berbuah Muda", "icon": "🌶️"},
+        {"label": "Berbuah", "icon": "🌶️🌶️"},
       ],
     },
     {
@@ -43,7 +44,6 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
         {"label": "Cabai Rawit", "icon": "⚡"},
         {"label": "Cabai Keriting", "icon": "〰️"},
         {"label": "Cabai Besar", "icon": "🔴"},
-        {"label": "Lainnya", "icon": "❓"},
       ],
     },
     {
@@ -157,7 +157,7 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
                       else if (q['type'] == 'text')
                         _buildTextInput(q, accentColor),
 
-                      const Spacer(),
+                      const SizedBox(height: 30),
                       _buildNextButton(primaryColor, q['key']),
                     ],
                   ),
