@@ -60,7 +60,7 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
       "key": "history",
       "question": "Apakah lahan pernah terserang hama?",
       "type": "list",
-      "options": [
+      "options": [  
         {"label": "Pernah", "sub": "Ada riwayat serangan"},
         {"label": "Tidak Pernah", "sub": "Lahan aman"},
         {"label": "Tidak Tahu", "sub": "Saya lupa"},
