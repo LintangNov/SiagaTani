@@ -12,13 +12,9 @@ class FarmDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Ambil data Farm yang dikirim dari FarmController
     final FarmModel farm = Get.arguments as FarmModel;
-    
-    // Inisialisasi Controller Prediksi & Langsung Jalankan
     final PredictionController predictionController = Get.put(PredictionController());
     
-    // Jalankan analisis saat halaman dibuka (hacky way with post frame callback is safer, but this works in init)
     WidgetsBinding.instance.addPostFrameCallback((_) {
       predictionController.runAnalysis(); 
     });
@@ -84,30 +80,32 @@ class FarmDetailScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // --- CARD STATUS TANAMAN ---
-                  _buildStatusCard(farm),
+                  // _buildStatusCard(farm) -> Pastikan kode ini ada dari file lama
+                  _buildStatusCard(farm), 
                   const SizedBox(height: 20),
                   
-                  // --- PREDIKSI HAMA & CUACA ---
-                  Text("Analysis & Weather", style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold)),
+                  Text("Analisis Risiko Hama", style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 10),
                   
                   Obx(() {
                     if (predictionController.isAnalyzing.value) {
-                      return const Center(child: CircularProgressIndicator());
+                      return const Padding(
+                        padding: EdgeInsets.all(20.0),
+                        child: Center(child: CircularProgressIndicator()),
+                      );
                     }
                     
                     return Column(
                       children: [
-                        // Weather Card Mini
+                        // Weather Mini Card (Tetap sama)
                         _buildWeatherMiniCard(predictionController.weatherData.value),
                         const SizedBox(height: 15),
                         
-                        // Pest Alert Cards
                         if (predictionController.predictionResults.isEmpty)
                           _buildSafeCard()
                         else
-                          ...predictionController.predictionResults.map((result) => _buildPestCard(result))
+                          // GENERATE EXPANDABLE CARDS
+                          ...predictionController.predictionResults.map((result) => _buildExpandablePestCard(result))
                       ],
                     );
                   }),
@@ -146,6 +144,120 @@ class FarmDetailScreen extends StatelessWidget {
     );
   }
 
+  Widget _buildExpandablePestCard(PredictionResult result) {
+    Color baseColor;
+    Color deepColor;
+    Color bgColor;
+
+    switch (result.riskLevel) {
+      case RiskLevel.severe: // BAHAYA
+        baseColor = Colors.red;
+        deepColor = Colors.red.shade900;
+        bgColor = Colors.red.shade50;
+        break;
+      case RiskLevel.high: // TINGGI
+        baseColor = Colors.orange;
+        deepColor = Colors.deepOrange.shade900;
+        bgColor = Colors.orange.shade50;
+        break;
+      case RiskLevel.moderate: // SEDANG
+        baseColor = Colors.amber;
+        deepColor = Colors.brown;
+        bgColor = Colors.amber.shade50;
+        break;
+      default: // RENDAH
+        baseColor = Colors.green;
+        deepColor = Colors.green.shade900;
+        bgColor = Colors.green.shade50;
+    }
+
+    return Card(
+      elevation: 2,
+      margin: const EdgeInsets.only(bottom: 12),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      clipBehavior: Clip.antiAlias,
+      child: Theme(
+        data: ThemeData().copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          backgroundColor: Colors.white,
+          collapsedBackgroundColor: bgColor,
+          tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          
+          // --- HEADER SAAT TERTUTUP ---
+          leading: CircleAvatar(
+            backgroundColor: Colors.white,
+            child: Icon(Icons.bug_report, color: baseColor),
+          ),
+          title: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Text(result.pestName, 
+                  style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: const Color(0xFF2C3312))
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: baseColor,
+                  borderRadius: BorderRadius.circular(8)
+                ),
+                child: Text(result.formattedPercentage, 
+                  style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 12)
+                ),
+              )
+            ],
+          ),
+          subtitle: Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Text(result.shortDescription, // Alasan singkat
+              style: GoogleFonts.poppins(fontSize: 12, color: Colors.black87),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          
+          // --- CONTENT SAAT DIBUKA ---
+          children: [
+            Container(
+              color: Colors.white,
+              padding: const EdgeInsets.all(16),
+              width: double.infinity,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Bagian Analisis
+                  Text("Mengapa Berisiko?", style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: baseColor)),
+                  const SizedBox(height: 5),
+                  Text(result.detailedAnalysis, 
+                    style: GoogleFonts.poppins(fontSize: 13, color: Colors.black87, height: 1.5)
+                  ),
+                  
+                  const SizedBox(height: 15),
+                  const Divider(),
+                  const SizedBox(height: 10),
+
+                  // Bagian Pencegahan
+                  Text("Langkah Pencegahan & Pengendalian:", style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: Colors.green[800])),
+                  const SizedBox(height: 8),
+                  ...result.preventionSteps.map((step) => Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text("• ", style: TextStyle(fontWeight: FontWeight.bold)),
+                        Expanded(child: Text(step, style: GoogleFonts.poppins(fontSize: 13, color: Colors.black87))),
+                      ],
+                    ),
+                  )).toList()
+                ],
+              ),
+            )
+          ],
+        ),
+      ),
+    );
+  }
   // WIDGET: Status Grid
   Widget _buildStatusCard(FarmModel farm) {
     return Container(
@@ -242,7 +354,7 @@ class FarmDetailScreen extends StatelessWidget {
             Text(result.formattedPercentage, style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: textColor)),
           ]),
           const SizedBox(height: 8),
-          Text(result.description, style: GoogleFonts.poppins(fontSize: 12, color: Colors.black87)),
+          Text(result.shortDescription, style: GoogleFonts.poppins(fontSize: 12, color: Colors.black87)),
           const SizedBox(height: 8),
           // Tampilkan 1 saran pencegahan utama
           if (result.preventionSteps.isNotEmpty)

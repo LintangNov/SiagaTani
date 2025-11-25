@@ -1,4 +1,4 @@
-import 'dart:async'; // Untuk Timer
+import 'dart:async'; 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -10,21 +10,13 @@ import '../utils/farm_constants.dart';
 class MapSetupController extends GetxController {
   final MapController mapController = MapController();
   
-  // State
   var myFarmLocation = Rxn<LatLng>(); 
   var surroundingPins = <Marker>[].obs; 
-  
-  // --- PERBAIKAN DI SINI: Tambahkan .obs agar bisa dipantau Obx ---
   var surroundingData = <Map<String, dynamic>>[].obs; 
-  // --------------------------------------------------------------
-
   var currentCenter = const LatLng(-7.795, 110.369).obs;
-  
-  // STATE ALAMAT
   var currentAddress = "Geser pin untuk lokasi...".obs;
   var isLoadingAddress = false.obs;
   
-  // Timer untuk Debounce
   Timer? _debounce;
 
   @override
@@ -39,43 +31,33 @@ class MapSetupController extends GetxController {
     super.onClose();
   }
 
-  // 1. Ambil Lokasi Saat Ini (GPS)
   Future<void> _getCurrentLocation() async {
     try {
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) return;
-
       LocationPermission permission = await Geolocator.checkPermission();
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
         if (permission == LocationPermission.denied) return;
       }
-      
       Position position = await Geolocator.getCurrentPosition();
       LatLng userPos = LatLng(position.latitude, position.longitude);
-      
       currentCenter.value = userPos;
       mapController.move(userPos, 16.0);
-      
       _getAddressFromLatLng(userPos.latitude, userPos.longitude);
-      
     } catch (e) {
       print("Gagal ambil GPS: $e");
     }
   }
 
-  // 2. Fungsi saat Map Digeser (Logic Debounce)
   void onPositionChanged(MapCamera camera, bool hasGesture) {
     currentCenter.value = camera.center;
-    
     if (_debounce?.isActive ?? false) _debounce!.cancel();
-
     _debounce = Timer(const Duration(milliseconds: 800), () {
       _getAddressFromLatLng(camera.center.latitude, camera.center.longitude);
     });
   }
 
-  // Helper: Cari Alamat dari Koordinat
   Future<void> _getAddressFromLatLng(double lat, double lng) async {
     isLoadingAddress.value = true;
     try {
@@ -85,7 +67,6 @@ class MapSetupController extends GetxController {
         String street = place.street ?? "";
         String subLoc = place.subLocality ?? "";
         String loc = place.locality ?? "";
-        
         currentAddress.value = "$street, $subLoc, $loc".replaceAll(RegExp(r'^, | , '), '');
       } else {
         currentAddress.value = "Alamat tidak ditemukan";
@@ -97,19 +78,11 @@ class MapSetupController extends GetxController {
     }
   }
 
-  // 3. Simpan Lokasi Lahan Saya
   void saveMyFarmLocation() {
     myFarmLocation.value = currentCenter.value;
-    Get.snackbar(
-      "Lokasi Tersimpan", 
-      "Lokasi: ${currentAddress.value}",
-      backgroundColor: Colors.green,
-      colorText: Colors.white,
-      snackPosition: SnackPosition.BOTTOM,
-    );
+    Get.snackbar("Lokasi Tersimpan", "Lokasi: ${currentAddress.value}", backgroundColor: Colors.green, colorText: Colors.white, snackPosition: SnackPosition.BOTTOM);
   }
 
-  // 4. Tambah Pin Tanaman Sekitar
   void addSurroundingPin(LatLng point) {
     Get.defaultDialog(
       title: "Tanaman Tetangga",
@@ -118,47 +91,19 @@ class MapSetupController extends GetxController {
         child: SingleChildScrollView(
           child: Column(
             children: FarmConstants.hostPlants.map((plant) {
-              return _buildPlantOption(point, plant);
+              return ListTile(
+                leading: const Icon(Icons.local_florist, color: Colors.orange),
+                title: Text(plant),
+                onTap: () {
+                  surroundingPins.add(Marker(point: point, width: 40, height: 40, child: const Icon(Icons.location_on, color: Colors.orange, size: 40)));
+                  surroundingData.add({"type": plant, "lat": point.latitude, "lng": point.longitude});
+                  Get.back(); 
+                },
+              );
             }).toList(),
           ),
         ),
       ),
     );
-  }
-
-  Widget _buildPlantOption(LatLng point, String label) {
-    return ListTile(
-      leading: Icon(_getIconForPlant(label), color: Colors.orange),
-      title: Text(label),
-      onTap: () {
-        // Tambah Marker ke Peta
-        surroundingPins.add(
-          Marker(
-            point: point,
-            width: 40,
-            height: 40,
-            child: const Icon(Icons.location_on, color: Colors.orange, size: 40),
-          ),
-        );
-        
-        // Tambah Data ke List (Sekarang sudah .obs, jadi aman dipanggil Obx)
-        surroundingData.add({
-          "type": label,
-          "lat": point.latitude,
-          "lng": point.longitude,
-        });
-        
-        Get.back(); 
-      },
-    );
-  }
-
-  IconData _getIconForPlant(String type) {
-    switch (type) {
-      case "Jagung": return Icons.grass;
-      case "Mangga": 
-      case "Jeruk": return Icons.park; 
-      default: return Icons.local_florist; 
-    }
   }
 }

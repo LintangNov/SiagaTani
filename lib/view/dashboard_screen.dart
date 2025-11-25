@@ -44,7 +44,79 @@ class DashboardScreen extends StatelessWidget {
               ),
 
               const SizedBox(height: 25),
-
+              Obx(() {
+                if (controller.dailyTips.isEmpty) return const SizedBox.shrink();
+                
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "Rekomendasi Hari Ini", 
+                      style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold, color: const Color(0xFF2C3312))
+                    ),
+                    const SizedBox(height: 10),
+                    SizedBox(
+                      height: 120, 
+                      child: PageView.builder(
+                        controller: PageController(viewportFraction: 0.9),
+                        itemCount: controller.dailyTips.length,
+                        itemBuilder: (context, index) {
+                          var tip = controller.dailyTips[index];
+                          return Container(
+                            margin: const EdgeInsets.only(right: 10),
+                            padding: const EdgeInsets.all(15),
+                            decoration: BoxDecoration(
+                              color: tip['color'], // Warna dinamis dari Controller
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(color: Colors.white, width: 2),
+                              boxShadow: [
+                                BoxShadow(color: Colors.grey.withOpacity(0.1), blurRadius: 5, offset: const Offset(0, 3))
+                              ],
+                            ),
+                            child: Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(10),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withOpacity(0.5),
+                                    shape: BoxShape.circle
+                                  ),
+                                  child: Icon(tip['icon'], size: 30, color: tip['textColor']),
+                                ),
+                                const SizedBox(width: 15),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        tip['title'], 
+                                        style: GoogleFonts.poppins(
+                                          fontWeight: FontWeight.bold, 
+                                          fontSize: 15,
+                                          color: tip['textColor']
+                                        )
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        tip['body'], 
+                                        style: GoogleFonts.poppins(fontSize: 11, color: Colors.black87), 
+                                        maxLines: 2, 
+                                        overflow: TextOverflow.ellipsis
+                                      ),
+                                    ],
+                                  ),
+                                )
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 25), // Jarak ke Weather Widget
+                  ],
+                );
+              }),
               // 2. WEATHER WIDGET
               Obx(() {
                 var weather = controller.currentWeather.value;
@@ -100,7 +172,7 @@ class DashboardScreen extends StatelessWidget {
                   children: [
                     Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2))),
                     const SizedBox(height: 10),
-                    Text("Manage your fields", style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.w600, color: const Color(0xFF2C3312))),
+                    Text("Kelola Lahanmu", style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.w600, color: const Color(0xFF2C3312))),
                   ],
                 ),
               ),

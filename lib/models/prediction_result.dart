@@ -1,25 +1,26 @@
-// Tambahkan Enum ini di luar class
 enum RiskLevel { low, moderate, high, severe }
 
 class PredictionResult {
   final String pestName;
-  final double percentage;   // 0.0 - 1.0
+  final double percentage;   // Contoh: 0.85 (85%)
   final RiskLevel riskLevel; // Menggunakan Enum
-  final String description;
-  final List<String> preventionSteps;
+  final String shortDescription; // Alasan singkat untuk header (saat ditutup)
+  final String detailedAnalysis;
+  final List<String> preventionSteps; // List saran pencegahan
 
   PredictionResult({
     required this.pestName,
     required this.percentage,
     required this.riskLevel,
-    required this.description,
+  required this.shortDescription,
+    required this.detailedAnalysis,
     required this.preventionSteps,
   });
 
-  // Helper untuk format persentase
-  String get formattedPercentage => "${(percentage * 100).toStringAsFixed(1)}%";
+  // Helper untuk memformat persentase ke string "85.2%"
+String get formattedPercentage => "${(percentage * 100).toStringAsFixed(0)}%";
   
-  // Helper untuk mendapatkan string level (untuk UI lama jika perlu)
+  // Helper untuk mendapatkan string level (jika dibutuhkan)
   String get riskLevelString {
     switch (riskLevel) {
       case RiskLevel.low: return "RENDAH";

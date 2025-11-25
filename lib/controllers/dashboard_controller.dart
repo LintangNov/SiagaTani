@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+import 'package:flutter/material.dart';
 import '../models/weather_model.dart';
 import '../models/farm_model.dart';
 import '../services/dummy_weather_service.dart';
@@ -9,14 +10,12 @@ class DashboardController extends GetxController {
   final DummyWeatherService _weatherService = DummyWeatherService();
   final FirestoreService _firestoreService = FirestoreService();
 
-  // Observable variables
-  var currentWeather = Rxn<WeatherModel>(); // Bisa null di awal
+  var currentWeather = Rxn<WeatherModel>();
   var isLoadingWeather = true.obs;
   var greeting = "".obs;
+  var dailyTips = <Map<String, dynamic>>[].obs;
   
-  // Stream list lahan (otomatis update jika ada perubahan di Firestore)
   Stream<List<FarmModel>> get farmListStream => _firestoreService.getFarms();
-  var dailyTips = <Map<String, String>>[].obs;
 
   @override
   void onInit() {
@@ -26,21 +25,11 @@ class DashboardController extends GetxController {
     ever(currentWeather, (_) => generateSmartTips());
   }
 
-  // 1. Logika Sapaan (Pagi/Siang/Sore)
   void updateGreeting() {
     var hour = DateTime.now().hour;
-    if (hour < 11) {
-      greeting.value = "Selamat Pagi, Pejuang Pangan!";
-    } else if (hour < 15) {
-      greeting.value = "Selamat Siang, Semangat!";
-    } else if (hour < 18) {
-      greeting.value = "Selamat Sore, Pak Tani!";
-    } else {
-      greeting.value = "Selamat Malam, Istirahatlah.";
-    }
+    greeting.value = (hour < 11) ? "Selamat Pagi, Pejuang Pangan!" : (hour < 15) ? "Selamat Siang, Semangat!" : (hour < 18) ? "Selamat Sore, Pak Tani!" : "Selamat Malam, Istirahatlah.";
   }
 
-  // 2. Ambil Data Cuaca Dummy
   void fetchWeather() async {
     isLoadingWeather.value = true;
     try {
@@ -53,41 +42,24 @@ class DashboardController extends GetxController {
 
   void generateSmartTips() {
     if (currentWeather.value == null) return;
-
     var w = currentWeather.value!;
-    var tips = <Map<String, String>>[];
+    var tips = <Map<String, dynamic>>[];
 
-    // 1. Logika Berdasarkan Cuaca
     if (w.temperature > 30) {
-      tips.add({
-        "title": "Cuaca Panas Terik",
-        "body": "Hindari penyemprotan pestisida siang hari agar tidak menguap. Siram lahan saat sore.",
-        "type": "warning" // untuk warna icon
-      });
-    } else if (w.condition.toLowerCase().contains("hujan")) {
-      tips.add({
-        "title": "Potensi Hujan Turun",
-        "body": "Tunda pemupukan tabur agar tidak hanyut terbawa air. Cek saluran irigasi.",
-        "type": "info"
-      });
+      tips.add({"title": "Cuaca Panas Terik", "body": "Suhu mencapai ${w.temperature}°C. Siram tanaman sore ini.", "icon": Icons.wb_sunny, "color": Colors.orange.shade100, "textColor": Colors.orange.shade900});
     }
-
-    // 2. Logika Berdasarkan Musim
-    if (w.season == "Musim Kemarau") {
-      tips.add({
-        "title": "Waspada Kutu Daun",
-        "body": "Cuaca kering memicu ledakan populasi Kutu. Pasang perangkap kuning sekarang.",
-        "type": "alert"
-      });
+    if (w.condition.toLowerCase().contains("hujan")) {
+      tips.add({"title": "Potensi Hujan", "body": "Tunda pemupukan agar tidak hanyut.", "icon": Icons.water_drop, "color": Colors.blue.shade100, "textColor": Colors.blue.shade900});
     }
-
-    // 3. Logika Umum (Randomizer biar tidak kosong)
+    if (w.humidity > 80) {
+      tips.add({"title": "Kelembapan Tinggi", "body": "Waspada jamur pada daun.", "icon": Icons.cloud, "color": Colors.grey.shade200, "textColor": Colors.grey.shade800});
+    }
+    
     var generalTips = [
-      {"title": "Info Pasar", "body": "Harga cabai rawit stabil di Rp 45.000/kg hari ini.", "type": "success"},
-      {"title": "Tips Hemat", "body": "Gunakan air cucian beras untuk pupuk cair tambahan.", "type": "info"},
+      {"title": "Info Pasar", "body": "Harga cabai rawit stabil Rp 45.000/kg.", "icon": Icons.monetization_on, "color": Colors.green.shade100, "textColor": Colors.green.shade900},
+      {"title": "Tips Budidaya", "body": "Rotasi dengan jagung memutus siklus kutu.", "icon": Icons.lightbulb, "color": Colors.yellow.shade100, "textColor": Colors.yellow.shade900}
     ];
     tips.add(generalTips[Random().nextInt(generalTips.length)]);
-
     dailyTips.assignAll(tips);
   }
 }

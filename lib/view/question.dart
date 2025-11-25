@@ -68,11 +68,22 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
     },
     {
       "key": "mulch",
-      "question": "Apakah Anda menggunakan Mulsa Plastik?",
+      "question": "Jenis mulsa apa yang Anda gunakan?",
       "type": "list",
       "options": [
-        {"label": "Ya, Pakai", "sub": "Penutup tanah plastik"},
-        {"label": "Tidak", "sub": "Tanah terbuka"},
+        {"label": "Mulsa Perak", "sub": "Memantulkan cahaya (bagus tolak Thrips)"},
+        {"label": "Mulsa Hitam", "sub": "Menjaga kehangatan tanah"},
+        {"label": "Tanpa Mulsa", "sub": "Tanah terbuka"},
+      ],
+    },
+    {
+      "key": "spray",
+      "question": "Kapan terakhir kali Anda menyemprot pestisida?",
+      "type": "list",
+      "options": [
+        {"label": "Baru saja (< 3 hari)", "sub": "Tanaman masih terlindungi"},
+        {"label": "Seminggu lalu", "sub": "Efektivitas mulai menurun"},
+        {"label": "Sudah lama / Belum", "sub": "Tidak ada proteksi kimia"},
       ],
     },
     {
@@ -103,7 +114,11 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
       _farmController.selectedVariety.value = "";
       _farmController.selectedPattern.value = "";
       _farmController.pestHistory.value = "";
-      _farmController.isMulchUsed.value = "";
+      
+      // --- PERUBAHAN DI SINI (Gunakan variabel baru) ---
+      _farmController.mulchInput.value = ""; // Dulu: isMulchUsed
+      _farmController.sprayInput.value = ""; // Baru
+      // ------------------------------------------------
 
       _mapController.myFarmLocation.value = null;
       _mapController.currentAddress.value = "Geser pin untuk lokasi...";
@@ -229,7 +244,9 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
       case 'history':
         return _farmController.pestHistory.value;
       case 'mulch':
-        return _farmController.isMulchUsed.value;
+        return _farmController.mulchInput.value; // UPDATE: variabel baru
+      case 'spray':
+        return _farmController.sprayInput.value; // UPDATE: variabel baru
       default:
         return "";
     }
@@ -250,7 +267,10 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
         _farmController.pestHistory.value = val;
         break;
       case 'mulch':
-        _farmController.isMulchUsed.value = val;
+        _farmController.mulchInput.value = val; // UPDATE
+        break;
+      case 'spray':
+        _farmController.sprayInput.value = val; // UPDATE
         break;
     }
   }

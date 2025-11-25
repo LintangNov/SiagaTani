@@ -3,7 +3,7 @@ import 'package:latlong2/latlong.dart';
 
 class SurroundingPinModel {
   String? id;
-  final String plantType; // Contoh: "Terong", "Jagung", "Pepaya", "Lainnya"
+  final String plantType; // Contoh: "Terong", "Jagung"
   final double latitude;
   final double longitude;
 
@@ -14,7 +14,6 @@ class SurroundingPinModel {
     required this.longitude,
   });
 
-  // Untuk menyimpan ke Firestore
   Map<String, dynamic> toMap() {
     return {
       'plantType': plantType,
@@ -23,7 +22,6 @@ class SurroundingPinModel {
     };
   }
 
-  // Dari Firestore ke Objek Dart
   factory SurroundingPinModel.fromMap(Map<String, dynamic> map, String documentId) {
     GeoPoint geo = map['location'] as GeoPoint;
     return SurroundingPinModel(
@@ -34,6 +32,5 @@ class SurroundingPinModel {
     );
   }
 
-  // Helper untuk konversi ke LatLng (dipakai flutter_map)
   LatLng get toLatLng => LatLng(latitude, longitude);
 }

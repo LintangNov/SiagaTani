@@ -3,227 +3,225 @@ import '../models/farm_model.dart';
 import '../models/weather_model.dart';
 import '../models/prediction_result.dart';
 
-// --- INTERFACE LOGIKA HAMA ---
-abstract class PestLogic {
-  RiskAssessment? calculateRisk(FarmModel farm, WeatherModel weather, List<String> nearbyPlants);
-}
-
-// Helper Class Internal untuk perhitungan
-class RiskAssessment {
-  final String name;
-  final double score;
-  final RiskLevel level;
-  final String reasoning;
-  final List<String> mitigation;
-
-  RiskAssessment(this.name, this.score, this.level, this.reasoning, this.mitigation);
+// --- Abstract Strategy ---
+abstract class PestStrategy {
+  PredictionResult? calculate(FarmModel farm, WeatherModel weather, List<String> nearbyPlants);
 }
 
 // ============================================================
-// 1. LOGIKA LALAT BUAH (Bactrocera spp.)
+// 1. STRATEGI: THRIPS (Thrips parvispinus)
 // ============================================================
-class FruitFlyLogic implements PestLogic {
+class ThripsStrategy implements PestStrategy {
   @override
-  RiskAssessment? calculateRisk(FarmModel farm, WeatherModel weather, List<String> nearbyPlants) {
-    // Syarat Utama: Harus fase berbuah
-    if (!farm.currentPhase.contains("Berbuah")) return null;
-
-    double score = 0.3; // Base risk
-    List<String> reasons = [];
-
-    // A. Cuaca (Optimum 25-33 C)
-    if (weather.temperature >= 25 && weather.temperature <= 33) {
-      score += 0.3;
-      reasons.add("Suhu optimal (25-33°C) untuk aktivitas lalat.");
-    } else if (weather.temperature < 16) {
-      score -= 0.2;
-      reasons.add("Suhu terlalu dingin menghambat terbang.");
+  PredictionResult? calculate(FarmModel farm, WeatherModel weather, List<String> nearbyPlants) {
+    double score = 0.3; 
+    
+    // A. Efek "Wash-out" Hujan
+    if (weather.rainfall24h > 15.0) {
+      return _buildResult(
+        "Thrips (Daun Keriting)", 
+        0.1, 
+        "Populasi tercuci oleh hujan lebat.",
+        "Curah hujan >15mm dalam 24 jam terakhir secara mekanis menjatuhkan nimfa dan imago Thrips dari daun, menyebabkan kematian massal alami (Wash-out Effect).",
+        ["Lakukan pemantauan 2 hari pasca hujan reda.", "Fokuskan pengamatan pada pucuk daun muda."]
+      );
     }
 
-    // B. Hujan/Lembap (Lalat suka lembap)
-    if (weather.condition.toLowerCase().contains("hujan") || weather.humidity > 80) {
-      score += 0.2;
-      reasons.add("Kondisi lembap/hujan memicu lalat menyerang buah lunak.");
+    // B. Analisis Risiko
+    String detail = "Kondisi lingkungan saat ini sangat mendukung perkembangan Thrips karena:";
+    if (weather.season == "Musim Kemarau") {
+      score += 0.35;
+      detail += "\n• Cuaca kering memperpendek siklus hidup dari telur ke dewasa menjadi hanya 14 hari.";
     }
-
-    // C. Inang Alternatif (Polifag)
-    bool hasHost = nearbyPlants.any((p) => ["Mangga", "Jambu", "Jeruk", "Pepaya", "Pisang", "Nangka", "Mentimun", "Terong"].contains(p));
-    if (hasHost) {
-      score += 0.2;
-      reasons.add("Terdeteksi tanaman inang (Buah-buahan/Terong) di sekitar.");
-    }
-
-    // Kalkulasi Akhir
-    score = score.clamp(0.0, 0.99);
-    return RiskAssessment(
-      "Lalat Buah (Bactrocera spp.)",
-      score,
-      _getLevel(score),
-      reasons.join(" "),
-      [
-        "Pasang perangkap Metil Eugenol (Petrogenol).",
-        "Sanitasi: Kubur buah busuk yang jatuh.",
-        "Rotasi tanaman untuk memutus siklus."
-      ]
-    );
-  }
-}
-
-// ============================================================
-// 2. LOGIKA THRIPS (Thrips parvispinus)
-// ============================================================
-class ThripsLogic implements PestLogic {
-  @override
-  RiskAssessment? calculateRisk(FarmModel farm, WeatherModel weather, List<String> nearbyPlants) {
-    double score = 0.2;
-    List<String> reasons = [];
-
-    // A. Cuaca (Suka Kering & Panas)
-    if (weather.season == "Musim Kemarau" || !weather.condition.toLowerCase().contains("hujan")) {
-      score += 0.4;
-      reasons.add("Cuaca kering/kemarau memicu perkembangan pesat Thrips.");
-    } else if (weather.condition.toLowerCase().contains("hujan")) {
-      score -= 0.4; // Wash-out effect
-      reasons.add("Hujan lebat mencuci hama dari daun.");
-    }
-
-    // B. Inang
     if (nearbyPlants.contains("Cabai Rawit")) {
       score += 0.2;
-      reasons.add("Ada Cabai Rawit di sekitar sebagai inang alternatif.");
+      detail += "\n• Adanya tanaman inang sejenis di sekitar menjadi sumber migrasi.";
     }
-
-    score = score.clamp(0.0, 0.99);
-    return RiskAssessment(
-      "Thrips (Daun Keriting)",
-      score,
-      _getLevel(score),
-      reasons.join(" "),
-      [
-        "Gunakan Mulsa Perak untuk memantulkan cahaya.",
-        "Tanam Kenikir Kuning sebagai tanaman perangkap.",
-        "Cek pucuk daun muda, jika keriting segera tangani."
-      ]
-    );
-  }
-}
-
-// ============================================================
-// 3. LOGIKA KUTU KEBUL & KUTU DAUN (Vektor Virus)
-// ============================================================
-class AphidLogic implements PestLogic {
-  @override
-  RiskAssessment? calculateRisk(FarmModel farm, WeatherModel weather, List<String> nearbyPlants) {
-    // Syarat: Lebih bahaya di fase muda
-    bool isYoung = farm.currentPhase == "Bibit" || farm.currentPhase == "Vegetatif";
     
-    double score = 0.2;
-    List<String> reasons = [];
-
-    if (isYoung) {
-      score += 0.3;
-      reasons.add("Tanaman fase muda kaya nutrisi yang disukai kutu.");
+    // C. Mitigasi Mulsa
+    if (farm.mulchType == MulchType.silver && farm.cropStage == CropStage.seedling) {
+      score -= 0.25;
+      detail += "\n• (Positif) Pantulan UV dari mulsa perak saat ini efektif membingungkan hama.";
     }
 
-    // A. Suhu (Optimum 32C)
-    if (weather.temperature > 30) {
-      score += 0.3;
-      reasons.add("Suhu panas (>30°C) mempercepat siklus hidup kutu.");
+    return _buildResult(
+      "Thrips (Daun Keriting)", 
+      score, 
+      "Cuaca kering memicu ledakan populasi.",
+      detail,
+      [
+        "Rotasi Insektisida: Gunakan bahan aktif Abamectin (Gol. 6) selang-seling dengan Spinetoram (Gol. 5) untuk cegah resistensi.",
+        "Mekanis: Pasang perangkap likat warna BIRU atau KUNING (40 buah/ha).",
+        "Hayati: Semprotkan jamur Beauveria bassiana pada sore hari.",
+        "Sanitasi: Potong pucuk daun yang keriting parah dan bakar."
+      ]
+    );
+  }
+}
+
+// ============================================================
+// 2. STRATEGI: LALAT BUAH (Bactrocera spp.)
+// ============================================================
+class FruitFlyStrategy implements PestStrategy {
+  @override
+  PredictionResult? calculate(FarmModel farm, WeatherModel weather, List<String> nearbyPlants) {
+    if (farm.cropStage != CropStage.fruiting && farm.cropStage != CropStage.harvesting) return null; 
+
+    double score = 0.4;
+    String detail = "Lalat buah menjadi ancaman serius karena:";
+
+    // A. Suhu & Aktivitas
+    if (weather.currentTemp >= 25 && weather.currentTemp <= 32) {
+      score += 0.3; 
+      detail += "\n• Suhu hangat (25-32°C) adalah rentang optimal untuk lalat kawin dan bertelur.";
+    } else if (weather.currentTemp < 16.0) {
+      score = 0.1;
+      return _buildResult("Lalat Buah", 0.1, "Suhu dingin hambat aktivitas.", "Suhu <16°C membuat lalat pasif.", ["Pantau saja."]);
     }
 
-    // B. Inang
-    if (nearbyPlants.any((p) => ["Melon", "Terong"].contains(p))) {
+    // B. Kelembapan (Kulit Buah)
+    if (weather.humidity > 80 || weather.rainfall24h > 0) {
+      score += 0.25;
+      detail += "\n• Kelembapan tinggi membuat kulit buah menjadi lunak, memudahkan ovipositor lalat menusuk buah.";
+    }
+
+    // C. Inang
+    bool hasFruitHost = nearbyPlants.any((p) => ["Mangga", "Jambu", "Jeruk", "Pepaya"].contains(p));
+    if (hasFruitHost) {
       score += 0.15;
-      reasons.add("Ada Melon/Terong sebagai inang kutu.");
+      detail += "\n• Tanaman buah di sekitar lahan berfungsi sebagai reservoir hama.";
     }
 
-    score = score.clamp(0.0, 0.99);
-    return RiskAssessment(
-      "Kutu Kebul & Kutu Daun",
-      score,
-      _getLevel(score),
-      reasons.join(" "),
+    return _buildResult(
+      "Lalat Buah", 
+      score, 
+      "Fase berbuah + Lembap = Risiko Tinggi.",
+      detail,
       [
-        "Pasang Yellow Trap (Perangkap Kuning).",
-        "Jaga populasi musuh alami (Kumbang Kura).",
-        "Tumpangsari dengan Jagung sebagai penghalang."
+        "Perangkap Jantan: Pasang atraktan Metil Eugenol (Petrogenol) sebanyak 20-24 titik/ha.",
+        "Umpan Protein: Semprotkan umpan protein (gliserin) untuk memandulkan lalat betina.",
+        "Sanitasi Ketat: Kubur buah jatuh sedalam 50cm untuk memutus siklus larva.",
+        "Kultur Teknis: Pembungkusan buah (brongsong) jika populasi sangat tinggi."
       ]
     );
   }
 }
 
 // ============================================================
-// 4. LOGIKA ANTRAKNOSA (Patek)
+// 3. STRATEGI: ANTRAKNOSA (Jamur Colletotrichum)
 // ============================================================
-class AnthracnoseLogic implements PestLogic {
+class AnthracnoseStrategy implements PestStrategy {
   @override
-  RiskAssessment? calculateRisk(FarmModel farm, WeatherModel weather, List<String> nearbyPlants) {
-    double score = 0.1;
-    List<String> reasons = [];
+  PredictionResult? calculate(FarmModel farm, WeatherModel weather, List<String> nearbyPlants) {
+    double score = 0.15;
+    String detail = "Analisis risiko infeksi jamur:";
 
-    // A. Kelembapan Tinggi (Kunci Utama)
-    if (weather.humidity > 90) {
-      score += 0.6;
-      reasons.add("Kelembapan sangat tinggi (>90%) memicu spora jamur.");
-    } else if (weather.humidity > 80) {
-      score += 0.3;
-      reasons.add("Kondisi lembap mendukung jamur.");
+    // A. Rumus Hydrothermal
+    bool isWet = weather.wetHours > 4 || weather.humidity > 85.0;
+    bool isWarm = weather.currentTemp >= 20.0 && weather.currentTemp <= 30.0;
+
+    if (isWet && isWarm) {
+      score += 0.65;
+      detail += "\n• Kombinasi 'Basah' (>4 jam/hari) dan 'Hangat' memicu spora berkecambah dalam hitungan jam.";
+    } else if (!isWet) {
+      return _buildResult("Antraknosa (Patek)", 0.1, "Kondisi kering menghambat jamur.", "Spora membutuhkan lapisan air untuk berkecambah.", ["Jaga drainase."]);
     }
 
-    // B. Hujan (Penyebaran Spora)
-    if (weather.condition.toLowerCase().contains("hujan")) {
-      score += 0.2;
-      reasons.add("Percikan air hujan menyebarkan spora.");
+    if (weather.rainfall24h > 5.0) {
+      score += 0.15;
+      detail += "\n• Percikan air hujan adalah media utama penyebaran spora antar tanaman.";
     }
 
-    score = score.clamp(0.0, 0.99);
-    return RiskAssessment(
-      "Penyakit Antraknosa (Patek)",
-      score,
-      _getLevel(score),
-      reasons.join(" "),
+    return _buildResult(
+      "Antraknosa (Patek)", 
+      score, 
+      "Kelembapan tinggi memicu spora jamur.",
+      detail,
       [
-        "Perbaiki drainase agar tidak menggenang.",
-        "Jarak tanam jangan terlalu rapat.",
-        "Petik dan musnahkan buah yang bergejala segera."
+        "Fungisida Protektif: Aplikasikan Mankozeb atau Propineb SEBELUM hujan turun.",
+        "Fungisida Kuratif: Jika gejala muncul, gunakan Azoxystrobin atau Difenokonazol.",
+        "Nutrisi: Tambahkan Kalsium (Ca) dan Boron (B) untuk mempertebal dinding sel buah.",
+        "Sanitasi: Petik buah bergejala dan musnahkan jauh dari lahan."
       ]
     );
   }
 }
 
 // ============================================================
-// 5. LOGIKA ULAT GRAYAK
+// 4. STRATEGI: ULAT GRAYAK (Spodoptera litura)
 // ============================================================
-class ArmywormLogic implements PestLogic {
+class ArmywormStrategy implements PestStrategy {
   @override
-  RiskAssessment? calculateRisk(FarmModel farm, WeatherModel weather, List<String> nearbyPlants) {
+  PredictionResult? calculate(FarmModel farm, WeatherModel weather, List<String> nearbyPlants) {
     double score = 0.2;
-    List<String> reasons = [];
+    String detail = "Faktor pendukung Ulat Grayak:";
 
-    // A. Mulsa & Kelembapan
-    if (farm.isMulchUsed && weather.season.contains("Hujan")) {
-      score += 0.4;
-      reasons.add("Mulsa di musim hujan menciptakan iklim mikro lembap yang disukai ulat.");
+    // A. Mulsa & Iklim Mikro
+    if (farm.mulchType == MulchType.black) {
+      score += 0.25;
+      detail += "\n• Mulsa hitam menjaga tanah tetap hangat dan lembap, tempat ideal bagi pupa ulat bersembunyi siang hari.";
     }
 
-    // B. Suhu (Mati jika terlalu panas)
-    if (weather.temperature < 30) {
+    // B. Suhu
+    if (weather.currentTemp < 28.0) {
       score += 0.2;
-    } else if (weather.temperature > 35) {
-      score -= 0.3;
-      reasons.add("Suhu ekstrem panas menekan populasi ulat.");
+      detail += "\n• Suhu sejuk (<28°C) meningkatkan nafsu makan larva.";
+    } else if (weather.currentTemp > 35.0) {
+      score -= 0.2; // Panas ekstrem menekan ulat
     }
 
-    score = score.clamp(0.0, 0.99);
-    return RiskAssessment(
-      "Ulat Grayak",
-      score,
-      _getLevel(score),
-      reasons.join(" "),
+    return _buildResult(
+      "Ulat Grayak", 
+      score, 
+      "Iklim mikro lembap mendukung siklus hidup.",
+      detail,
       [
-        "Cek lubang mulsa saat sore/malam hari.",
-        "Bersihkan gulma di sekitar lubang tanam.",
-        "Lakukan penggenangan sesaat."
+        "Pemantauan Malam: Ulat aktif di malam hari. Lakukan pengumpulan manual saat malam.",
+        "Jebakan: Pasang perangkap Feromon Exi (untuk S. exigua) atau Litone (S. litura).",
+        "Sanitasi: Bersihkan gulma di parit yang sering menjadi tempat bertelur.",
+        "Insektisida: Gunakan bahan aktif Emamectin Benzoate atau Chlorantraniliprole."
+      ]
+    );
+  }
+}
+
+// ============================================================
+// 5. STRATEGI: KUTU KEBUL (Vektor Virus Gemini)
+// ============================================================
+class AphidStrategy implements PestStrategy {
+  @override
+  PredictionResult? calculate(FarmModel farm, WeatherModel weather, List<String> nearbyPlants) {
+    double score = 0.2;
+    String detail = "Potensi ledakan populasi Kutu Kebul:";
+
+    // A. Fase Rentan
+    if (farm.cropStage == CropStage.seedling || farm.cropStage == CropStage.vegetative) {
+      score += 0.35;
+      detail += "\n• Tanaman muda memiliki jaringan lunak dan kaya nitrogen yang sangat disukai kutu.";
+    }
+
+    // B. Suhu Panas (Reproduction Rate)
+    if (weather.currentTemp > 30.0) {
+      score += 0.3;
+      detail += "\n• Suhu panas (>30°C) mempercepat siklus hidup dari 30 hari menjadi <20 hari.";
+    }
+
+    // C. Inang
+    if (nearbyPlants.any((p) => ["Terong", "Melon", "Semangka"].contains(p))) {
+      score += 0.15;
+      detail += "\n• Terdeteksi inang Solanaceae/Cucurbitaceae lain di sekitar.";
+    }
+
+    return _buildResult(
+      "Kutu Kebul (Virus Kuning)", 
+      score, 
+      "Panas & Tunas muda memicu ledakan populasi.",
+      detail,
+      [
+        "Monitoring: Pasang Yellow Sticky Trap (Perangkap Kuning) 40 titik/ha untuk pantau populasi.",
+        "Barier: Tanam Jagung di keliling lahan sebagai tanaman penghadang.",
+        "Insektisida: Gunakan Imidakloprid (sistemik) atau Abamectin (kontak), rotasi wajib.",
+        "Nutrisi: Hindari penggunaan Urea (N) berlebih agar daun tidak terlalu sukulen."
       ]
     );
   }
@@ -232,45 +230,47 @@ class ArmywormLogic implements PestLogic {
 // --- MAIN SERVICE ---
 class PredictionService {
   final Random _rng = Random();
-
-  // Daftar Logika yang akan dijalankan
-  final List<PestLogic> _pestModels = [
-    FruitFlyLogic(),
-    ThripsLogic(),
-    AphidLogic(),
-    AnthracnoseLogic(),
-    ArmywormLogic(),
+  final List<PestStrategy> _strategies = [
+    ThripsStrategy(), FruitFlyStrategy(), AnthracnoseStrategy(), ArmywormStrategy(), AphidStrategy()
   ];
 
   List<PredictionResult> analyzeRisk(FarmModel? farm, WeatherModel weather, List<String> nearbyPlants) {
     if (farm == null) return [];
-
     List<PredictionResult> results = [];
 
-    for (var model in _pestModels) {
-      RiskAssessment? assessment = model.calculateRisk(farm, weather, nearbyPlants);
-      
-      if (assessment != null && assessment.score > 0.25) { // Hanya tampilkan jika risiko > 25%
-        // Tambahkan sedikit random factor (0-5%) agar terlihat dinamis
-        double finalScore = (assessment.score + (_rng.nextDouble() * 0.05)).clamp(0.0, 0.99);
-        
-        results.add(PredictionResult(
-          pestName: assessment.name,
-          percentage: finalScore,
-          riskLevel: assessment.level,
-          description: assessment.reasoning,
-          preventionSteps: assessment.mitigation,
-        ));
+    for (var strategy in _strategies) {
+      var result = strategy.calculate(farm, weather, nearbyPlants);
+      if (result != null) {
+        // Cek Proteksi Kimia
+        if (farm.lastPesticideTime.contains("< 3 hari")) {
+           double newPercentage = result.percentage * 0.2;
+           result = _buildResult(
+             result.pestName, 
+             newPercentage, 
+             "Risiko terkendali (Pasca Semprot).", 
+             "Tanaman masih dilindungi oleh residu pestisida yang diaplikasikan < 3 hari lalu.", 
+             ["Lanjutkan jadwal monitoring rutin."]
+           );
+        }
+        if (result.percentage > 0.40) results.add(result); // Tampilkan jika risiko > 40%
       }
     }
-
-    // Urutkan dari risiko tertinggi
     results.sort((a, b) => b.percentage.compareTo(a.percentage));
     return results;
   }
 }
 
-// Helper Global
+// --- HELPERS ---
+PredictionResult _buildResult(String name, double score, String shortReason, String detailReason, List<String> steps) {
+  score = score.clamp(0.0, 0.99);
+  return PredictionResult(
+    pestName: name, percentage: score, riskLevel: _getLevel(score),
+    shortDescription: shortReason,
+    detailedAnalysis: detailReason,
+    preventionSteps: steps,
+  );
+}
+
 RiskLevel _getLevel(double score) {
   if (score > 0.7) return RiskLevel.severe;
   if (score > 0.5) return RiskLevel.high;

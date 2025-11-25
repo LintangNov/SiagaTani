@@ -1,37 +1,30 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:latlong2/latlong.dart';
-import 'package:siaga_tani/controllers/map_setup_controller.dart'; // Import Map Controller
+import 'package:siaga_tani/controllers/map_setup_controller.dart'; 
 import '../models/farm_model.dart';
 import '../services/firestore_service.dart';
 import '../view/farm_detail_screen.dart';
+import 'package:latlong2/latlong.dart';
 
 class FarmController extends GetxController {
   final FirestoreService _firestoreService = FirestoreService();
 
-  // --- INPUT FORM ---
   final nameController = TextEditingController();
   final sizeController = TextEditingController();
   
+  // Observable Values untuk Kuesioner
+  var selectedVariety = "".obs;
+  var selectedPattern = "".obs;
+  var selectedPhase = "".obs;
+  var pestHistory = "".obs;
+  var mulchInput = "".obs; 
+  var sprayInput = "".obs; 
+  
   var isSaving = false.obs;
 
-  // Values (Sesuai inputan kuesioner)
-  var selectedVariety = "Cabai Rawit".obs;
-  var selectedPattern = "Monokultur".obs;
-  var selectedPhase = "Vegetatif".obs;
-  var selectedWatering = "Sedang".obs;
-  var isMulchUsed = "Tidak".obs; // String biar cocok dengan UI
-  var pestHistory = "Tidak Pernah".obs;
-  var recentlySprayed = false.obs;
-
-  // --- HAPUS: getCurrentLocation & _getAddressFromLatLng ---
-  // (Karena logika ini sudah dipindah ke MapSetupController biar lebih canggih/debounce)
-
   Future<void> saveFarm() async {
-    // 1. Ambil Data dari MapSetupController
     final MapSetupController mapController = Get.find<MapSetupController>();
     
-    // Validasi Lokasi
     if (mapController.myFarmLocation.value == null) {
       Get.snackbar("Gagal", "Lokasi lahan belum ditentukan di peta!");
       return;
@@ -39,56 +32,78 @@ class FarmController extends GetxController {
 
     isSaving.value = true;
     try {
-      // 2. LOGIKA CEK INANG (Data Pendukung)
-      // Kita cek dari pin yang BARU SAJA ditambahkan user di peta
+      // --- PERBAIKAN LOGIKA JARAK (SCIENTIFIC) ---
       bool hasHostNearby = false;
+      final Distance distanceCalc = const Distance();
       
-      // Cek daftar pin di MapController
-      if (mapController.surroundingData.isNotEmpty) {
-        // Kalau ada pin selain 'Lainnya', anggap ada inang
-        hasHostNearby = mapController.surroundingData.any((data) => data['type'] != 'Lainnya');
+      // Lokasi lahan kita
+      final myLocation = mapController.myFarmLocation.value!;
+
+      // Cek setiap pin yang ada di peta
+      for (var data in mapController.surroundingData) {
+        // Abaikan jika jenisnya 'Lainnya'
+        if (data['type'] == 'Lainnya') continue;
+
+        // Hitung jarak meter
+        double distanceMeters = distanceCalc.as(
+          LengthUnit.Meter,
+          myLocation,
+          LatLng(data['lat'], data['lng'])
+        );
+
+        // Ambang batas 1000 meter (1 KM) sesuai riset lalat buah
+        if (distanceMeters <= 1000) {
+          hasHostNearby = true;
+          print("Inang ${data['type']} terdeteksi dalam jarak ${distanceMeters.toStringAsFixed(0)}m");
+          break; // Ketemu satu saja sudah cukup risiko
+        }
       }
 
-      // 3. Auto-Generate Nama jika kosong (Karena di UI Questionnaire tidak ada input nama)
+      // 2. Konversi String ke Enum
+      CropStage stage = CropStage.vegetative;
+      if (selectedPhase.value == "Bibit") stage = CropStage.seedling;
+      else if (selectedPhase.value == "Vegetatif") stage = CropStage.vegetative;
+      else if (selectedPhase.value == "Berbunga") stage = CropStage.flowering;
+      else if (selectedPhase.value.contains("Berbuah")) stage = CropStage.fruiting;
+
+      MulchType mulch = MulchType.none;
+      if (mulchInput.value.contains("Perak")) mulch = MulchType.silver;
+      else if (mulchInput.value.contains("Hitam")) mulch = MulchType.black;
+
       String finalName = nameController.text.isEmpty 
           ? "Lahan ${selectedVariety.value}" 
           : nameController.text;
 
-      String finalSize = sizeController.text.isEmpty 
-          ? "1000 m2" // Default size
-          : sizeController.text;
-
-      // 4. Buat Object FarmModel
+      // 3. Buat Model
       FarmModel newFarm = FarmModel(
         farmName: finalName,
-        // Ambil alamat yang sudah di-geocode otomatis oleh MapController
         address: mapController.currentAddress.value, 
         latitude: mapController.myFarmLocation.value!.latitude,
         longitude: mapController.myFarmLocation.value!.longitude,
-        landSize: finalSize,
+        landSize: "1000 m2", 
         variety: selectedVariety.value,
-        // Hasil logika inang otomatis
-        hostPlantsNearby: hasHostNearby ? "Ya" : "Tidak", 
-        isMulchUsed: isMulchUsed.value == "Ya, Pakai",
+        
+        cropStage: stage,
+        mulchType: mulch,
+        lastPesticideTime: sprayInput.value,
+        
+        currentPhase: selectedPhase.value,
+        hostPlantsNearby: hasHostNearby ? "Ya" : "Tidak",
+        isMulchUsed: mulch != MulchType.none,
         plantingPattern: selectedPattern.value,
         pestHistory: pestHistory.value,
-        currentPhase: selectedPhase.value,
-        recentlySprayedPesticide: recentlySprayed.value,
-        wateringIntensity: selectedWatering.value,
+        recentlySprayedPesticide: sprayInput.value.contains("Baru"),
+        wateringIntensity: "Sedang", 
+        pesticideType: "",
       );
 
-      // 5. Simpan ke Firestore
+      // 4. Simpan
       await _firestoreService.addFarm(newFarm);
       
-      // 6. Navigasi ke Dashboard Detail (Langsung Analisis)
+      // 5. Navigasi
       Get.off(() => const FarmDetailScreen(), arguments: newFarm);
       
-      Get.snackbar(
-        "Sukses", 
-        "Lahan berhasil disimpan di ${newFarm.address}!",
-        backgroundColor: Colors.green,
-        colorText: Colors.white,
-      );
+      Get.snackbar("Sukses", "Lahan berhasil disimpan! Analisis risiko sedang berjalan.", backgroundColor: Colors.green, colorText: Colors.white);
       
     } catch (e) {
       Get.snackbar("Error", "Gagal menyimpan: $e");
