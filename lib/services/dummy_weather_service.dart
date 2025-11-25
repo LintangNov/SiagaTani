@@ -20,13 +20,13 @@ class DummyWeatherService {
       season: "Musim Kemarau",  // Penting untuk logika
       windSpeed: 15.0,        // km/h
     
-      /* 
-      temperature: 32.5,      // Suhu (C)
-      humidity: 60.2,         // Kelembapan (%)
-      condition: "Cerah", 
-      season: "Musim Kemarau",  // Penting untuk logika
-      windSpeed: 17.0,        // km/h
-      */
+      
+      // temperature: 32.5,      // Suhu (C)
+      // humidity: 60.2,         // Kelembapan (%)
+      // condition: "Cerah", 
+      // season: "Musim Kemarau",  // Penting untuk logika
+      // windSpeed: 17.0,        // km/h
+      
     );
   }
 }
