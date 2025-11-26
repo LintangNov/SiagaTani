@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:get/get.dart';
 import 'package:siaga_tani/controllers/dashboard_controller.dart';
-import 'package:siaga_tani/view/question.dart'; // Import Questionnaire
+import 'package:siaga_tani/view/question.dart';
 
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
@@ -19,34 +19,42 @@ class DashboardScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // 1. HEADER LOKASI
+              // 1. HEADER PERSONALISASI (NAMA & LOKASI)
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        "Lokasi Anda",
-                        style: GoogleFonts.poppins(
-                          fontSize: 12,
-                          color: Colors.grey,
+                      // Sapaan Nama
+                      Obx(
+                        () => Text(
+                          "Hai, ${controller.userName.value} 👋",
+                          style: GoogleFonts.poppins(
+                            fontSize: 20, // Lebih besar
+                            fontWeight: FontWeight.bold,
+                            color: const Color(0xFF2C3312),
+                          ),
                         ),
                       ),
+                      const SizedBox(height: 4),
+                      // Lokasi di bawahnya
                       Row(
                         children: [
                           const Icon(
                             Icons.location_on,
                             color: Color(0xFFE57373),
-                            size: 18,
+                            size: 16,
                           ),
-                          const SizedBox(width: 5),
-                          Text(
-                            "Sleman, Yogyakarta",
-                            style: GoogleFonts.poppins(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: const Color(0xFF2C3312),
+                          const SizedBox(width: 4),
+                          Obx(
+                            () => Text(
+                              controller.currentLocation.value,
+                              style: GoogleFonts.poppins(
+                                fontSize: 13,
+                                color: Colors.grey[600],
+                                fontWeight: FontWeight.w500,
+                              ),
                             ),
                           ),
                         ],
@@ -65,248 +73,247 @@ class DashboardScreen extends StatelessWidget {
 
               const SizedBox(height: 25),
 
-              // 2. WEATHER WIDGET
-              Obx(() {
-                var weather = controller.currentWeather.value;
-                return Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFFFFD54F), Color(0xFFFFB74D)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(25),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.orange.withOpacity(0.3),
-                        blurRadius: 15,
-                        offset: const Offset(0, 8),
-                      ),
-                    ],
-                  ),
-                  child: controller.isLoadingWeather.value
-                      ? const Center(
-                          child: CircularProgressIndicator(color: Colors.white),
-                        )
-                      : Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      "${weather?.temperature ?? '--'}°C",
-                                      style: GoogleFonts.poppins(
-                                        fontSize: 32,
-                                        fontWeight: FontWeight.bold,
-                                        color: const Color(0xFF4E342E),
-                                      ),
-                                    ),
-                                    Text(
-                                      weather?.condition ?? "Cerah",
-                                      style: GoogleFonts.poppins(
-                                        fontSize: 14,
-                                        color: const Color(0xFF5D4037),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const Icon(
-                                  Icons.wb_sunny_rounded,
-                                  size: 60,
-                                  color: Colors.white54,
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 20),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                _buildWeatherInfo(
-                                  "Kelembapan",
-                                  "${weather?.humidity ?? '-'}%",
-                                  "Baik",
-                                ),
-                                _buildWeatherInfo(
-                                  "Angin",
-                                  "${weather?.windSpeed ?? '-'}km/h",
-                                  "Normal",
-                                ),
-                                _buildWeatherInfo("Hujan", "Rendah", "Low"),
-                              ],
-                            ),
-                          ],
-                        ),
-                );
-              }),
+              // ... SISA KODE WIDGET CUACA & MENU TETAP SAMA ...
+              // (Copy dari kode sebelumnya mulai dari Weather Widget ke bawah)
+              _buildWeatherSection(controller),
 
               const SizedBox(height: 25),
-              Obx(() {
-                if (controller.dailyTips.isEmpty)
-                  return const SizedBox.shrink();
-
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      "Rekomendasi Hari Ini",
-                      style: GoogleFonts.poppins(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: const Color(0xFF2C3312),
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    SizedBox(
-                      height: 120,
-                      child: PageView.builder(
-                        controller: PageController(viewportFraction: 0.9),
-                        itemCount: controller.dailyTips.length,
-                        itemBuilder: (context, index) {
-                          var tip = controller.dailyTips[index];
-                          return Container(
-                            margin: const EdgeInsets.only(right: 10),
-                            padding: const EdgeInsets.all(15),
-                            decoration: BoxDecoration(
-                              color:
-                                  tip['color'], // Warna dinamis dari Controller
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(color: Colors.white, width: 2),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.grey.withOpacity(0.1),
-                                  blurRadius: 5,
-                                  offset: const Offset(0, 3),
-                                ),
-                              ],
-                            ),
-                            child: Row(
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.all(10),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white.withOpacity(0.5),
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: Icon(
-                                    tip['icon'],
-                                    size: 30,
-                                    color: tip['textColor'],
-                                  ),
-                                ),
-                                const SizedBox(width: 15),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Text(
-                                        tip['title'],
-                                        style: GoogleFonts.poppins(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 15,
-                                          color: tip['textColor'],
-                                        ),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        tip['body'],
-                                        style: GoogleFonts.poppins(
-                                          fontSize: 11,
-                                          color: Colors.black87,
-                                        ),
-                                        maxLines: 2,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  ],
-                );
-              }),
+              _buildTipsSection(controller),
 
               const SizedBox(height: 30),
-
-              // 3. MENU GRID
-              Center(
-                child: Column(
-                  children: [
-                    Container(
-                      width: 40,
-                      height: 4,
-                      decoration: BoxDecoration(
-                        color: Colors.grey[300],
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    Text(
-                      "Kelola Lahanmu",
-                      style: GoogleFonts.poppins(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                        color: const Color(0xFF2C3312),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 20),
-
-              GridView.count(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                crossAxisCount: 2,
-                crossAxisSpacing: 15,
-                mainAxisSpacing: 15,
-                childAspectRatio: 1.1,
-                children: [
-                  // TOMBOL MY FARM -> Mengarah ke Questionnaire (Tambah Lahan)
-                  _buildMenuCard(
-                    "Tambah Lahan",
-                    Icons.add_location_alt_rounded,
-                    Colors.green,
-                    onTap: () {
-                      // NAVIGASI KE QUESTIONNAIRE
-                      Get.to(() => const QuestionnaireScreen());
-                    },
-                  ),
-                  _buildMenuCard(
-                    "Tanaman",
-                    Icons.grass,
-                    Colors.teal,
-                    onTap: () {},
-                  ),
-                  _buildMenuCard(
-                    "Inventaris",
-                    Icons.inventory_2_rounded,
-                    Colors.brown,
-                    onTap: () {},
-                  ),
-                  _buildMenuCard(
-                    "Keuangan",
-                    Icons.monetization_on_rounded,
-                    Colors.orange,
-                    onTap: () {},
-                  ),
-                ],
-              ),
+              _buildMenuSection(),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  // --- Helper Widgets (Biar rapi kodenya) ---
+
+  Widget _buildWeatherSection(DashboardController controller) {
+    return Obx(() {
+      var weather = controller.currentWeather.value;
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFFFFD54F), Color(0xFFFFB74D)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(25),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.orange.withOpacity(0.3),
+              blurRadius: 15,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: controller.isLoadingWeather.value
+            ? const Center(
+                child: CircularProgressIndicator(color: Colors.white),
+              )
+            : Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "${weather?.temperature ?? '--'}°C",
+                            style: GoogleFonts.poppins(
+                              fontSize: 32,
+                              fontWeight: FontWeight.bold,
+                              color: const Color(0xFF4E342E),
+                            ),
+                          ),
+                          Text(
+                            weather?.condition ?? "Cerah",
+                            style: GoogleFonts.poppins(
+                              fontSize: 14,
+                              color: const Color(0xFF5D4037),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const Icon(
+                        Icons.wb_sunny_rounded,
+                        size: 60,
+                        color: Colors.white54,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      _buildWeatherInfo(
+                        "Kelembapan",
+                        "${weather?.humidity ?? '-'}%",
+                        "Baik",
+                      ),
+                      _buildWeatherInfo(
+                        "Angin",
+                        "${weather?.windSpeed ?? '-'}km/h",
+                        "Normal",
+                      ),
+                      _buildWeatherInfo("Hujan", "Rendah", "Low"),
+                    ],
+                  ),
+                ],
+              ),
+      );
+    });
+  }
+
+  Widget _buildTipsSection(DashboardController controller) {
+    return Obx(() {
+      if (controller.dailyTips.isEmpty) return const SizedBox.shrink();
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            "Rekomendasi Hari Ini",
+            style: GoogleFonts.poppins(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: const Color(0xFF2C3312),
+            ),
+          ),
+          const SizedBox(height: 10),
+          SizedBox(
+            height: 120,
+            child: PageView.builder(
+              controller: PageController(viewportFraction: 0.9),
+              itemCount: controller.dailyTips.length,
+              itemBuilder: (context, index) {
+                var tip = controller.dailyTips[index];
+                return Container(
+                  margin: const EdgeInsets.only(right: 10),
+                  padding: const EdgeInsets.all(15),
+                  decoration: BoxDecoration(
+                    color: tip['color'],
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: Colors.white, width: 2),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.grey.withOpacity(0.1),
+                        blurRadius: 5,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.5),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          tip['icon'],
+                          size: 30,
+                          color: tip['textColor'],
+                        ),
+                      ),
+                      const SizedBox(width: 15),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              tip['title'],
+                              style: GoogleFonts.poppins(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 15,
+                                color: tip['textColor'],
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              tip['body'],
+                              style: GoogleFonts.poppins(
+                                fontSize: 11,
+                                color: Colors.black87,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      );
+    });
+  }
+
+  Widget _buildMenuSection() {
+    return Column(
+      children: [
+        Center(
+          child: Container(
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: Colors.grey[300],
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+        ),
+        const SizedBox(height: 10),
+        Text(
+          "Kelola Lahanmu",
+          style: GoogleFonts.poppins(
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+            color: const Color(0xFF2C3312),
+          ),
+        ),
+        const SizedBox(height: 20),
+        GridView.count(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          crossAxisCount: 2,
+          crossAxisSpacing: 15,
+          mainAxisSpacing: 15,
+          childAspectRatio: 1.1,
+          children: [
+            _buildMenuCard(
+              "Tambah Lahan",
+              Icons.add_location_alt_rounded,
+              Colors.green,
+              onTap: () => Get.to(() => const QuestionnaireScreen()),
+            ),
+            _buildMenuCard("Tanaman", Icons.grass, Colors.teal, onTap: () {}),
+            _buildMenuCard(
+              "Inventaris",
+              Icons.inventory_2_rounded,
+              Colors.brown,
+              onTap: () {},
+            ),
+            _buildMenuCard(
+              "Keuangan",
+              Icons.monetization_on_rounded,
+              Colors.orange,
+              onTap: () {},
+            ),
+          ],
+        ),
+      ],
     );
   }
 

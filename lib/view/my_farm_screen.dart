@@ -6,14 +6,14 @@ import 'package:latlong2/latlong.dart';
 import '../controllers/dashboard_controller.dart';
 import '../services/firestore_service.dart';
 import '../models/farm_model.dart';
-import 'farm_detail_screen.dart'; // Penting: Ini fix error "isn't a class"
+import 'farm_detail_screen.dart';
 
 class MyFarmScreen extends StatelessWidget {
   const MyFarmScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // Pastikan DashboardController sudah di-put di MainScreen atau Bindings
+    // Panggil controller untuk akses stream data
     final DashboardController controller = Get.put(DashboardController());
     final FirestoreService firestoreService = FirestoreService();
 
@@ -33,21 +33,55 @@ class MyFarmScreen extends StatelessWidget {
         automaticallyImplyLeading: false,
       ),
       body: StreamBuilder<List<FarmModel>>(
-        stream: controller.farmListStream,
+        // Ini STREAM PINTAR yang otomatis update kalau ada data baru
+        stream: controller.farmListStream, 
         builder: (context, snapshot) {
+          // 1. State Loading
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
+            return const Center(
+              child: CircularProgressIndicator(color: Color(0xFF2C3312)),
+            );
           }
 
+          // 2. State Error
+          if (snapshot.hasError) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Text(
+                  "Terjadi kesalahan memuat data.\n(Cek Console: Mungkin butuh Index Firestore)",
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.poppins(color: Colors.red),
+                ),
+              ),
+            );
+          }
+
+          // 3. State Kosong (Belum input lahan)
           if (!snapshot.hasData || snapshot.data!.isEmpty) {
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.grass_rounded, size: 80, color: Colors.grey[300]),
-                  const SizedBox(height: 10),
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Colors.green.shade50,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(Icons.spa_outlined, size: 60, color: Colors.green.shade300),
+                  ),
+                  const SizedBox(height: 20),
                   Text(
-                    "Belum ada lahan tersimpan.",
+                    "Belum ada lahan.",
+                    style: GoogleFonts.poppins(
+                      color: const Color(0xFF2C3312),
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                  Text(
+                    "Tambah lahan pertamamu di menu Beranda.",
                     style: GoogleFonts.poppins(color: Colors.grey),
                   ),
                 ],
@@ -55,6 +89,7 @@ class MyFarmScreen extends StatelessWidget {
             );
           }
 
+          // 4. State Ada Data -> Tampilkan List
           final farms = snapshot.data!;
 
           return ListView.separated(
@@ -71,7 +106,7 @@ class MyFarmScreen extends StatelessWidget {
     );
   }
 
-  // --- WIDGET CARD ALA "MOON CHICKEN" TAPI VERSI TANI ---
+  // --- WIDGET KARTU LAHAN (DESAIN BARU) ---
   Widget _buildFarmCard(BuildContext context, FarmModel farm, FirestoreService service) {
     return GestureDetector(
       onTap: () => Get.to(() => const FarmDetailScreen(), arguments: farm),
@@ -81,16 +116,16 @@ class MyFarmScreen extends StatelessWidget {
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.06),
+              color: Colors.black.withOpacity(0.05),
               blurRadius: 15,
               offset: const Offset(0, 5),
             ),
           ],
         ),
-        child: Column(
+child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 1. BAGIAN ATAS: MAP PREVIEW
+            // A. GAMBAR PETA
             ClipRRect(
               borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
               child: SizedBox(
@@ -98,17 +133,21 @@ class MyFarmScreen extends StatelessWidget {
                 width: double.infinity,
                 child: Stack(
                   children: [
-                    // Peta non-interaktif sebagai gambar header
+                    // Peta Statis
                     FlutterMap(
                       options: MapOptions(
                         initialCenter: LatLng(farm.latitude, farm.longitude),
-                        initialZoom: 15.5,
+                        initialZoom: 15.0,
                         interactionOptions: const InteractionOptions(
-                          flags: InteractiveFlag.none, // Map diam seperti gambar
+                          flags: InteractiveFlag.none, 
                         ),
                       ),
                       children: [
-                        TileLayer(urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png'),
+                        TileLayer(
+                          urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                          // TAMBAHKAN BARIS INI (WAJIB UNTUK OSM)
+                          userAgentPackageName: 'com.example.siaga_tani', 
+                        ),
                         MarkerLayer(
                           markers: [
                             Marker(
@@ -119,21 +158,31 @@ class MyFarmScreen extends StatelessWidget {
                         ),
                       ],
                     ),
-                    // Tombol Option (Titik Tiga) di pojok
+                    // Gradient agar tombol option terlihat
+                    Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.center,
+                          colors: [Colors.black.withOpacity(0.2), Colors.transparent],
+                        ),
+                      ),
+                    ),
+                    // Tombol Opsi (Titik Tiga)
                     Positioned(
                       top: 10,
                       right: 10,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          shape: BoxShape.circle,
-                          boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 5)]
-                        ),
-                        child: IconButton(
-                          icon: const Icon(Icons.more_horiz, size: 20, color: Colors.black87),
-                          constraints: const BoxConstraints(),
-                          padding: const EdgeInsets.all(8),
-                          onPressed: () => _showOptionsDialog(context, farm, service),
+                      child: Material(
+                        color: Colors.white,
+                        shape: const CircleBorder(),
+                        elevation: 2,
+                        child: InkWell(
+                          customBorder: const CircleBorder(),
+                          onTap: () => _showOptionsDialog(context, farm, service),
+                          child: const Padding(
+                            padding: EdgeInsets.all(6),
+                            child: Icon(Icons.more_horiz, size: 20, color: Colors.black87),
+                          ),
                         ),
                       ),
                     ),
@@ -142,32 +191,58 @@ class MyFarmScreen extends StatelessWidget {
               ),
             ),
 
-            // 2. BAGIAN BAWAH: INFO LAHAN
+            // B. INFORMASI DETAIL
             Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Nama Lahan
+                  // Nama & Luas
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          farm.farmName,
+                          style: GoogleFonts.poppins(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: const Color(0xFF2C3312),
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      Text(
+                        farm.landSize, // Contoh: "1000 m2"
+                        style: GoogleFonts.poppins(
+                          fontSize: 12,
+                          color: Colors.grey[600],
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                  
+                  const SizedBox(height: 4),
+                  // Alamat Singkat
                   Text(
-                    farm.farmName,
-                    style: GoogleFonts.poppins(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: const Color(0xFF2C3312),
-                    ),
+                    farm.address,
+                    style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  
-                  const SizedBox(height: 8),
-                  
-                  // Baris Info (Variety & Phase)
+
+                  const SizedBox(height: 12),
+                  const Divider(height: 1, color: Colors.black12),
+                  const SizedBox(height: 12),
+
+                  // Chips Info (Varietas & Fase)
                   Row(
                     children: [
-                      _buildTag(Icons.eco, farm.variety, Colors.green),
+                      _buildInfoChip(Icons.grass, farm.variety, Colors.green),
                       const SizedBox(width: 8),
-                      _buildTag(Icons.timeline, farm.currentPhase, Colors.orange),
+                      _buildInfoChip(Icons.timeline, farm.currentPhase, Colors.orange),
                     ],
                   ),
                 ],
@@ -179,9 +254,10 @@ class MyFarmScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildTag(IconData icon, String text, MaterialColor color) {
+  // Helper Widget untuk Chip
+  Widget _buildInfoChip(IconData icon, String label, MaterialColor color) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: color.shade50,
         borderRadius: BorderRadius.circular(8),
@@ -191,11 +267,11 @@ class MyFarmScreen extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: 14, color: color.shade700),
-          const SizedBox(width: 5),
+          const SizedBox(width: 6),
           Text(
-            text,
+            label,
             style: GoogleFonts.poppins(
-              fontSize: 12,
+              fontSize: 11,
               fontWeight: FontWeight.w600,
               color: color.shade800,
             ),
@@ -205,7 +281,8 @@ class MyFarmScreen extends StatelessWidget {
     );
   }
 
-  // --- LOGIKA OPSI: EDIT & DELETE ---
+  // --- LOGIKA DIALOG EDIT & DELETE ---
+  
   void _showOptionsDialog(BuildContext context, FarmModel farm, FirestoreService service) {
     Get.bottomSheet(
       Container(
@@ -221,9 +298,9 @@ class MyFarmScreen extends StatelessWidget {
             const SizedBox(height: 20),
             ListTile(
               leading: Container(
-                padding: const EdgeInsets.all(10),
+                padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(color: Colors.blue.shade50, shape: BoxShape.circle),
-                child: Icon(Icons.edit, color: Colors.blue.shade700),
+                child: Icon(Icons.edit, color: Colors.blue.shade700, size: 20),
               ),
               title: Text("Ubah Nama Lahan", style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
               onTap: () {
@@ -231,14 +308,14 @@ class MyFarmScreen extends StatelessWidget {
                 _showEditDialog(context, farm, service);
               },
             ),
+            const SizedBox(height: 10),
             ListTile(
               leading: Container(
-                padding: const EdgeInsets.all(10),
+                padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(color: Colors.red.shade50, shape: BoxShape.circle),
-                child: Icon(Icons.delete_forever, color: Colors.red.shade700),
+                child: Icon(Icons.delete_outline, color: Colors.red.shade700, size: 20),
               ),
               title: Text("Hapus Lahan", style: GoogleFonts.poppins(fontWeight: FontWeight.w600, color: Colors.red)),
-              subtitle: Text("Data akan hilang permanen", style: GoogleFonts.poppins(fontSize: 12)),
               onTap: () {
                 Get.back();
                 _showDeleteConfirmation(context, farm, service);
@@ -256,13 +333,13 @@ class MyFarmScreen extends StatelessWidget {
       title: "Ubah Nama",
       titleStyle: GoogleFonts.poppins(fontWeight: FontWeight.bold),
       content: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+        padding: const EdgeInsets.all(15),
         child: TextField(
           controller: nameCtrl,
           decoration: const InputDecoration(
             border: OutlineInputBorder(),
             labelText: "Nama Lahan Baru",
-            contentPadding: EdgeInsets.symmetric(horizontal: 15, vertical: 15),
+            isDense: true,
           ),
         ),
       ),
@@ -271,7 +348,7 @@ class MyFarmScreen extends StatelessWidget {
           if (nameCtrl.text.isNotEmpty && farm.id != null) {
             await service.updateFarmName(farm.id!, nameCtrl.text);
             Get.back();
-            Get.snackbar("Sukses", "Nama lahan berhasil diubah", backgroundColor: Colors.green, colorText: Colors.white);
+            Get.snackbar("Sukses", "Nama lahan diperbarui", backgroundColor: Colors.green, colorText: Colors.white);
           }
         },
         style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF2C3312)),
@@ -285,21 +362,20 @@ class MyFarmScreen extends StatelessWidget {
     Get.defaultDialog(
       title: "Hapus Lahan?",
       titleStyle: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: Colors.red),
-      middleText: "Apakah Anda yakin ingin menghapus '${farm.farmName}'? Data tidak dapat dikembalikan.",
-      middleTextStyle: GoogleFonts.poppins(fontSize: 14),
-      confirm: ElevatedButton(
-        onPressed: () async {
-          if (farm.id != null) {
-            await service.deleteFarm(farm.id!);
-            Get.back();
-            Get.snackbar("Terhapus", "Lahan telah dihapus", backgroundColor: Colors.red, colorText: Colors.white);
-          }
-        },
-        style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-        child: const Text("Hapus", style: TextStyle(color: Colors.white)),
-      ),
-      cancel: OutlinedButton(onPressed: () => Get.back(), child: const Text("Batal")),
-      contentPadding: const EdgeInsets.all(20),
+      middleText: "Anda yakin ingin menghapus '${farm.farmName}'? Data ini tidak bisa dikembalikan.",
+      middleTextStyle: GoogleFonts.poppins(),
+      textConfirm: "Hapus",
+      textCancel: "Batal",
+      confirmTextColor: Colors.white,
+      buttonColor: Colors.red,
+      cancelTextColor: Colors.black,
+      onConfirm: () async {
+        if (farm.id != null) {
+          await service.deleteFarm(farm.id!);
+          Get.back();
+          Get.snackbar("Terhapus", "Lahan berhasil dihapus", backgroundColor: Colors.red, colorText: Colors.white);
+        }
+      },
     );
   }
 }

@@ -1,19 +1,15 @@
-// File: lib/models/weather_model.dart
-
 class WeatherModel {
-  final double temperature; // Suhu saat ini
-  final double humidity;    // Kelembapan (%)
-  final String condition;   // Kondisi ("Hujan", "Cerah")
-  final String season;      // ("Musim Hujan", "Musim Kemarau")
-  final double windSpeed;   // Kecepatan angin (km/h)
-  
-  final double rainfall24h; // Total hujan 24 jam (mm)
-  final double maxTemp;     // Suhu maksimum hari ini
-  final int wetHours;       // Estimasi jam daun basah (Penting untuk Antraknosa)
-  
-  // Getter alias untuk kompatibilitas dengan kode PredictionService
+  final double temperature;
+  final double humidity;
+  final String condition;
+  final String season;
+  final double windSpeed;
+  final double rainfall24h;
+  final double maxTemp;
+  final int wetHours;
+
   double get currentTemp => temperature;
-  double get maxTemp24h => maxTemp; // Alias agar maxTemp24h terbaca
+  double get maxTemp24h => maxTemp;
 
   WeatherModel({
     required this.temperature,
@@ -21,8 +17,39 @@ class WeatherModel {
     required this.condition,
     required this.season,
     required this.windSpeed,
-    this.rainfall24h = 0.0, 
+    this.rainfall24h = 0.0,
     this.maxTemp = 30.0,
-    this.wetHours = 0, // Default 0
+    this.wetHours = 0,
   });
+
+  // --- INI PABRIK PENGOLAH DATA DARI API ---
+  factory WeatherModel.fromJson(Map<String, dynamic> json) {
+    // 1. Ambil data dasar
+    var main = json['main'];
+    var weather = json['weather'][0];
+    var wind = json['wind'];
+    
+    // 2. Cek Hujan (API kadang tidak kirim field 'rain' kalau gak hujan)
+    double rain = 0.0;
+    if (json['rain'] != null && json['rain']['1h'] != null) {
+      rain = (json['rain']['1h'] as num).toDouble() * 24; // Estimasi ke 24 jam
+    }
+
+    // 3. Tentukan Musim (Sederhana: Berdasarkan Bulan)
+    // Di Indo: Okt - Mar = Hujan, Apr - Sep = Kemarau
+    int month = DateTime.now().month;
+    String currentSeason = (month >= 4 && month <= 9) ? "Musim Kemarau" : "Musim Hujan";
+
+    return WeatherModel(
+      temperature: (main['temp'] as num).toDouble(),
+      humidity: (main['humidity'] as num).toDouble(),
+      condition: weather['description'], // Contoh: "Hujan Ringan"
+      season: currentSeason,
+      windSpeed: (wind['speed'] as num).toDouble() * 3.6, // m/s ke km/h
+      rainfall24h: rain,
+      maxTemp: (main['temp_max'] as num).toDouble(),
+      // Logika Estimasi Wet Hours (Daun Basah)
+      wetHours: (rain > 0 || (main['humidity'] as num) > 90) ? 12 : 0,
+    );
+  }
 }

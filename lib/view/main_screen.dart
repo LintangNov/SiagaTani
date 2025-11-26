@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:persistent_bottom_nav_bar/persistent_bottom_nav_bar.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:siaga_tani/view/dashboard_screen.dart';
-import 'package:siaga_tani/view/my_farm_screen.dart'; 
+import 'package:siaga_tani/view/my_farm_screen.dart';
+import 'package:siaga_tani/view/profile_screen.dart'; 
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -19,7 +20,7 @@ class _MainScreenState extends State<MainScreen> {
       const DashboardScreen(),
       const MyFarmScreen(),
       const Center(child: Text("Inventory Page")),
-      const Center(child: Text("Profile Page")),
+      const ProfileScreen(),
     ];
   }
 
