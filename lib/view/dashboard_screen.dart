@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:get/get.dart';
 import 'package:siaga_tani/controllers/dashboard_controller.dart';
+import 'package:siaga_tani/view/my_farm_screen.dart';
 import 'package:siaga_tani/view/question.dart'; 
 
 class DashboardScreen extends StatelessWidget {
@@ -335,9 +336,7 @@ class DashboardScreen extends StatelessWidget {
           childAspectRatio: 1.1,
           children: [
             _buildMenuCard("Tambah Lahan", Icons.add_location_alt_rounded, Colors.green, onTap: () => Get.to(() => const QuestionnaireScreen())),
-            _buildMenuCard("Tanaman", Icons.grass, Colors.teal, onTap: () {}),
-            _buildMenuCard("Inventaris", Icons.inventory_2_rounded, Colors.brown, onTap: () {}),
-            _buildMenuCard("Keuangan", Icons.monetization_on_rounded, Colors.orange, onTap: () {}),
+            _buildMenuCard("Tanaman", Icons.grass, Colors.teal, onTap: () => Get.to(() => const MyFarmScreen())),
           ],
         ),
       ],

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_map/flutter_map.dart'; // v8.2.2
-import 'package:latlong2/latlong.dart'; // v0.9.1
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:get/get.dart';
 import 'package:siaga_tani/controllers/map_setup_controller.dart';
@@ -22,28 +22,38 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
 
   int _currentPage = 0;
 
-  // --- DATA PERTANYAAN ---
+  // --- DATA PERTANYAAN (DENGAN GAMBAR) ---
   final List<Map<String, dynamic>> _questions = [
     {
       "key": "phase",
       "question": "Fase tanaman cabai Anda saat ini?",
-      "type": "grid",
+      "type": "image_grid", // Tipe Baru: Grid Gambar
       "options": [
-        {"label": "Bibit", "icon": "🌱"},
-        {"label": "Vegetatif", "icon": "🌿"},
-        {"label": "Berbunga", "icon": "🌼"},
-        {"label": "Berbuah Muda", "icon": "🌶️"},
-        {"label": "Berbuah", "icon": "🌶️🌶️"},
-      ],
-    },
-    {
-      "key": "variety",
-      "question": "Varietas cabai apa yang Anda tanam?",
-      "type": "grid",
-      "options": [
-        {"label": "Cabai Rawit", "icon": "⚡"},
-        {"label": "Cabai Keriting", "icon": "〰️"},
-        {"label": "Cabai Besar", "icon": "🔴"},
+        {
+          "label": "Bibit",
+          "image":
+              "assets/images/phase/bibit.png",
+        },
+        {
+          "label": "Vegetatif",
+          "image":
+              "assets/images/phase/vegetatif.png",
+        },
+        {
+          "label": "Berbunga",
+          "image":
+              "assets/images/phase/berbungaa.png",
+        },
+        {
+          "label": "Berbuah",
+          "image":
+              "assets/images/phase/berbuah.png",
+        },
+        {
+          "label": "Panen",
+          "image":
+              "assets/images/phase/berbuah_besar.png",
+        },
       ],
     },
     {
@@ -57,10 +67,31 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
       ],
     },
     {
+      "key": "variety",
+      "question": "Varietas cabai apa yang Anda tanam?",
+      "type": "image_grid", // Tipe Baru
+      "options": [
+        {
+          "label": "Cabai Rawit",
+          "image":
+              "assets/images/varietas/rawit.png",
+        },
+        {
+          "label": "Cabai Keriting",
+          "image":
+              "assets/images/varietas/keriting.png",
+        },
+        {
+          "label": "Cabai Besar",
+          "image": "assets/images/varietas/besar.png",
+        },
+      ],
+    },
+    {
       "key": "history",
       "question": "Apakah lahan pernah terserang hama?",
       "type": "list",
-      "options": [  
+      "options": [
         {"label": "Pernah", "sub": "Ada riwayat serangan"},
         {"label": "Tidak Pernah", "sub": "Lahan aman"},
         {"label": "Tidak Tahu", "sub": "Saya lupa"},
@@ -71,8 +102,8 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
       "question": "Jenis mulsa apa yang Anda gunakan?",
       "type": "list",
       "options": [
-        {"label": "Mulsa Perak", "sub": "Memantulkan cahaya (bagus tolak Thrips)"},
-        {"label": "Mulsa Hitam", "sub": "Menjaga kehangatan tanah"},
+        {"label": "Mulsa Perak", "sub": "Memantulkan cahaya"},
+        {"label": "Mulsa Hitam", "sub": "Menjaga kehangatan"},
         {"label": "Tanpa Mulsa", "sub": "Tanah terbuka"},
       ],
     },
@@ -81,9 +112,9 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
       "question": "Kapan terakhir kali Anda menyemprot pestisida?",
       "type": "list",
       "options": [
-        {"label": "Baru saja (< 3 hari)", "sub": "Tanaman masih terlindungi"},
-        {"label": "Seminggu lalu", "sub": "Efektivitas mulai menurun"},
-        {"label": "Sudah lama / Belum", "sub": "Tidak ada proteksi kimia"},
+        {"label": "Baru saja (< 3 hari)", "sub": "Tanaman terlindungi"},
+        {"label": "Seminggu lalu", "sub": "Efektivitas menurun"},
+        {"label": "Belum Pernah", "sub": "Tidak ada proteksi"},
       ],
     },
     {
@@ -94,8 +125,6 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
       "type": "map_surrounding",
       "desc": "Tap peta untuk menandai tanaman di lahan tetangga.",
     },
-
-    // PERTANYAAN TERAKHIR: NAMA LAHAN
     {
       "key": "name",
       "question": "Terakhir, beri nama lahan Anda",
@@ -107,19 +136,14 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
   @override
   void initState() {
     super.initState();
-    // RESET DATA SAAT MASUK HALAMAN
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _farmController.nameController.clear();
       _farmController.selectedPhase.value = "";
       _farmController.selectedVariety.value = "";
       _farmController.selectedPattern.value = "";
       _farmController.pestHistory.value = "";
-      
-      // --- PERUBAHAN DI SINI (Gunakan variabel baru) ---
-      _farmController.mulchInput.value = ""; // Dulu: isMulchUsed
-      _farmController.sprayInput.value = ""; // Baru
-      // ------------------------------------------------
-
+      _farmController.mulchInput.value = "";
+      _farmController.sprayInput.value = "";
       _mapController.myFarmLocation.value = null;
       _mapController.currentAddress.value = "Geser pin untuk lokasi...";
       _mapController.surroundingData.clear();
@@ -133,6 +157,7 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
     final accentColor = const Color(0xFF4CAF50);
 
     return Scaffold(
+      backgroundColor: const Color(0xFFF8F9FA),
       body: Stack(
         children: [
           PageView.builder(
@@ -154,7 +179,7 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       _buildHeader(primaryColor, accentColor),
-                      const SizedBox(height: 30),
+                      const SizedBox(height: 15),
                       Text(
                         q['question'],
                         style: GoogleFonts.poppins(
@@ -163,16 +188,21 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
                           color: primaryColor,
                         ),
                       ),
-                      const SizedBox(height: 30),
+                      const SizedBox(height: 20),
 
-                      if (q['type'] == 'grid')
-                        _buildGridOptions(q, q['key'], accentColor)
+                      // LOGIKA BUILDER
+                      if (q['type'] == 'image_grid')
+                        _buildImageGridOptions(
+                          q,
+                          q['key'],
+                          accentColor,
+                        ) // WIDGET BARU
                       else if (q['type'] == 'list')
                         _buildListOptions(q, q['key'], accentColor)
                       else if (q['type'] == 'text')
                         _buildTextInput(q, accentColor),
 
-                      const SizedBox(height: 30),
+                      const SizedBox(height: 20),
                       _buildNextButton(primaryColor, q['key']),
                     ],
                   ),
@@ -185,31 +215,136 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
     );
   }
 
-  // --- WIDGET INPUT TEXT (NAMA LAHAN) ---
+  // --- WIDGET BARU: IMAGE CARD GRID ---
+  Widget _buildImageGridOptions(
+    Map<String, dynamic> q,
+    String key,
+    Color color,
+  ) {
+    return Expanded(
+      child: GridView.builder(
+        physics: const BouncingScrollPhysics(),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2, // 2 Kolom
+          mainAxisSpacing: 15,
+          crossAxisSpacing: 15,
+          childAspectRatio: 0.90, // Rasio Card (Sedikit memanjang ke bawah)
+        ),
+        itemCount: (q['options'] as List).length,
+        itemBuilder: (ctx, i) {
+          var opt = q['options'][i];
+
+          return Obx(() {
+            bool isSelected = _getValue(key) == opt['label'];
+            return GestureDetector(
+              onTap: () => _setValue(key, opt['label']),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(20),
+                  // Jika selected: Border Hijau Tebal
+                  border: isSelected
+                      ? Border.all(color: color, width: 2)
+                      : Border.all(color: Colors.transparent, width: 0),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color.fromARGB(13, 0, 0, 0),
+                      blurRadius: 4,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                  image: DecorationImage(
+                    image: AssetImage(opt['image']), // Gambar dari URL
+                    fit: BoxFit.cover,
+                    colorFilter: isSelected
+                        ? null
+                        : const ColorFilter.mode(
+                            Colors.white10,
+                            BlendMode.darken,
+                          ),
+                  ),
+                ),
+                child: Stack(
+                  alignment: Alignment.bottomCenter,
+                  children: [
+                    // Gradient Putih di Bawah (Agar teks terbaca)
+                    Container(
+                      height: 80,
+                      decoration: BoxDecoration(
+                        borderRadius: const BorderRadius.vertical(
+                          bottom: Radius.circular(20),
+                        ),
+                        gradient: LinearGradient(
+                          begin: Alignment.bottomCenter,
+                          end: Alignment.topCenter,
+                          colors: [
+                            Colors.white,
+                            const Color.fromARGB(228, 255, 255, 255),
+                            const Color.fromARGB(0, 255, 255, 255),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    // Teks Label & Icon Check
+                    Padding(
+                      padding: const EdgeInsets.only(
+                        bottom: 15,
+                        left: 10,
+                        right: 10,
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          if (isSelected)
+                            Padding(
+                              padding: const EdgeInsets.only(right: 5),
+                              child: Icon(
+                                Icons.check_circle,
+                                color: color,
+                                size: 18,
+                              ),
+                            ),
+                          Flexible(
+                            child: Text(
+                              opt['label'],
+                              textAlign: TextAlign.center,
+                              style: GoogleFonts.poppins(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black87,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          });
+        },
+      ),
+    );
+  }
+
+  // --- WIDGET TEXT INPUT (Dengan Info Luas Lahan) ---
   Widget _buildTextInput(Map<String, dynamic> q, Color activeColor) {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
-            ],
-            border: Border.all(color: Colors.grey.shade200),
+            boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10)],
           ),
           child: TextField(
             controller: _farmController.nameController,
-            onChanged: (val) {
-              setState(() {}); // Rebuild agar tombol lanjut aktif/mati
-            },
+            onChanged: (val) => setState(() {}),
             decoration: InputDecoration(
               hintText: q['hint'],
-              hintStyle: GoogleFonts.poppins(color: Colors.grey),
               border: InputBorder.none,
               contentPadding: const EdgeInsets.all(20),
               prefixIcon: Icon(
@@ -217,22 +352,118 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
                 color: activeColor,
               ),
             ),
-            style: GoogleFonts.poppins(
-              fontSize: 16,
-              fontWeight: FontWeight.w500,
-            ),
           ),
         ),
-        const SizedBox(height: 20),
-        Text(
-          "Tips: Beri nama yang mudah diingat agar tidak tertukar dengan lahan lain.",
-          style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey),
+        const SizedBox(height: 15),
+
+        // INFO LUAS LAHAN
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: Colors.blue.shade50,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.blue.shade100),
+          ),
+          child: Row(
+            children: [
+              Icon(Icons.aspect_ratio, color: Colors.blue.shade700, size: 20),
+              const SizedBox(width: 10),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "Estimasi Luas Lahan",
+                    style: GoogleFonts.poppins(
+                      fontSize: 10,
+                      color: Colors.blueGrey,
+                    ),
+                  ),
+                  Text(
+                    "1000 m²", // Nilai Default dari Controller
+                    style: GoogleFonts.poppins(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.blue.shade900,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ],
     );
   }
 
-  // --- FUNGSI CONTROLLER HELPER ---
+  // ... (SISA KODE SAMA: _buildListOptions, Helper, & Maps) ...
+  // Pastikan copy bagian ini agar tidak error:
+
+  Widget _buildListOptions(Map<String, dynamic> q, String key, Color color) {
+    return Expanded(
+      child: ListView.builder(
+        itemCount: (q['options'] as List).length,
+        itemBuilder: (ctx, i) {
+          var opt = q['options'][i];
+          return Obx(() {
+            bool isSelected = _getValue(key) == opt['label'];
+            return GestureDetector(
+              onTap: () => _setValue(key, opt['label']),
+              child: Container(
+                margin: const EdgeInsets.only(bottom: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 16,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: isSelected ? color : Colors.transparent,
+                    width: 2,
+                  ),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: const Color.fromARGB(13, 0, 0, 0),
+                      blurRadius: 4,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            opt['label'],
+                            style: GoogleFonts.poppins(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 15,
+                            ),
+                          ),
+                          if (opt['sub'] != null)
+                            Text(
+                              opt['sub'],
+                              style: GoogleFonts.poppins(
+                                fontSize: 12,
+                                color: Colors.grey.shade500,
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                    if (isSelected) Icon(Icons.check_circle, color: color),
+                  ],
+                ),
+              ),
+            );
+          });
+        },
+      ),
+    );
+  }
+
   String _getValue(String key) {
     switch (key) {
       case 'phase':
@@ -244,9 +475,9 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
       case 'history':
         return _farmController.pestHistory.value;
       case 'mulch':
-        return _farmController.mulchInput.value; // UPDATE: variabel baru
+        return _farmController.mulchInput.value;
       case 'spray':
-        return _farmController.sprayInput.value; // UPDATE: variabel baru
+        return _farmController.sprayInput.value;
       default:
         return "";
     }
@@ -267,159 +498,25 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
         _farmController.pestHistory.value = val;
         break;
       case 'mulch':
-        _farmController.mulchInput.value = val; // UPDATE
+        _farmController.mulchInput.value = val;
         break;
       case 'spray':
-        _farmController.sprayInput.value = val; // UPDATE
+        _farmController.sprayInput.value = val;
         break;
     }
   }
 
-  // --- WIDGET GRID & LIST ---
-
-  Widget _buildGridOptions(Map<String, dynamic> q, String key, Color color) {
-    return Expanded(
-      child: GridView.builder(
-        physics: const BouncingScrollPhysics(),
-        padding: const EdgeInsets.only(top: 10, bottom: 20, left: 4, right: 4),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          mainAxisSpacing: 15,
-          crossAxisSpacing: 15,
-          childAspectRatio: 1.0,
-        ),
-        itemCount: (q['options'] as List).length,
-        itemBuilder: (ctx, i) {
-          var opt = q['options'][i];
-
-          return Obx(() {
-            bool isSelected = _getValue(key) == opt['label'];
-            return GestureDetector(
-              onTap: () => _setValue(key, opt['label']),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: isSelected
-                      ? Colors.white
-                      : Colors.white.withOpacity(0.8),
-                  border: Border.all(
-                    color: isSelected ? color : Colors.transparent,
-                    width: 2,
-                  ),
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(opt['icon'], style: const TextStyle(fontSize: 38)),
-                    const SizedBox(height: 12),
-                    Text(
-                      opt['label'],
-                      textAlign: TextAlign.center,
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        fontWeight: isSelected
-                            ? FontWeight.w600
-                            : FontWeight.normal,
-                        color: Colors.black87,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    if (isSelected) ...[
-                      const SizedBox(height: 6),
-                      Icon(Icons.check_circle, size: 20, color: color),
-                    ],
-                  ],
-                ),
-              ),
-            );
-          });
-        },
-      ),
-    );
-  }
-
-  Widget _buildListOptions(Map<String, dynamic> q, String key, Color color) {
-    return Expanded(
-      child: ListView.builder(
-        itemCount: (q['options'] as List).length,
-        itemBuilder: (ctx, i) {
-          var opt = q['options'][i];
-
-          return Obx(() {
-            bool isSelected = _getValue(key) == opt['label'];
-            return GestureDetector(
-              onTap: () => _setValue(key, opt['label']),
-              child: Container(
-                margin: const EdgeInsets.only(bottom: 12),
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: isSelected ? color : Colors.transparent,
-                    width: 2,
-                  ),
-                  boxShadow: const [
-                    BoxShadow(color: Colors.black12, blurRadius: 5),
-                  ],
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            opt['label'],
-                            style: GoogleFonts.poppins(
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          Text(
-                            opt['sub'],
-                            style: GoogleFonts.poppins(
-                              fontSize: 12,
-                              color: Colors.grey,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    if (isSelected) Icon(Icons.check_circle, color: color),
-                  ],
-                ),
-              ),
-            );
-          });
-        },
-      ),
-    );
-  }
-
   Widget _buildNextButton(Color color, String? key) {
     bool isLastPage = _currentPage == _questions.length - 1;
-
     return SizedBox(
       width: double.infinity,
-      height: 55,
+      height: 50,
       child: Obx(() {
         bool isEnabled = false;
-
-        if (key == 'name') {
+        if (key == 'name')
           isEnabled = _farmController.nameController.text.isNotEmpty;
-        } else if (key != null) {
+        else if (key != null)
           isEnabled = _getValue(key).isNotEmpty;
-        }
 
         return ElevatedButton(
           onPressed: isEnabled
@@ -428,14 +525,13 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
           style: ElevatedButton.styleFrom(
             backgroundColor: color,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(12),
             ),
-            disabledBackgroundColor: Colors.grey[400],
           ),
           child: _farmController.isSaving.value
               ? const CircularProgressIndicator(color: Colors.white)
               : Text(
-                  isLastPage ? "Selesai & Analisis" : "Lanjut",
+                  isLastPage ? "Selesai" : "Lanjut",
                   style: GoogleFonts.poppins(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
@@ -446,6 +542,40 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
     );
   }
 
+  void _nextPage() {
+    if (_currentPage < _questions.length - 1) {
+      _pageController.nextPage(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeIn,
+      );
+    }
+  }
+
+  Widget _buildHeader(Color primary, Color accent) {
+    return Row(
+      children: [
+        IconButton(
+          icon: Icon(Icons.arrow_back, color: primary),
+          onPressed: () => _currentPage > 0
+              ? _pageController.previousPage(
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.ease,
+                )
+              : Get.back(),
+        ),
+        SizedBox(width: 10),
+        Expanded(
+          child: LinearProgressIndicator(            
+            minHeight: 7,
+            borderRadius: BorderRadius.circular(30),
+            value: (_currentPage + 1) / _questions.length,
+            backgroundColor: Colors.grey[300],
+            valueColor: AlwaysStoppedAnimation<Color>(accent),
+          ),
+        ),
+      ],
+    );
+  }
   // --- PETA 1: GOJEK STYLE ---
   Widget _buildMapMainStep(Map<String, dynamic> q) {
     return Stack(
@@ -693,32 +823,6 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
     );
   }
 
-  Widget _buildHeader(Color primary, Color accent) {
-    return Row(
-      children: [
-        IconButton(
-          icon: Icon(Icons.arrow_back_ios_new_rounded, color: primary),
-          onPressed: () => _currentPage > 0
-              ? _pageController.previousPage(
-                  duration: const Duration(milliseconds: 300),
-                  curve: Curves.ease,
-                )
-              : Get.back(),
-        ),
-        Expanded(
-          child: LinearProgressIndicator(
-            value: (_currentPage + 1) / _questions.length,
-            backgroundColor: Colors.grey[300],
-            valueColor: AlwaysStoppedAnimation<Color>(accent),
-            borderRadius: BorderRadius.circular(10),
-            minHeight: 6,
-          ),
-        ),
-      ],
-    );
-  }
-
-  // Widget Floating Back Button
   Widget _buildFloatingBackButton() {
     return Positioned(
       top: 50,
@@ -747,12 +851,5 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
     );
   }
 
-  void _nextPage() {
-    if (_currentPage < _questions.length - 1) {
-      _pageController.nextPage(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeIn,
-      );
-    }
-  }
+  
 }

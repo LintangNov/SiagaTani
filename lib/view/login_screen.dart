@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:siaga_tani/controllers/auth_controller.dart';
 import 'package:siaga_tani/view/register_screen.dart';
+// import 'package:flutter_svg/flutter_svg.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -39,7 +40,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: const Icon(Icons.arrow_back, color: Colors.black87),
                 ),
               ),
-              
+
               const SizedBox(height: 40),
 
               // --- HEADING ---
@@ -101,34 +102,43 @@ class _LoginScreenState extends State<LoginScreen> {
               SizedBox(
                 width: double.infinity,
                 height: 55,
-                child: Obx(() => ElevatedButton(
-                  onPressed: authController.isLoading.value
-                      ? null
-                      : () {
-                          if (emailCtrl.text.isEmpty || passCtrl.text.isEmpty) {
-                            Get.snackbar("Error", "Email dan Password wajib diisi");
-                            return;
-                          }
-                          authController.login(emailCtrl.text.trim(), passCtrl.text.trim());
-                        },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF2C3312),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
+                child: Obx(
+                  () => ElevatedButton(
+                    onPressed: authController.isLoading.value
+                        ? null
+                        : () {
+                            if (emailCtrl.text.isEmpty ||
+                                passCtrl.text.isEmpty) {
+                              Get.snackbar(
+                                "Error",
+                                "Email dan Password wajib diisi",
+                              );
+                              return;
+                            }
+                            authController.login(
+                              emailCtrl.text.trim(),
+                              passCtrl.text.trim(),
+                            );
+                          },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF2C3312),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      elevation: 0,
                     ),
-                    elevation: 0,
-                  ),
-                  child: authController.isLoading.value
-                      ? const CircularProgressIndicator(color: Colors.white)
-                      : Text(
-                          "Masuk",
-                          style: GoogleFonts.poppins(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
+                    child: authController.isLoading.value
+                        ? const CircularProgressIndicator(color: Colors.white)
+                        : Text(
+                            "Masuk",
+                            style: GoogleFonts.poppins(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
                           ),
-                        ),
-                )),
+                  ),
+                ),
               ),
 
               const SizedBox(height: 30),
@@ -140,8 +150,11 @@ class _LoginScreenState extends State<LoginScreen> {
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 10),
                     child: Text(
-                      "atau masuk dengan",
-                      style: GoogleFonts.poppins(color: Colors.grey[500], fontSize: 12),
+                      "atau",
+                      style: GoogleFonts.poppins(
+                        color: Colors.grey[500],
+                        fontSize: 12,
+                      ),
                     ),
                   ),
                   Expanded(child: Divider(color: Colors.grey[300])),
@@ -167,14 +180,14 @@ class _LoginScreenState extends State<LoginScreen> {
                     children: [
                       // Icon Google (bisa pakai asset image logo google kalau mau berwarna)
                       // Disini saya pakai Icon standard dulu
-                      // Image.asset("assets/icons/google.png", height: 24), 
-                      const Icon(Icons.g_mobiledata, size: 35, color: Colors.black87), 
+                      Image.asset("assets/icons/google.png", height: 24),
+                      // const Icon(Icons.g_mobiledata, size: 35, color: Colors.black87),
                       const SizedBox(width: 10),
                       Text(
-                        "Google",
+                        "Masuk dengan Google",
                         style: GoogleFonts.poppins(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
+                          fontSize: 16,     
+                          fontWeight: FontWeight.w500,
                           color: Colors.black87,
                         ),
                       ),
@@ -249,7 +262,9 @@ class _LoginScreenState extends State<LoginScreen> {
           suffixIcon: isPassword
               ? IconButton(
                   icon: Icon(
-                    _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                    _isPasswordVisible
+                        ? Icons.visibility
+                        : Icons.visibility_off,
                     color: Colors.grey[400],
                     size: 20,
                   ),

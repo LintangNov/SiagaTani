@@ -305,7 +305,7 @@ class MyFarmScreen extends StatelessWidget {
     );
   }
 
-  // --- DIALOG UPDATE FASE ---
+  // --- DIALOG UPDATE FASE (ANTI ERROR) ---
   void _showUpdatePhaseDialog(BuildContext context, FarmModel farm, FirestoreService service) {
     final phases = [
       {"label": "Bibit", "enum": "CropStage.seedling"},
@@ -318,30 +318,37 @@ class MyFarmScreen extends StatelessWidget {
     Get.defaultDialog(
       title: "Pilih Fase Baru",
       titleStyle: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+      // PERBAIKAN UTAMA: Ganti ListView dengan Column + SingleChildScrollView
+      // Ini mencegah error "Intrinsic Dimensions"
       content: SizedBox(
         width: double.maxFinite,
-        child: ListView.separated(
-          shrinkWrap: true,
-          itemCount: phases.length,
-          separatorBuilder: (ctx, i) => const Divider(height: 1),
-          itemBuilder: (ctx, i) {
-            bool isSelected = farm.currentPhase == phases[i]['label'];
-            return ListTile(
-              title: Text(phases[i]['label']!, style: GoogleFonts.poppins()),
-              trailing: isSelected ? const Icon(Icons.check_circle, color: Colors.green) : null,
-              onTap: () async {
-                if (farm.id != null) {
-                  await service.updateFarmPhase(
-                    farm.id!, 
-                    phases[i]['label']!, // String UI
-                    phases[i]['enum']!   // String Enum
-                  );
-                  Get.back();
-                  Get.snackbar("Sukses", "Fase tanaman berhasil diperbarui!", backgroundColor: Colors.green, colorText: Colors.white);
-                }
-              },
-            );
-          },
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: phases.map((phase) {
+              bool isSelected = farm.currentPhase == phase['label'];
+              return Column(
+                children: [
+                  const Divider(height: 1),
+                  ListTile(
+                    title: Text(phase['label']!, style: GoogleFonts.poppins()),
+                    trailing: isSelected ? const Icon(Icons.check_circle, color: Colors.green) : null,
+                    onTap: () async {
+                      if (farm.id != null) {
+                        await service.updateFarmPhase(
+                          farm.id!, 
+                          phase['label']!, 
+                          phase['enum']!
+                        );
+                        Get.back();
+                        Get.snackbar("Sukses", "Fase tanaman diperbarui!", backgroundColor: Colors.green, colorText: Colors.white);
+                      }
+                    },
+                  ),
+                ],
+              );
+            }).toList(),
+          ),
         ),
       ),
     );
