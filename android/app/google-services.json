@@ -12,7 +12,20 @@
           "package_name": "com.example.siaga_tani"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "902797635993-cco8686rmstaslrc483qf8rg57qi06gt.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.siaga_tani",
+            "certificate_hash": "8a75aa87ddcc8e3703e8a65f9136c1651a26cadf"
+          }
+        },
+        {
+          "client_id": "902797635993-adpnanmglh6bdao491haidaldqtctuq3.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyCW8VxjKv0-exMeZXjnS6pRK7lAKRTnTic"
@@ -20,7 +33,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "902797635993-adpnanmglh6bdao491haidaldqtctuq3.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "902797635993-l5tlutmj7o05lgfh2gf1pat6tkoskc01.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.siagaTani"
+              }
+            }
+          ]
         }
       }
     }

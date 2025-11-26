@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:siaga_tani/view/login_screen.dart';
 import 'package:siaga_tani/view/main_screen.dart';
 import 'package:get/get.dart';
 
@@ -17,7 +18,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   final List<Map<String, dynamic>> _onboardingData = [
     {
       "title": "Pertanian Digital\nMasa Depan",
-      "desc": "Kami menyediakan data dan teknologi untuk mengotomatisasi dan mengoptimalkan pertanian global.",
+      "desc": "Kami mengotomatisasi dan mengoptimalkan pertanian global.",
       // Pastikan nama file sesuai dengan di folder assets/images/
       "icon": 'assets/images/onboarding_1.jpg',
     },
@@ -61,12 +62,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 // Gunakan Container untuk mengatur posisi gambar
                 return Container(
                   // Beri padding atas agar tidak nabrak status bar
-                  // padding: const EdgeInsets.only(top: 80, bottom: 250), 
+                  // padding: const EdgeInsets.only(top: 80, bottom: 250),
                   alignment: Alignment.topCenter,
                   child: Image.asset(
                     _onboardingData[index]['icon'],
                     // Atur tinggi gambar relatif terhadap layar (misal 40%)
-                    // height: screenHeight * 0.4, 
+                    // height: screenHeight * 0.4,
                     fit: BoxFit.fitWidth,
                   ),
                 );
@@ -97,9 +98,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 ],
               ),
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(30, 40, 30, 30),
+                padding: const EdgeInsets.fromLTRB(30, 30, 30, 30),
                 child: Column(
-                  mainAxisSize: MainAxisSize.min, // Agar column hanya setinggi kontennya
+                  mainAxisSize:
+                      MainAxisSize.min, // Agar column hanya setinggi kontennya
                   children: [
                     // Judul
                     Text(
@@ -123,9 +125,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         color: Colors.grey[600],
                       ),
                     ),
-                    
-                    const Spacer(), // Spacer akan mendorong konten ke atas/bawah
 
+                    const Spacer(), // Spacer akan mendorong konten ke atas/bawah
                     // Indikator Slide (Titik-titik)
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -136,19 +137,26 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     ),
 
                     const SizedBox(height: 30), // Jarak antara dot dan tombol
-
                     // Tombol
                     SizedBox(
                       width: double.infinity,
                       height: 55,
                       child: ElevatedButton(
                         onPressed: () {
+                          // Di dalam onPressed tombol "Mulai Sekarang"
                           if (_currentPage == _onboardingData.length - 1) {
-                            Get.offAll(
-                              () => const MainScreen(),
+                            // GANTI KE LOGIN SCREEN
+                            Get.off(
+                              () => const LoginScreen(), // <-- Arahkan ke sini
                               transition: Transition.fade,
                               duration: const Duration(milliseconds: 500),
                             );
+                            // if (_currentPage == _onboardingData.length - 1) {
+                            //   Get.offAll(
+                            //     () => const MainScreen(),
+                            //     transition: Transition.fade,
+                            //     duration: const Duration(milliseconds: 500),
+                            //   );
                           } else {
                             _pageController.nextPage(
                               duration: const Duration(milliseconds: 300),
@@ -177,7 +185,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                               ),
                             ),
                             const SizedBox(width: 10),
-                            const Icon(Icons.arrow_forward, color: Colors.white),
+                            const Icon(
+                              Icons.arrow_forward,
+                              color: Colors.white,
+                            ),
                           ],
                         ),
                       ),

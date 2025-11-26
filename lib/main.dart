@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:siaga_tani/view/on_boarding.dart';
-import 'package:get/get.dart'; // 1. Pastikan import ini ada
+import 'package:get/get.dart'; 
+import 'controllers/auth_controller.dart'; // Import controller
 import 'firebase_options.dart';
 
 void main() async {
@@ -9,6 +9,10 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  
+  // REGISTER CONTROLLER DI SINI
+  Get.put(AuthController()); 
+  
   runApp(const MyApp());
 }
 
@@ -17,22 +21,12 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // 2. Ganti MaterialApp menjadi GetMaterialApp
     return GetMaterialApp( 
       debugShowCheckedModeBanner: false,
       title: 'SiagaTani',
       theme: ThemeData(primarySwatch: Colors.green),
-      // Home tetap ke HomePage (yang isinya Splash Screen)
-      home: const HomePage(),
+      // KOSONGKAN HOME, biarkan AuthController yang menentukan arah (ke Main/Onboarding)
+      home: const Scaffold(body: Center(child: CircularProgressIndicator())), 
     );
-  }
-}
-
-class HomePage extends StatelessWidget {
-  const HomePage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const OnboardingScreen();
   }
 }

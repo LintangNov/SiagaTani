@@ -6,6 +6,7 @@ import '../models/surrounding_pin_model.dart';
 import '../services/dummy_weather_service.dart';
 import '../services/prediction_service.dart';
 import '../services/firestore_service.dart';
+import '../utils/ui_utils.dart';
 
 class PredictionController extends GetxController {
   final DummyWeatherService _weatherService = DummyWeatherService();
@@ -39,11 +40,14 @@ class PredictionController extends GetxController {
       List<String> nearbyPlants = pins.map((e) => e.plantType).toList();
 
       // 3. Jalankan Analisis
-      List<PredictionResult> results = _predictionService.analyzeRisk(farm, weather, nearbyPlants);
+      List<PredictionResult> results = _predictionService.analyzeRisk(
+        farm,
+        weather,
+        nearbyPlants,
+      );
       predictionResults.assignAll(results);
-      
     } catch (e) {
-      Get.snackbar("Error", "Gagal analisis: $e");
+      UiUtils.showError("Gagal analisis: $e");
     } finally {
       isAnalyzing.value = false;
     }

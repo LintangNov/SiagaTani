@@ -12,10 +12,17 @@ class FarmDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final FarmModel farm = Get.arguments as FarmModel;
+    // Mengambil data dari arguments
+    final FarmModel? farmArgs = Get.arguments as FarmModel?;
+    if (farmArgs == null) {
+      return const Scaffold(body: Center(child: Text("Data Lahan Tidak Ditemukan")));
+    }
+    final FarmModel farm = farmArgs;
+
     final PredictionController predictionController = Get.put(PredictionController());
     
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      predictionController.farm = farm; 
       predictionController.runAnalysis(); 
     });
 
@@ -23,21 +30,43 @@ class FarmDetailScreen extends StatelessWidget {
       backgroundColor: const Color(0xFFF8F9FA),
       body: CustomScrollView(
         slivers: [
-          // 1. APP BAR GAMBAR/PETA (Sesuai referensi)
+          // 1. APP BAR DENGAN PETA & TOMBOL BACK CANTIK
           SliverAppBar(
             expandedHeight: 250,
             pinned: true,
             backgroundColor: const Color(0xFF2C3312),
+            leadingWidth: 70, 
+            leading: Padding(
+              padding: const EdgeInsets.only(left: 16, top: 8, bottom: 8),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.15),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2)
+                    )
+                  ]
+                ),
+                child: IconButton(
+                  icon: const Icon(Icons.arrow_back_rounded, color: Color(0xFF2C3312)),
+                  onPressed: () => Get.back(),
+                  tooltip: 'Kembali',
+                ),
+              ),
+            ),
             flexibleSpace: FlexibleSpaceBar(
               background: Stack(
                 fit: StackFit.expand,
                 children: [
-                  // Tampilkan Peta Statis sebagai background
+                  // Peta Statis (Background)
                   FlutterMap(
                     options: MapOptions(
                       initialCenter: LatLng(farm.latitude, farm.longitude),
                       initialZoom: 16.0,
-                      interactionOptions: const InteractionOptions(flags: InteractiveFlag.none), // Map diam
+                      interactionOptions: const InteractionOptions(flags: InteractiveFlag.none),
                     ),
                     children: [
                       TileLayer(urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png'),
@@ -49,92 +78,82 @@ class FarmDetailScreen extends StatelessWidget {
                       ])
                     ],
                   ),
-                  // Gradient gelap biar teks kelihatan
+                  // Gradient Shadow agar status bar terlihat
                   Container(
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
-                        colors: [Colors.transparent, Colors.black.withOpacity(0.7)],
+                        colors: [
+                          Colors.black.withOpacity(0.3),
+                          Colors.transparent,
+                          Colors.black.withOpacity(0.6),
+                        ],
                       ),
                     ),
                   ),
                 ],
               ),
-              title: Text(farm.farmName, style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: Colors.white)),
-              centerTitle: false,
-            ),
-            leading: CircleAvatar(
-              backgroundColor: Colors.white.withOpacity(0.8),
-              child: IconButton(
-                icon: const Icon(Icons.arrow_back, color: Colors.black),
-                onPressed: () => Get.back(),
-              ),
             ),
           ),
 
-          // 2. KONTEN DASHBOARD
+          // 2. KONTEN UTAMA
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.all(20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // _buildStatusCard(farm) -> Pastikan kode ini ada dari file lama
-                  _buildStatusCard(farm), 
-                  const SizedBox(height: 20),
+                  // --- HEADER INFO LAHAN (Simpel) ---
+                  _buildInfoCard(farm),
                   
-                  Text("Analisis Risiko Hama", style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 25),
                   
+                  // --- JUDUL BAGIAN ANALISIS ---
+                  Row(
+                    children: [
+                      const Icon(Icons.analytics_outlined, color: Color(0xFF2C3312)),
+                      const SizedBox(width: 8),
+                      Text("Analisis Risiko Hama", 
+                        style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold, color: const Color(0xFF2C3312))
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 15),
+                  
+                  // --- CONTENT ANALISIS ---
                   Obx(() {
                     if (predictionController.isAnalyzing.value) {
-                      return const Padding(
-                        padding: EdgeInsets.all(20.0),
-                        child: Center(child: CircularProgressIndicator()),
+                      return Container(
+                        height: 150,
+                        alignment: Alignment.center,
+                        child: const Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            CircularProgressIndicator(color: Color(0xFF4CAF50)),
+                            SizedBox(height: 10),
+                            Text("Sedang menganalisis lahan...")
+                          ],
+                        ),
                       );
                     }
                     
                     return Column(
                       children: [
-                        // Weather Mini Card (Tetap sama)
+                        // Kartu Cuaca Mini
                         _buildWeatherMiniCard(predictionController.weatherData.value),
                         const SizedBox(height: 15),
                         
+                        // Kartu Hama (Jika kosong = Aman)
                         if (predictionController.predictionResults.isEmpty)
                           _buildSafeCard()
                         else
-                          // GENERATE EXPANDABLE CARDS
                           ...predictionController.predictionResults.map((result) => _buildExpandablePestCard(result))
                       ],
                     );
                   }),
                   
-                  const SizedBox(height: 20),
-                  
-                  // --- GROWTH MONITORING (DUMMY CHART) ---
-                  Text("Growth Monitoring", style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 10),
-                  Container(
-                    height: 150,
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(15),
-                    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
-                    child: Center(child: Text("Chart Grafik Pertumbuhan\n(Placeholder)", textAlign: TextAlign.center, style: GoogleFonts.poppins(color: Colors.grey))),
-                  ),
-                  
-                  // const SizedBox(height: 30),
-                  // // Tombol Ask AI
-                  // SizedBox(
-                  //   width: double.infinity,
-                  //   height: 55,
-                  //   child: ElevatedButton.icon(
-                  //     onPressed: (){}, 
-                  //     icon: const Icon(Icons.smart_toy, color: Colors.white),
-                  //     label: Text("Tanya Siaga AI", style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: Colors.white)),
-                  //     style: ElevatedButton.styleFrom(backgroundColor: Colors.black87),
-                  //   ),
-                  // )
+                  const SizedBox(height: 40), 
                 ],
               ),
             ),
@@ -144,234 +163,209 @@ class FarmDetailScreen extends StatelessWidget {
     );
   }
 
+  // --- WIDGET: INFO LAHAN (Pengganti Crop Health yang rumit) ---
+  Widget _buildInfoCard(FarmModel farm) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Nama Lahan
+          Text(
+            farm.farmName, 
+            style: GoogleFonts.poppins(
+              fontSize: 22, 
+              fontWeight: FontWeight.bold, 
+              color: const Color(0xFF2C3312)
+            )
+          ),
+          const SizedBox(height: 5),
+          Row(
+            children: [
+              const Icon(Icons.location_on_outlined, size: 14, color: Colors.grey),
+              const SizedBox(width: 4),
+              Expanded(
+                child: Text(
+                  farm.address,
+                  style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+          
+          const Divider(height: 30, thickness: 1),
+          
+          // Detail Grid Sederhana
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _buildInfoColumn("Tanaman", farm.variety, Icons.grass),
+              _buildInfoColumn("Fase", farm.currentPhase, Icons.timeline),
+              _buildInfoColumn("Luas", farm.landSize, Icons.aspect_ratio),
+            ],
+          )
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInfoColumn(String label, String value, IconData icon) {
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: const Color(0xFFF1F8E9), 
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Icon(icon, size: 22, color: const Color(0xFF558B2F)),
+        ),
+        const SizedBox(height: 8),
+        Text(value, style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.black87)),
+        Text(label, style: GoogleFonts.poppins(fontSize: 11, color: Colors.grey)),
+      ],
+    );
+  }
+
+  // --- WIDGET: EXPANDABLE CARD (HAMA) ---
   Widget _buildExpandablePestCard(PredictionResult result) {
     Color baseColor;
-    Color deepColor;
     Color bgColor;
 
     switch (result.riskLevel) {
-      case RiskLevel.severe: // BAHAYA
+      case RiskLevel.severe:
         baseColor = Colors.red;
-        deepColor = Colors.red.shade900;
         bgColor = Colors.red.shade50;
         break;
-      case RiskLevel.high: // TINGGI
+      case RiskLevel.high:
         baseColor = Colors.orange;
-        deepColor = Colors.deepOrange.shade900;
         bgColor = Colors.orange.shade50;
         break;
-      case RiskLevel.moderate: // SEDANG
-        baseColor = Colors.amber;
-        deepColor = Colors.brown;
+      case RiskLevel.moderate:
+        baseColor = Colors.amber.shade800;
         bgColor = Colors.amber.shade50;
         break;
-      default: // RENDAH
+      default:
         baseColor = Colors.green;
-        deepColor = Colors.green.shade900;
         bgColor = Colors.green.shade50;
     }
 
     return Card(
-      elevation: 2,
+      elevation: 0,
       margin: const EdgeInsets.only(bottom: 12),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      clipBehavior: Clip.antiAlias,
-      child: Theme(
-        data: ThemeData().copyWith(dividerColor: Colors.transparent),
-        child: ExpansionTile(
-          backgroundColor: Colors.white,
-          collapsedBackgroundColor: bgColor,
-          tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          
-          // --- HEADER SAAT TERTUTUP ---
-          leading: CircleAvatar(
-            backgroundColor: Colors.white,
-            child: Icon(Icons.bug_report, color: baseColor),
-          ),
-          title: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Text(result.pestName, 
-                  style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: const Color(0xFF2C3312))
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: baseColor,
-                  borderRadius: BorderRadius.circular(8)
-                ),
-                child: Text(result.formattedPercentage, 
-                  style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 12)
-                ),
-              )
-            ],
-          ),
-          subtitle: Padding(
-            padding: const EdgeInsets.only(top: 4),
-            child: Text(result.shortDescription, // Alasan singkat
-              style: GoogleFonts.poppins(fontSize: 12, color: Colors.black87),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-          
-          // --- CONTENT SAAT DIBUKA ---
-          children: [
-            Container(
-              color: Colors.white,
-              padding: const EdgeInsets.all(16),
-              width: double.infinity,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Bagian Analisis
-                  Text("Mengapa Berisiko?", style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: baseColor)),
-                  const SizedBox(height: 5),
-                  Text(result.detailedAnalysis, 
-                    style: GoogleFonts.poppins(fontSize: 13, color: Colors.black87, height: 1.5)
-                  ),
-                  
-                  const SizedBox(height: 15),
-                  const Divider(),
-                  const SizedBox(height: 10),
-
-                  // Bagian Pencegahan
-                  Text("Langkah Pencegahan & Pengendalian:", style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: Colors.green[800])),
-                  const SizedBox(height: 8),
-                  ...result.preventionSteps.map((step) => Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text("• ", style: TextStyle(fontWeight: FontWeight.bold)),
-                        Expanded(child: Text(step, style: GoogleFonts.poppins(fontSize: 13, color: Colors.black87))),
-                      ],
-                    ),
-                  )).toList()
-                ],
-              ),
-            )
-          ],
-        ),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: baseColor.withOpacity(0.3))
       ),
-    );
-  }
-  // WIDGET: Status Grid
-  Widget _buildStatusCard(FarmModel farm) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
-      child: Column(
+      clipBehavior: Clip.antiAlias,
+      child: ExpansionTile(
+        backgroundColor: Colors.white,
+        collapsedBackgroundColor: Colors.white,
+        tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        
+        leading: Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(color: bgColor, shape: BoxShape.circle),
+          child: Icon(Icons.bug_report_rounded, color: baseColor),
+        ),
+        title: Text(
+          result.pestName, 
+          style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: const Color(0xFF2C3312))
+        ),
+        subtitle: Text(
+          result.shortDescription,
+          style: GoogleFonts.poppins(fontSize: 12, color: Colors.black54),
+          maxLines: 1, overflow: TextOverflow.ellipsis,
+        ),
+        trailing: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: baseColor,
+            borderRadius: BorderRadius.circular(8)
+          ),
+          child: Text(
+            result.formattedPercentage, 
+            style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 12)
+          ),
+        ),
+        
         children: [
-          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-            Text("Crop Health", style: GoogleFonts.poppins(color: Colors.grey)),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(color: Colors.green[50], borderRadius: BorderRadius.circular(8)),
-              child: Text("Good", style: GoogleFonts.poppins(color: Colors.green, fontWeight: FontWeight.bold)),
-            )
-          ]),
-          const Divider(height: 20),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              _buildDetailItem("Varietas", farm.variety),
-              _buildDetailItem("Fase", farm.currentPhase),
-              _buildDetailItem("Panen", "~2 Bulan"), // Estimasi Dummy
-            ],
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Divider(),
+                Text("Analisis:", style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 13)),
+                Text(result.detailedAnalysis, style: GoogleFonts.poppins(fontSize: 13, color: Colors.black87, height: 1.5)),
+                const SizedBox(height: 10),
+                Text("Saran Pencegahan:", style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 13, color: baseColor)),
+                ...result.preventionSteps.map((step) => Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text("• ", style: TextStyle(fontWeight: FontWeight.bold)),
+                      Expanded(child: Text(step, style: GoogleFonts.poppins(fontSize: 12))),
+                    ],
+                  ),
+                )),
+              ],
+            ),
           )
         ],
       ),
     );
   }
 
-  Widget _buildDetailItem(String label, String val) {
-    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text(label, style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey)),
-      Text(val, style: GoogleFonts.poppins(fontWeight: FontWeight.w600))
-    ]);
-  }
-
-  // WIDGET: Weather Mini
+  // --- WIDGET: CUACA MINI ---
   Widget _buildWeatherMiniCard(weather) {
     if (weather == null) return const SizedBox();
     return Container(
       padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(colors: [Color(0xFF4FC3F7), Color(0xFF29B6F6)]),
-        borderRadius: BorderRadius.circular(16)
+        color: Colors.blue[50],
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.blue.shade100)
       ),
       child: Row(
         children: [
-          const Icon(Icons.cloud, color: Colors.white, size: 40),
+          const Icon(Icons.cloud_queue, color: Colors.blue, size: 30),
           const SizedBox(width: 15),
-          Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text("${weather.temperature}°C - ${weather.condition}", style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold)),
-            Text("Kelembapan: ${weather.humidity}%", style: GoogleFonts.poppins(color: Colors.white70, fontSize: 12)),
-          ])
-        ],
-      ),
-    );
-  }
-
-  // WIDGET: Pest Analysis Card (Merah jika Tinggi)
-  Widget _buildPestCard(PredictionResult result) {
-    // Logika Warna Baru menggunakan Enum
-    Color cardColor;
-    Color textColor;
-
-    switch (result.riskLevel) {
-      case RiskLevel.severe: // BAHAYA
-        cardColor = Colors.red.shade50;
-        textColor = Colors.red.shade900;
-        break;
-      case RiskLevel.high: // TINGGI
-        cardColor = Colors.orange.shade50;
-        textColor = Colors.deepOrange.shade800;
-        break;
-      case RiskLevel.moderate: // SEDANG
-        cardColor = Colors.yellow.shade50;
-        textColor = Colors.orange.shade900;
-        break;
-      default: // RENDAH
-        cardColor = Colors.green.shade50;
-        textColor = Colors.green.shade800;
-    }
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(15),
-      decoration: BoxDecoration(color: cardColor, borderRadius: BorderRadius.circular(16)),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(children: [
-            Icon(Icons.warning_amber_rounded, color: textColor),
-            const SizedBox(width: 10),
-            Expanded(child: Text(result.pestName, style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: textColor))),
-            Text(result.formattedPercentage, style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: textColor)),
-          ]),
-          const SizedBox(height: 8),
-          Text(result.shortDescription, style: GoogleFonts.poppins(fontSize: 12, color: Colors.black87)),
-          const SizedBox(height: 8),
-          // Tampilkan 1 saran pencegahan utama
-          if (result.preventionSteps.isNotEmpty)
-             Text("Saran: ${result.preventionSteps.first}", style: GoogleFonts.poppins(fontSize: 11, fontStyle: FontStyle.italic, color: textColor)),
+          Expanded(
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text("Cuaca Saat Ini", style: GoogleFonts.poppins(fontSize: 10, color: Colors.blueGrey)),
+              Text("${weather.temperature}°C - ${weather.condition}", style: GoogleFonts.poppins(color: Colors.black87, fontWeight: FontWeight.bold)),
+            ]),
+          )
         ],
       ),
     );
   }
   
+  // --- WIDGET: AMAN ---
   Widget _buildSafeCard() {
     return Container(
-      padding: const EdgeInsets.all(15),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(color: Colors.green[50], borderRadius: BorderRadius.circular(16)),
       child: Row(children: [
-        const Icon(Icons.check_circle, color: Colors.green),
-        const SizedBox(width: 10),
-        Text("Risiko Hama Rendah", style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: Colors.green)),
+        const Icon(Icons.verified_user_rounded, color: Colors.green, size: 30),
+        const SizedBox(width: 15),
+        Expanded(child: Text("Tidak ada risiko hama yang terdeteksi saat ini.", style: GoogleFonts.poppins(color: Colors.green[900], fontSize: 13))),
       ]),
     );
   }

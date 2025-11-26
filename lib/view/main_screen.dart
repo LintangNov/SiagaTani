@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:persistent_bottom_nav_bar/persistent_bottom_nav_bar.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:siaga_tani/view/dashboard_screen.dart'; 
+import 'package:siaga_tani/view/dashboard_screen.dart';
+import 'package:siaga_tani/view/my_farm_screen.dart'; 
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -16,7 +17,7 @@ class _MainScreenState extends State<MainScreen> {
   List<Widget> _buildScreens() {
     return [
       const DashboardScreen(),
-      const Center(child: Text("Crops Page")),
+      const MyFarmScreen(),
       const Center(child: Text("Inventory Page")),
       const Center(child: Text("Profile Page")),
     ];
@@ -27,14 +28,14 @@ class _MainScreenState extends State<MainScreen> {
       PersistentBottomNavBarItem(
         icon: const Icon(CupertinoIcons.house_fill),
         inactiveIcon: const Icon(CupertinoIcons.house),
-        title: ("Home"),
+        title: ("Beranda"),
         activeColorPrimary: const Color(0xFF4CAF50),
         inactiveColorPrimary: CupertinoColors.systemGrey,
       ),
       PersistentBottomNavBarItem(
         icon: const Icon(Icons.spa), // Material Icon untuk Daun
         inactiveIcon: const Icon(Icons.spa_outlined),
-        title: ("Crops"),
+        title: ("Lahan Saya"),
         activeColorPrimary: const Color(0xFF4CAF50),
         inactiveColorPrimary: CupertinoColors.systemGrey,
       ),
@@ -48,7 +49,7 @@ class _MainScreenState extends State<MainScreen> {
       PersistentBottomNavBarItem(
         icon: const Icon(CupertinoIcons.person_fill),
         inactiveIcon: const Icon(CupertinoIcons.person),
-        title: ("Profile"),
+        title: ("Profil"),
         activeColorPrimary: const Color(0xFF4CAF50),
         inactiveColorPrimary: CupertinoColors.systemGrey,
       ),
