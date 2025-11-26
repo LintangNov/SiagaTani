@@ -1,5 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart'; // 1. Wajib import ini
+import 'package:firebase_auth/firebase_auth.dart';
 import '../models/farm_model.dart';
 import '../models/surrounding_pin_model.dart';
 
@@ -16,7 +16,7 @@ class FirestoreService {
     String? uid = _currentUserId;
     if (uid == null) throw Exception("User belum login!");
 
-    // 2. Saat simpan, tempelkan 'userId' ke data
+    // Saat simpan, tempelkan 'userId' ke data
     Map<String, dynamic> data = farm.toMap();
     data['userId'] = uid; 
     
@@ -27,6 +27,15 @@ class FirestoreService {
     await _farmsCollection.doc(id).update({'farmName': newName});
   }
 
+  // --- FITUR BARU: UPDATE FASE TANAM ---
+  Future<void> updateFarmPhase(String id, String newPhaseStr, String newEnumStr) async {
+    await _farmsCollection.doc(id).update({
+      'currentPhase': newPhaseStr, // Teks untuk UI ("Berbuah")
+      'cropStage': newEnumStr,     // Enum string untuk Logic ("CropStage.fruiting")
+    });
+  }
+  // --------------------------------------
+
   Future<void> deleteFarm(String id) async {
     await _farmsCollection.doc(id).delete();
   }
@@ -35,13 +44,11 @@ class FirestoreService {
     String? uid = _currentUserId;
     
     if (uid == null) {
-      // Kalau user logout/null, kembalikan list kosong
       return Stream.value([]); 
     }
 
-    // 3. Saat ambil data, FILTER berdasarkan 'userId' == uid saya
     return _farmsCollection
-        .where('userId', isEqualTo: uid) // INI KUNCINYA
+        .where('userId', isEqualTo: uid) 
         .orderBy('createdAt', descending: true)
         .snapshots()
         .map((snapshot) {
@@ -51,9 +58,6 @@ class FirestoreService {
     });
   }
 
-  // --- PIN TETANGGA (Biasanya bersifat publik/berbagi, jadi tidak perlu filter user) ---
-  // Tapi kalau mau privat juga, lakukan hal yang sama seperti di atas.
-  
   Future<void> addSurroundingPin(SurroundingPinModel pin) async {
     await _pinsCollection.add(pin.toMap());
   }

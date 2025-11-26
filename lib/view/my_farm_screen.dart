@@ -13,7 +13,6 @@ class MyFarmScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Panggil controller untuk akses stream data
     final DashboardController controller = Get.put(DashboardController());
     final FirestoreService firestoreService = FirestoreService();
 
@@ -33,31 +32,20 @@ class MyFarmScreen extends StatelessWidget {
         automaticallyImplyLeading: false,
       ),
       body: StreamBuilder<List<FarmModel>>(
-        // Ini STREAM PINTAR yang otomatis update kalau ada data baru
         stream: controller.farmListStream, 
         builder: (context, snapshot) {
-          // 1. State Loading
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(
               child: CircularProgressIndicator(color: Color(0xFF2C3312)),
             );
           }
 
-          // 2. State Error
           if (snapshot.hasError) {
             return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: Text(
-                  "Terjadi kesalahan memuat data.\n(Cek Console: Mungkin butuh Index Firestore)",
-                  textAlign: TextAlign.center,
-                  style: GoogleFonts.poppins(color: Colors.red),
-                ),
-              ),
+              child: Text("Gagal memuat data.", style: GoogleFonts.poppins()),
             );
           }
 
-          // 3. State Kosong (Belum input lahan)
           if (!snapshot.hasData || snapshot.data!.isEmpty) {
             return Center(
               child: Column(
@@ -89,7 +77,6 @@ class MyFarmScreen extends StatelessWidget {
             );
           }
 
-          // 4. State Ada Data -> Tampilkan List
           final farms = snapshot.data!;
 
           return ListView.separated(
@@ -106,7 +93,7 @@ class MyFarmScreen extends StatelessWidget {
     );
   }
 
-  // --- WIDGET KARTU LAHAN (DESAIN BARU) ---
+  // --- WIDGET KARTU LAHAN ---
   Widget _buildFarmCard(BuildContext context, FarmModel farm, FirestoreService service) {
     return GestureDetector(
       onTap: () => Get.to(() => const FarmDetailScreen(), arguments: farm),
@@ -122,7 +109,7 @@ class MyFarmScreen extends StatelessWidget {
             ),
           ],
         ),
-child: Column(
+        child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // A. GAMBAR PETA
@@ -133,20 +120,16 @@ child: Column(
                 width: double.infinity,
                 child: Stack(
                   children: [
-                    // Peta Statis
                     FlutterMap(
                       options: MapOptions(
                         initialCenter: LatLng(farm.latitude, farm.longitude),
                         initialZoom: 15.0,
-                        interactionOptions: const InteractionOptions(
-                          flags: InteractiveFlag.none, 
-                        ),
+                        interactionOptions: const InteractionOptions(flags: InteractiveFlag.none),
                       ),
                       children: [
                         TileLayer(
                           urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                          // TAMBAHKAN BARIS INI (WAJIB UNTUK OSM)
-                          userAgentPackageName: 'com.example.siaga_tani', 
+                          userAgentPackageName: 'com.example.siaga_tani',
                         ),
                         MarkerLayer(
                           markers: [
@@ -158,7 +141,7 @@ child: Column(
                         ),
                       ],
                     ),
-                    // Gradient agar tombol option terlihat
+                    // Gradient & Tombol Opsi
                     Container(
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
@@ -168,7 +151,6 @@ child: Column(
                         ),
                       ),
                     ),
-                    // Tombol Opsi (Titik Tiga)
                     Positioned(
                       top: 10,
                       right: 10,
@@ -197,7 +179,6 @@ child: Column(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Nama & Luas
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -214,30 +195,14 @@ child: Column(
                         ),
                       ),
                       Text(
-                        farm.landSize, // Contoh: "1000 m2"
-                        style: GoogleFonts.poppins(
-                          fontSize: 12,
-                          color: Colors.grey[600],
-                          fontWeight: FontWeight.w500,
-                        ),
+                        farm.landSize,
+                        style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey[600]),
                       ),
                     ],
                   ),
-                  
-                  const SizedBox(height: 4),
-                  // Alamat Singkat
-                  Text(
-                    farm.address,
-                    style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 8),
                   const Divider(height: 1, color: Colors.black12),
-                  const SizedBox(height: 12),
-
-                  // Chips Info (Varietas & Fase)
+                  const SizedBox(height: 8),
                   Row(
                     children: [
                       _buildInfoChip(Icons.grass, farm.variety, Colors.green),
@@ -254,7 +219,6 @@ child: Column(
     );
   }
 
-  // Helper Widget untuk Chip
   Widget _buildInfoChip(IconData icon, String label, MaterialColor color) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
@@ -270,19 +234,14 @@ child: Column(
           const SizedBox(width: 6),
           Text(
             label,
-            style: GoogleFonts.poppins(
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              color: color.shade800,
-            ),
+            style: GoogleFonts.poppins(fontSize: 11, fontWeight: FontWeight.w600, color: color.shade800),
           ),
         ],
       ),
     );
   }
 
-  // --- LOGIKA DIALOG EDIT & DELETE ---
-  
+  // --- LOGIKA MENU OPSI ---
   void _showOptionsDialog(BuildContext context, FarmModel farm, FirestoreService service) {
     Get.bottomSheet(
       Container(
@@ -296,6 +255,24 @@ child: Column(
           children: [
             Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2))),
             const SizedBox(height: 20),
+            
+            // 1. UPDATE FASE (NEW)
+            ListTile(
+              leading: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(color: Colors.orange.shade50, shape: BoxShape.circle),
+                child: Icon(Icons.update, color: Colors.orange.shade700, size: 20),
+              ),
+              title: Text("Update Fase Tanam", style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
+              subtitle: Text("Ubah fase (misal: Berbunga -> Berbuah)", style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey)),
+              onTap: () {
+                Get.back();
+                _showUpdatePhaseDialog(context, farm, service);
+              },
+            ),
+            const Divider(),
+
+            // 2. EDIT NAMA
             ListTile(
               leading: Container(
                 padding: const EdgeInsets.all(8),
@@ -308,7 +285,8 @@ child: Column(
                 _showEditDialog(context, farm, service);
               },
             ),
-            const SizedBox(height: 10),
+
+            // 3. HAPUS
             ListTile(
               leading: Container(
                 padding: const EdgeInsets.all(8),
@@ -322,6 +300,48 @@ child: Column(
               },
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  // --- DIALOG UPDATE FASE ---
+  void _showUpdatePhaseDialog(BuildContext context, FarmModel farm, FirestoreService service) {
+    final phases = [
+      {"label": "Bibit", "enum": "CropStage.seedling"},
+      {"label": "Vegetatif", "enum": "CropStage.vegetative"},
+      {"label": "Berbunga", "enum": "CropStage.flowering"},
+      {"label": "Berbuah", "enum": "CropStage.fruiting"},
+      {"label": "Panen", "enum": "CropStage.harvesting"},
+    ];
+
+    Get.defaultDialog(
+      title: "Pilih Fase Baru",
+      titleStyle: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+      content: SizedBox(
+        width: double.maxFinite,
+        child: ListView.separated(
+          shrinkWrap: true,
+          itemCount: phases.length,
+          separatorBuilder: (ctx, i) => const Divider(height: 1),
+          itemBuilder: (ctx, i) {
+            bool isSelected = farm.currentPhase == phases[i]['label'];
+            return ListTile(
+              title: Text(phases[i]['label']!, style: GoogleFonts.poppins()),
+              trailing: isSelected ? const Icon(Icons.check_circle, color: Colors.green) : null,
+              onTap: () async {
+                if (farm.id != null) {
+                  await service.updateFarmPhase(
+                    farm.id!, 
+                    phases[i]['label']!, // String UI
+                    phases[i]['enum']!   // String Enum
+                  );
+                  Get.back();
+                  Get.snackbar("Sukses", "Fase tanaman berhasil diperbarui!", backgroundColor: Colors.green, colorText: Colors.white);
+                }
+              },
+            );
+          },
         ),
       ),
     );
@@ -364,18 +384,18 @@ child: Column(
       titleStyle: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: Colors.red),
       middleText: "Anda yakin ingin menghapus '${farm.farmName}'? Data ini tidak bisa dikembalikan.",
       middleTextStyle: GoogleFonts.poppins(),
-      textConfirm: "Hapus",
-      textCancel: "Batal",
-      confirmTextColor: Colors.white,
-      buttonColor: Colors.red,
-      cancelTextColor: Colors.black,
-      onConfirm: () async {
-        if (farm.id != null) {
-          await service.deleteFarm(farm.id!);
-          Get.back();
-          Get.snackbar("Terhapus", "Lahan berhasil dihapus", backgroundColor: Colors.red, colorText: Colors.white);
-        }
-      },
+      confirm: ElevatedButton(
+        onPressed: () async {
+          if (farm.id != null) {
+            await service.deleteFarm(farm.id!);
+            Get.back();
+            Get.snackbar("Terhapus", "Lahan berhasil dihapus", backgroundColor: Colors.red, colorText: Colors.white);
+          }
+        },
+        style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+        child: const Text("Hapus", style: TextStyle(color: Colors.white)),
+      ),
+      cancel: OutlinedButton(onPressed: () => Get.back(), child: const Text("Batal")),
     );
   }
 }

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:get/get.dart';
 import 'package:siaga_tani/controllers/dashboard_controller.dart';
-import 'package:siaga_tani/view/question.dart';
+import 'package:siaga_tani/view/question.dart'; 
 
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
@@ -14,111 +14,158 @@ class DashboardScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // 1. HEADER PERSONALISASI (NAMA & LOKASI)
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Sapaan Nama
-                      Obx(
-                        () => Text(
+        child: RefreshIndicator(
+          onRefresh: () async {
+            await controller.fetchCurrentLocation(forceRefresh: true);
+            controller.fetchUserData(); 
+          },
+          color: const Color(0xFF2C3312),
+          backgroundColor: Colors.white,
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // --- HEADER ---
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Obx(() => Text(
                           "Hai, ${controller.userName.value} 👋",
                           style: GoogleFonts.poppins(
-                            fontSize: 20, // Lebih besar
+                            fontSize: 20,
                             fontWeight: FontWeight.bold,
                             color: const Color(0xFF2C3312),
                           ),
+                        )),
+                        const SizedBox(height: 4),
+                        GestureDetector(
+                          onTap: () => controller.handleLocationTap(),
+                          child: Row(
+                            children: [
+                              Obx(() => Icon(
+                                Icons.location_on,
+                                color: controller.currentLocation.value.contains("Ketuk") 
+                                    ? Colors.red 
+                                    : const Color(0xFFE57373),
+                                size: 16,
+                              )),
+                              const SizedBox(width: 4),
+                              Obx(() => Text(
+                                controller.currentLocation.value,
+                                style: GoogleFonts.poppins(
+                                  fontSize: 13,
+                                  color: controller.currentLocation.value.contains("Ketuk") 
+                                      ? Colors.red 
+                                      : Colors.grey[600],
+                                  fontWeight: FontWeight.w500,
+                                  decoration: controller.currentLocation.value.contains("Ketuk") 
+                                      ? TextDecoration.underline 
+                                      : TextDecoration.none,
+                                ),
+                              )),
+                            ],
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 4),
-                      // Lokasi di bawahnya
-                      Row(
-                        children: [
-                          const Icon(
-                            Icons.location_on,
-                            color: Color(0xFFE57373),
-                            size: 16,
-                          ),
-                          const SizedBox(width: 4),
-                          Obx(
-                            () => Text(
-                              controller.currentLocation.value,
-                              style: GoogleFonts.poppins(
-                                fontSize: 13,
-                                color: Colors.grey[600],
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                  CircleAvatar(
-                    backgroundColor: Colors.white,
-                    child: const Icon(
-                      Icons.notifications_none,
-                      color: Colors.black54,
+                      ],
                     ),
-                  ),
-                ],
-              ),
+                    CircleAvatar(
+                      backgroundColor: Colors.white,
+                      child: const Icon(Icons.notifications_none, color: Colors.black54),
+                    ),
+                  ],
+                ),
 
-              const SizedBox(height: 25),
+                const SizedBox(height: 25),
 
-              // ... SISA KODE WIDGET CUACA & MENU TETAP SAMA ...
-              // (Copy dari kode sebelumnya mulai dari Weather Widget ke bawah)
-              _buildWeatherSection(controller),
-
-              const SizedBox(height: 25),
-              _buildTipsSection(controller),
-
-              const SizedBox(height: 30),
-              _buildMenuSection(),
-            ],
+                // --- WEATHER WIDGET (YANG DIUBAH) ---
+                _buildWeatherSection(controller),
+                
+                const SizedBox(height: 25),
+                _buildTipsSection(controller),
+                const SizedBox(height: 30),
+                _buildMenuSection(),
+                const SizedBox(height: 20),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  // --- Helper Widgets (Biar rapi kodenya) ---
-
+  // --- WIDGET CUACA DINAMIS DENGAN GRADIENT ---
   Widget _buildWeatherSection(DashboardController controller) {
     return Obx(() {
       var weather = controller.currentWeather.value;
+      
+      // LOGIKA WARNA & GRADIENT
+      List<Color> gradientColors;
+      Color textColor;
+      Color iconColor;
+      IconData weatherIcon;
+      
+      String condition = (weather?.condition ?? "").toLowerCase();
+
+      if (condition.contains("hujan")) {
+        // ABU-ABU MENDUNG (Rainy)
+        gradientColors = [
+          const Color(0xFF607D8B), // Blue Grey 500
+          const Color(0xFF90A4AE), // Blue Grey 300
+        ];
+        textColor = Colors.white;
+        iconColor = Colors.white70;
+        weatherIcon = Icons.thunderstorm;
+      } 
+      else if (condition.contains("awan") || condition.contains("berawan")) {
+        // BIRU SEJUK (Cloudy)
+        gradientColors = [
+          const Color(0xFF42A5F5), // Blue 400
+          const Color(0xFF90CAF9), // Blue 200
+        ];
+        textColor = Colors.white;
+        iconColor = Colors.white70;
+        weatherIcon = Icons.cloud;
+      } 
+      else {
+        // KUNING TERIK (Sunny - Default)
+        gradientColors = [
+          const Color(0xFFFFB300), // Amber 600
+          const Color(0xFFFFD54F), // Amber 300
+        ];
+        textColor = const Color(0xFF4E342E); // Coklat tua biar kontras
+        iconColor = Colors.white54;
+        weatherIcon = Icons.wb_sunny_rounded;
+      }
+
       return Container(
         width: double.infinity,
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [Color(0xFFFFD54F), Color(0xFFFFB74D)],
+          gradient: LinearGradient(
+            colors: gradientColors,
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
           borderRadius: BorderRadius.circular(25),
           boxShadow: [
             BoxShadow(
-              color: Colors.orange.withOpacity(0.3),
+              color: gradientColors.last.withOpacity(0.5),
               blurRadius: 15,
               offset: const Offset(0, 8),
             ),
           ],
         ),
         child: controller.isLoadingWeather.value
-            ? const Center(
-                child: CircularProgressIndicator(color: Colors.white),
-              )
+            ? const Center(child: CircularProgressIndicator(color: Colors.white))
             : Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Baris Atas: Suhu & Ikon Besar
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -126,44 +173,56 @@ class DashboardScreen extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            "${weather?.temperature ?? '--'}°C",
+                            "${weather?.temperature.toStringAsFixed(0) ?? '--'}°C",
                             style: GoogleFonts.poppins(
-                              fontSize: 32,
+                              fontSize: 36, // Sedikit lebih besar
                               fontWeight: FontWeight.bold,
-                              color: const Color(0xFF4E342E),
+                              color: textColor,
                             ),
                           ),
                           Text(
-                            weather?.condition ?? "Cerah",
+                            // Kapitalisasi huruf pertama
+                            (weather?.condition ?? "Tidak ada data").capitalizeFirst ?? "",
                             style: GoogleFonts.poppins(
                               fontSize: 14,
-                              color: const Color(0xFF5D4037),
+                              color: textColor.withOpacity(0.9),
+                              fontWeight: FontWeight.w500,
                             ),
                           ),
                         ],
                       ),
-                      const Icon(
-                        Icons.wb_sunny_rounded,
+                      Icon(
+                        weatherIcon,
                         size: 60,
-                        color: Colors.white54,
+                        color: iconColor,
                       ),
                     ],
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 25),
+                  
+                  // Baris Bawah: Detail Data (Real Data API)
+                  // Kita ubah warna teks detail menyesuaikan background agar terbaca
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       _buildWeatherInfo(
                         "Kelembapan",
-                        "${weather?.humidity ?? '-'}%",
-                        "Baik",
+                        "${weather?.humidity.toStringAsFixed(0) ?? '-'}%",
+                        textColor,
                       ),
                       _buildWeatherInfo(
                         "Angin",
-                        "${weather?.windSpeed ?? '-'}km/h",
-                        "Normal",
+                        "${weather?.windSpeed.toStringAsFixed(1) ?? '-'} km/h",
+                        textColor,
                       ),
-                      _buildWeatherInfo("Hujan", "Rendah", "Low"),
+                      // Hujan (Rainfall 24h)
+                      _buildWeatherInfo(
+                        "Curah Hujan",
+                        (weather?.rainfall24h ?? 0) > 0 
+                            ? "${weather!.rainfall24h.toStringAsFixed(1)} mm" 
+                            : "0 mm", 
+                        textColor,
+                      ),
                     ],
                   ),
                 ],
@@ -172,20 +231,47 @@ class DashboardScreen extends StatelessWidget {
     });
   }
 
+  // --- HELPER WIDGETS ---
+  
+  // Info Kecil di Bawah (Kelembapan, dll)
+  Widget _buildWeatherInfo(String label, String value, Color contentColor) {
+    return Column(
+      children: [
+        Text(
+          label,
+          style: GoogleFonts.poppins(
+            fontSize: 11,
+            color: contentColor.withOpacity(0.8),
+          ),
+        ),
+        const SizedBox(height: 4),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.25), // Semi-transparan
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Text(
+            value,
+            style: GoogleFonts.poppins(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: contentColor,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ... SISA WIDGET (Tips, Menu) TETAP SAMA (Copy dari file lama) ...
   Widget _buildTipsSection(DashboardController controller) {
     return Obx(() {
       if (controller.dailyTips.isEmpty) return const SizedBox.shrink();
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            "Rekomendasi Hari Ini",
-            style: GoogleFonts.poppins(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: const Color(0xFF2C3312),
-            ),
-          ),
+          Text("Rekomendasi Hari Ini", style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold, color: const Color(0xFF2C3312))),
           const SizedBox(height: 10),
           SizedBox(
             height: 120,
@@ -201,27 +287,14 @@ class DashboardScreen extends StatelessWidget {
                     color: tip['color'],
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(color: Colors.white, width: 2),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.grey.withOpacity(0.1),
-                        blurRadius: 5,
-                        offset: const Offset(0, 3),
-                      ),
-                    ],
+                    boxShadow: [BoxShadow(color: Colors.grey.withOpacity(0.1), blurRadius: 5, offset: const Offset(0, 3))],
                   ),
                   child: Row(
                     children: [
                       Container(
                         padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.5),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          tip['icon'],
-                          size: 30,
-                          color: tip['textColor'],
-                        ),
+                        decoration: BoxDecoration(color: Colors.white.withOpacity(0.5), shape: BoxShape.circle),
+                        child: Icon(tip['icon'], size: 30, color: tip['textColor']),
                       ),
                       const SizedBox(width: 15),
                       Expanded(
@@ -229,24 +302,9 @@ class DashboardScreen extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Text(
-                              tip['title'],
-                              style: GoogleFonts.poppins(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 15,
-                                color: tip['textColor'],
-                              ),
-                            ),
+                            Text(tip['title'], style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 15, color: tip['textColor'])),
                             const SizedBox(height: 4),
-                            Text(
-                              tip['body'],
-                              style: GoogleFonts.poppins(
-                                fontSize: 11,
-                                color: Colors.black87,
-                              ),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
+                            Text(tip['body'], style: GoogleFonts.poppins(fontSize: 11, color: Colors.black87), maxLines: 2, overflow: TextOverflow.ellipsis),
                           ],
                         ),
                       ),
@@ -264,25 +322,9 @@ class DashboardScreen extends StatelessWidget {
   Widget _buildMenuSection() {
     return Column(
       children: [
-        Center(
-          child: Container(
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(
-              color: Colors.grey[300],
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-        ),
+        Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2)))),
         const SizedBox(height: 10),
-        Text(
-          "Kelola Lahanmu",
-          style: GoogleFonts.poppins(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-            color: const Color(0xFF2C3312),
-          ),
-        ),
+        Text("Kelola Lahanmu", style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.w600, color: const Color(0xFF2C3312))),
         const SizedBox(height: 20),
         GridView.count(
           shrinkWrap: true,
@@ -292,104 +334,21 @@ class DashboardScreen extends StatelessWidget {
           mainAxisSpacing: 15,
           childAspectRatio: 1.1,
           children: [
-            _buildMenuCard(
-              "Tambah Lahan",
-              Icons.add_location_alt_rounded,
-              Colors.green,
-              onTap: () => Get.to(() => const QuestionnaireScreen()),
-            ),
+            _buildMenuCard("Tambah Lahan", Icons.add_location_alt_rounded, Colors.green, onTap: () => Get.to(() => const QuestionnaireScreen())),
             _buildMenuCard("Tanaman", Icons.grass, Colors.teal, onTap: () {}),
-            _buildMenuCard(
-              "Inventaris",
-              Icons.inventory_2_rounded,
-              Colors.brown,
-              onTap: () {},
-            ),
-            _buildMenuCard(
-              "Keuangan",
-              Icons.monetization_on_rounded,
-              Colors.orange,
-              onTap: () {},
-            ),
+            _buildMenuCard("Inventaris", Icons.inventory_2_rounded, Colors.brown, onTap: () {}),
+            _buildMenuCard("Keuangan", Icons.monetization_on_rounded, Colors.orange, onTap: () {}),
           ],
         ),
       ],
     );
   }
 
-  Widget _buildWeatherInfo(String label, String value, String status) {
-    return Column(
-      children: [
-        Text(
-          label,
-          style: GoogleFonts.poppins(
-            fontSize: 12,
-            color: const Color(0xFF5D4037),
-          ),
-        ),
-        const SizedBox(height: 4),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.6),
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Text(
-            status,
-            style: GoogleFonts.poppins(
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-              color: const Color(0xFF4E342E),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildMenuCard(
-    String title,
-    IconData icon,
-    Color color, {
-    required VoidCallback onTap,
-  }) {
+  Widget _buildMenuCard(String title, IconData icon, Color color, {required VoidCallback onTap}) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 5),
-            ),
-          ],
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(15),
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(icon, size: 30, color: color),
-            ),
-            const SizedBox(height: 15),
-            Text(
-              title,
-              style: GoogleFonts.poppins(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: const Color(0xFF2C3312),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 5))]),
+        child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [Container(padding: const EdgeInsets.all(15), decoration: BoxDecoration(color: color.withOpacity(0.1), shape: BoxShape.circle), child: Icon(icon, size: 30, color: color)), const SizedBox(height: 15), Text(title, style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600, color: const Color(0xFF2C3312)))])));
   }
 }

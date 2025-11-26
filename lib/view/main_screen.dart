@@ -3,6 +3,7 @@ import 'package:persistent_bottom_nav_bar/persistent_bottom_nav_bar.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:siaga_tani/view/dashboard_screen.dart';
 import 'package:siaga_tani/view/my_farm_screen.dart';
+import 'package:siaga_tani/view/education_screen.dart'; 
 import 'package:siaga_tani/view/profile_screen.dart'; 
 
 class MainScreen extends StatefulWidget {
@@ -19,7 +20,7 @@ class _MainScreenState extends State<MainScreen> {
     return [
       const DashboardScreen(),
       const MyFarmScreen(),
-      const Center(child: Text("Inventory Page")),
+      const EducationScreen(), 
       const ProfileScreen(),
     ];
   }
@@ -34,16 +35,17 @@ class _MainScreenState extends State<MainScreen> {
         inactiveColorPrimary: CupertinoColors.systemGrey,
       ),
       PersistentBottomNavBarItem(
-        icon: const Icon(Icons.spa), // Material Icon untuk Daun
+        icon: const Icon(Icons.spa), 
         inactiveIcon: const Icon(Icons.spa_outlined),
         title: ("Lahan Saya"),
         activeColorPrimary: const Color(0xFF4CAF50),
         inactiveColorPrimary: CupertinoColors.systemGrey,
       ),
+      // GANTI ITEM KETIGA
       PersistentBottomNavBarItem(
-        icon: const Icon(CupertinoIcons.doc_text_fill),
-        inactiveIcon: const Icon(CupertinoIcons.doc_text),
-        title: ("Inventory"),
+        icon: const Icon(CupertinoIcons.book_fill), // Ganti Icon Buku
+        inactiveIcon: const Icon(CupertinoIcons.book),
+        title: ("Edukasi"), // Ganti Judul
         activeColorPrimary: const Color(0xFF4CAF50),
         inactiveColorPrimary: CupertinoColors.systemGrey,
       ),
