@@ -99,15 +99,49 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   onPressed: authController.isLoading.value
                       ? null
                       : () {
-                          if (nameCtrl.text.isEmpty || emailCtrl.text.isEmpty || passCtrl.text.isEmpty) {
-                            Get.snackbar("Error", "Semua data wajib diisi");
+                          // Ambil text dan bersihkan spasi di awal/akhir
+                          String name = nameCtrl.text.trim();
+                          String email = emailCtrl.text.trim();
+                          String pass = passCtrl.text.trim();
+
+                          // 1. VALIDASI: Data Kosong
+                          if (name.isEmpty || email.isEmpty || pass.isEmpty) {
+                            Get.snackbar(
+                              "Data Belum Lengkap", 
+                              "Semua kolom wajib diisi ya!",
+                              backgroundColor: Colors.red.shade50,
+                              colorText: Colors.red,
+                              icon: const Icon(Icons.error_outline, color: Colors.red),
+                            );
+                            return; // Stop, jangan lanjut
+                          }
+
+                          // 2. VALIDASI: Format Email (Pakai GetUtils)
+                          if (!GetUtils.isEmail(email)) {
+                            Get.snackbar(
+                              "Email Tidak Valid", 
+                              "Coba cek lagi emailnya (contoh: nama@email.com)",
+                              backgroundColor: Colors.orange.shade50,
+                              colorText: Colors.orange.shade900,
+                              icon: const Icon(Icons.alternate_email, color: Colors.orange),
+                            );
                             return;
                           }
-                          authController.register(
-                            nameCtrl.text.trim(),
-                            emailCtrl.text.trim(),
-                            passCtrl.text.trim()
-                          );
+
+                          // 3. VALIDASI: Password (Firebase wajib minimal 6 karakter)
+                          if (pass.length < 6) {
+                            Get.snackbar(
+                              "Password Lemah", 
+                              "Kata sandi minimal harus 6 karakter.",
+                              backgroundColor: Colors.orange.shade50,
+                              colorText: Colors.orange.shade900,
+                              icon: const Icon(Icons.lock_outline, color: Colors.orange),
+                            );
+                            return;
+                          }
+
+                          // Kalau semua lolos, baru panggil controller
+                          authController.register(name, email, pass);
                         },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF2C3312),

@@ -1,16 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:get/get.dart'; 
-import 'controllers/auth_controller.dart'; // Import controller
+import 'package:flutter_dotenv/flutter_dotenv.dart'; // 1. Import ini
+import 'controllers/auth_controller.dart';
 import 'firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // 2. Load .env
+  await dotenv.load(fileName: ".env");
+
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
   
-  // REGISTER CONTROLLER DI SINI
   Get.put(AuthController()); 
   
   runApp(const MyApp());

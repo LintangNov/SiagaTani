@@ -1,14 +1,20 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:flutter_dotenv/flutter_dotenv.dart'; // Import ini
 import '../models/weather_model.dart';
 
 class WeatherService {
-  // ⚠️ PENTING: Ganti dengan API Key asli kamu dari OpenWeatherMap
-  final String apiKey = "be1b98742e8451e566f9e11d69bf974a"; 
+  // Panggil dari .env. Jika tidak ada, kembalikan string kosong (biar gak error null)
+  final String apiKey = dotenv.env['OPENWEATHER_API_KEY'] ?? ''; 
   
   final String baseUrl = "https://api.openweathermap.org/data/2.5/weather";
 
   Future<WeatherModel> getWeatherByLocation(double lat, double lng) async {
+    // Validasi kecil biar dev tau kalau lupa bikin .env
+    if (apiKey.isEmpty) {
+      throw Exception("API Key tidak ditemukan. Pastikan file .env sudah dibuat!");
+    }
+
     final Uri url = Uri.parse('$baseUrl?lat=$lat&lon=$lng&appid=$apiKey&units=metric&lang=id');
 
     try {
