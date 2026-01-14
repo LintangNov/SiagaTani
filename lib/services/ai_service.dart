@@ -2,9 +2,10 @@ import 'package:google_generative_ai/google_generative_ai.dart';
 import '../models/weather_model.dart';
 import '../models/farm_model.dart';
 import '../models/prediction_result.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class AIService {
-  static const String _apiKey = 'AIzaSyAz5xobNdLXCr-jwbL7Gomt_5KwdU5N-mk'; 
+  static final String _apiKey = dotenv.env['GOOGLE_GEMINI_API_KEY'] ?? ''; 
   final GenerativeModel _model;
 
   AIService() : _model = GenerativeModel(model: 'gemini-1.5-flash', apiKey: _apiKey);
