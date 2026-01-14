@@ -1,10 +1,9 @@
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:siaga_tani/view/main_screen.dart';
 import 'package:siaga_tani/view/on_boarding.dart';
-import '../utils/ui_utils.dart'; // Pastikan import UiUtils kamu
+import '../utils/ui_utils.dart'; 
 
 class AuthController extends GetxController {
   static AuthController instance = Get.find();
@@ -18,18 +17,18 @@ class AuthController extends GetxController {
   void onReady() {
     super.onReady();
     _user = Rx<User?>(_auth.currentUser);
-    // Memantau perubahan status login user secara real-time
+
     _user.bindStream(_auth.authStateChanges());
     ever(_user, _setInitialScreen);
   }
 
-  // LOGIKA PINTAR: Menentukan halaman awal
+
   _setInitialScreen(User? user) {
     if (user == null) {
-      // Jika belum login, ke Onboarding (atau LoginScreen nanti diatur di Onboarding)
+      
       Get.offAll(() => const OnboardingScreen());
     } else {
-      // Jika SUDAH login, langsung ke MainScreen (Skip Onboarding & Login)
+
       Get.offAll(() => const MainScreen());
     }
   }
@@ -43,7 +42,6 @@ class AuthController extends GetxController {
         password: password,
       );
       
-      // Update Nama User di Firebase
       await userCredential.user!.updateDisplayName(name);
       
       UiUtils.showSuccess("Akun berhasil dibuat! Selamat datang, $name.");
@@ -74,7 +72,7 @@ class AuthController extends GetxController {
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
       if (googleUser == null) {
         isLoading.value = false;
-        return; // User membatalkan login
+        return; 
       }
 
       final GoogleSignInAuthentication googleAuth = await googleUser.authentication;

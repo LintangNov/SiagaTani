@@ -6,9 +6,9 @@ import 'package:latlong2/latlong.dart';
 import '../models/farm_model.dart';
 import '../controllers/prediction_controller.dart';
 import '../models/prediction_result.dart';
-import '../models/weather_model.dart'; // Import Model Cuaca
+import '../models/weather_model.dart';
 import '../services/firestore_service.dart';
-import 'education_screen.dart'; // Import Education buat navigasi
+import 'education_screen.dart';
 
 class FarmDetailScreen extends StatelessWidget {
   const FarmDetailScreen({super.key});
@@ -16,8 +16,9 @@ class FarmDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final FarmModel? farmArgs = Get.arguments as FarmModel?;
-    if (farmArgs == null)
+    if (farmArgs == null) {
       return const Scaffold(body: Center(child: Text("Data Error")));
+    }
 
     final Rx<FarmModel> farm = farmArgs.obs;
     final PredictionController controller = Get.put(PredictionController());
@@ -33,7 +34,6 @@ class FarmDetailScreen extends StatelessWidget {
       body: CustomScrollView(
         physics: const BouncingScrollPhysics(),
         slivers: [
-          // 1. APP BAR (MAP)
           SliverAppBar(
             expandedHeight: 240,
             pinned: true,
@@ -67,8 +67,7 @@ class FarmDetailScreen extends StatelessWidget {
                     ),
                     children: [
                       TileLayer(
-                        urlTemplate:
-                            'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                        urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                         userAgentPackageName: 'com.example.siaga_tani',
                       ),
                       MarkerLayer(
@@ -104,19 +103,14 @@ class FarmDetailScreen extends StatelessWidget {
               ),
             ),
           ),
-
-          // 2. KONTEN
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.all(20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // INFO LAHAN
                   _buildInfoHeader(context, farm, firestoreService),
                   const SizedBox(height: 25),
-
-                  // SECTION: KONDISI LINGKUNGAN (Cuaca & Ramalan)
                   Text(
                     "Kondisi Lingkungan",
                     style: GoogleFonts.poppins(
@@ -126,7 +120,6 @@ class FarmDetailScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 12),
-
                   Obx(() {
                     if (controller.isAnalyzing.value) {
                       return const Center(
@@ -137,7 +130,6 @@ class FarmDetailScreen extends StatelessWidget {
                     }
                     return Row(
                       children: [
-                        // Kartu 1: Cuaca Saat Ini
                         Expanded(
                           child: _buildWeatherCard(
                             controller.weatherData.value,
@@ -145,7 +137,6 @@ class FarmDetailScreen extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(width: 12),
-                        // Kartu 2: Ramalan Besok
                         Expanded(
                           child: _buildWeatherCard(
                             controller.forecastData.value,
@@ -155,10 +146,7 @@ class FarmDetailScreen extends StatelessWidget {
                       ],
                     );
                   }),
-
                   const SizedBox(height: 25),
-
-                  // SECTION: ANALISIS RISIKO
                   Text(
                     "Analisis Risiko Hama",
                     style: GoogleFonts.poppins(
@@ -168,10 +156,8 @@ class FarmDetailScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 12),
-
                   Obx(() {
-                    if (controller.isAnalyzing.value)
-                      return const SizedBox.shrink();
+                    if (controller.isAnalyzing.value) return const SizedBox.shrink();
 
                     if (controller.predictionResults.isEmpty) {
                       return _buildSafeCard();
@@ -183,7 +169,6 @@ class FarmDetailScreen extends StatelessWidget {
                       );
                     }
                   }),
-
                   const SizedBox(height: 40),
                 ],
               ),
@@ -194,7 +179,6 @@ class FarmDetailScreen extends StatelessWidget {
     );
   }
 
-  // --- WIDGET INFO HEADER (Edit Nama) ---
   Widget _buildInfoHeader(
     BuildContext context,
     Rx<FarmModel> farm,
@@ -235,14 +219,14 @@ class FarmDetailScreen extends StatelessWidget {
                 onTap: () => _showEditNameDialog(context, farm, service),
                 child: Container(
                   padding: const EdgeInsets.all(6),
-                  decoration: BoxDecoration(
-                    color: const Color.fromARGB(92, 107, 214, 111),
+                  decoration: const BoxDecoration(
+                    color: Color.fromARGB(92, 107, 214, 111),
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(
+                  child: const Icon(
                     Icons.edit,
                     size: 18,
-                    color: const Color(0xFF4CAF50),
+                    color: Color(0xFF4CAF50),
                   ),
                 ),
               ),
@@ -274,11 +258,11 @@ class FarmDetailScreen extends StatelessWidget {
       children: [
         Container(
           padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: const Color.fromARGB(92, 149, 236, 152),
+          decoration: const BoxDecoration(
+            color: Color.fromARGB(92, 149, 236, 152),
             shape: BoxShape.circle,
           ),
-          child: Icon(icon, size: 20, color: const Color(0xFF4CAF50)),
+          child: Icon(icon, size: 20, color: Color(0xFF4CAF50)),
         ),
         const SizedBox(height: 4),
         Text(
@@ -293,27 +277,24 @@ class FarmDetailScreen extends StatelessWidget {
     );
   }
 
-  // --- WIDGET CUACA & FORECAST (DINAMIS) ---
   Widget _buildWeatherCard(WeatherModel? weather, {required bool isForecast}) {
     if (weather == null) return const SizedBox();
 
-    // Logika Warna Dinamis
     Color bgColors;
     Color textColors;
     IconData icon;
     String condition = weather.condition.toLowerCase();
 
     if (condition.contains("hujan")) {
-      bgColors = const Color(0xFFCFD8DC); // Abu-abu mendung
+      bgColors = const Color(0xFFCFD8DC);
       textColors = const Color.fromARGB(255, 55, 87, 103);
-      icon = Icons.cloudy_snowing; // Ikon hujan lebih tepatnya water_drop
+      icon = Icons.cloudy_snowing;
     } else if (condition.contains("awan") || condition.contains("berawan")) {
-      bgColors = const Color(0xFFE0F7FA); // Biru muda sejuk
+      bgColors = const Color(0xFFE0F7FA);
       textColors = const Color.fromARGB(255, 47, 167, 242);
       icon = Icons.cloud_queue;
     } else {
-      // Terik / Cerah
-      bgColors = const Color(0xFFFFF8E1); // Kuning cerah
+      bgColors = const Color(0xFFFFF8E1);
       textColors = const Color.fromARGB(255, 230, 222, 0);
       icon = Icons.wb_sunny_rounded;
     }
@@ -362,7 +343,6 @@ class FarmDetailScreen extends StatelessWidget {
     );
   }
 
-  // --- WIDGET KARTU HAMA (EXPANSION TILE FIX) ---
   Widget _buildExpandablePestCard(PredictionResult result) {
     Color baseColor;
     Color bgColor;
@@ -395,12 +375,9 @@ class FarmDetailScreen extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       child: ExpansionTile(
         backgroundColor: Colors.white,
-        collapsedBackgroundColor: bgColor, // Warna saat nutup
+        collapsedBackgroundColor: bgColor,
         tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-        shape: Border.all(
-          color: Colors.transparent,
-        ), // Hilangkan garis border bawaan saat expand
-
+        shape: Border.all(color: Colors.transparent),
         leading: CircleAvatar(
           backgroundColor: Colors.white,
           radius: 18,
@@ -414,7 +391,6 @@ class FarmDetailScreen extends StatelessWidget {
             fontSize: 15,
           ),
         ),
-        // Subtitle: Dipotong saat nutup
         subtitle: Text(
           result.shortDescription,
           style: GoogleFonts.poppins(fontSize: 12, color: Colors.black54),
@@ -436,7 +412,6 @@ class FarmDetailScreen extends StatelessWidget {
             ),
           ),
         ),
-
         children: [
           Container(
             width: double.infinity,
@@ -446,7 +421,6 @@ class FarmDetailScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Divider(),
-                // 1. TEKS LENGKAP (Subtitle yang tadi kepotong)
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
@@ -474,8 +448,6 @@ class FarmDetailScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 15),
-
-                // 2. ANALISIS
                 Text(
                   "Analisis Penyebab:",
                   style: GoogleFonts.poppins(
@@ -492,8 +464,6 @@ class FarmDetailScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 15),
-
-                // 3. SARAN
                 Text(
                   "Rekomendasi Tindakan:",
                   style: GoogleFonts.poppins(
@@ -522,15 +492,11 @@ class FarmDetailScreen extends StatelessWidget {
                     ),
                   ),
                 ),
-
                 const SizedBox(height: 20),
-
-                // 4. TOMBOL EDUKASI
                 SizedBox(
                   width: double.infinity,
                   child: OutlinedButton.icon(
                     onPressed: () {
-                      // Navigasi ke Edukasi
                       Get.to(() => const EducationScreen());
                     },
                     icon: const Icon(Icons.menu_book_rounded, size: 18),
@@ -584,7 +550,6 @@ class FarmDetailScreen extends StatelessWidget {
     );
   }
 
-  // Logika Edit Nama (Sama seperti sebelumnya)
   void _showEditNameDialog(
     BuildContext context,
     Rx<FarmModel> farmRx,
@@ -609,7 +574,6 @@ class FarmDetailScreen extends StatelessWidget {
         onPressed: () async {
           if (nameCtrl.text.isNotEmpty && farmRx.value.id != null) {
             await service.updateFarmName(farmRx.value.id!, nameCtrl.text);
-            // Update lokal (trik biar gak perlu refresh page)
             farmRx.value = FarmModel(
               id: farmRx.value.id,
               farmName: nameCtrl.text,

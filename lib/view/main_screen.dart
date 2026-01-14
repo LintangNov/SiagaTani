@@ -41,11 +41,10 @@ class _MainScreenState extends State<MainScreen> {
         activeColorPrimary: const Color(0xFF4CAF50),
         inactiveColorPrimary: CupertinoColors.systemGrey,
       ),
-      // GANTI ITEM KETIGA
       PersistentBottomNavBarItem(
-        icon: const Icon(CupertinoIcons.book_fill), // Ganti Icon Buku
+        icon: const Icon(CupertinoIcons.book_fill),
         inactiveIcon: const Icon(CupertinoIcons.book),
-        title: ("Edukasi"), // Ganti Judul
+        title: ("Edukasi"),
         activeColorPrimary: const Color(0xFF4CAF50),
         inactiveColorPrimary: CupertinoColors.systemGrey,
       ),

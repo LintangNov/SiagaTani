@@ -9,14 +9,12 @@ class FirestoreService {
   final CollectionReference _pinsCollection = 
       FirebaseFirestore.instance.collection('surrounding_pins');
 
-  // Helper untuk ambil User ID saat ini
   String? get _currentUserId => FirebaseAuth.instance.currentUser?.uid;
 
   Future<void> addFarm(FarmModel farm) async {
     String? uid = _currentUserId;
     if (uid == null) throw Exception("User belum login!");
 
-    // Saat simpan, tempelkan 'userId' ke data
     Map<String, dynamic> data = farm.toMap();
     data['userId'] = uid; 
     
@@ -27,14 +25,12 @@ class FirestoreService {
     await _farmsCollection.doc(id).update({'farmName': newName});
   }
 
-  // --- FITUR BARU: UPDATE FASE TANAM ---
   Future<void> updateFarmPhase(String id, String newPhaseStr, String newEnumStr) async {
     await _farmsCollection.doc(id).update({
-      'currentPhase': newPhaseStr, // Teks untuk UI ("Berbuah")
-      'cropStage': newEnumStr,     // Enum string untuk Logic ("CropStage.fruiting")
+      'currentPhase': newPhaseStr,
+      'cropStage': newEnumStr,
     });
   }
-  // --------------------------------------
 
   Future<void> deleteFarm(String id) async {
     await _farmsCollection.doc(id).delete();

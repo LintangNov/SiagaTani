@@ -19,7 +19,6 @@ class DashboardController extends GetxController {
   var isLoadingWeather = true.obs;
   
   var userName = "Petani".obs;
-  // Default text ajakan
   var currentLocation = "Mencari lokasi...".obs; 
   
   var dailyTips = <Map<String, dynamic>>[].obs;
@@ -44,7 +43,7 @@ class DashboardController extends GetxController {
     }
   }
 
-  // --- LOGIKA UTAMA PENGAMBILAN LOKASI ---
+  // --- AMBIL LOKASI ---
   Future<void> fetchCurrentLocation({bool forceRefresh = false}) async {
     if (forceRefresh) {
       isLoadingWeather.value = true;
@@ -52,7 +51,7 @@ class DashboardController extends GetxController {
     }
 
     try {
-      // 1. Cek GPS Service
+
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
         currentLocation.value = "GPS Mati. Ketuk untuk nyalakan"; 
@@ -60,11 +59,9 @@ class DashboardController extends GetxController {
         return;
       }
 
-      // 2. Cek Izin
       LocationPermission permission = await Geolocator.checkPermission();
       
       if (permission == LocationPermission.denied) {
-        // Coba minta izin sekali lagi
         permission = await Geolocator.requestPermission();
         if (permission == LocationPermission.denied) {
           currentLocation.value = "Izin ditolak. Ketuk beri izin";
@@ -74,13 +71,11 @@ class DashboardController extends GetxController {
       }
 
       if (permission == LocationPermission.deniedForever) {
-        // Kalau permanen, gak bisa requestPermission, harus ke settings
         currentLocation.value = "Izin diblokir. Ketuk buka setting";
         _stopLoading();
         return;
       }
 
-      // 3. Kalau lolos, ambil posisi
       Position position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high,
         timeLimit: const Duration(seconds: 10),
@@ -102,32 +97,21 @@ class DashboardController extends GetxController {
     }
   }
 
-  // --- FUNGSI PINTAR HANDLE TAP (PERBAIKAN DISINI) ---
-  // --- FUNGSI PINTAR HANDLE TAP (VERSI PANTANG MENYERAH) ---
+
   void handleLocationTap() async {
-    // 1. Cek GPS Hardware dulu (Kalo GPS mati, popup izin gak akan guna)
     bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
-      // Ini biasanya memunculkan dialog sistem Android "Turn on Device Location?"
-      // Jadi tetep kerasa kayak "Popup", bukan masuk full screen setting.
       await Geolocator.openLocationSettings();
       return;
     }
 
-    // 2. LANGSUNG HAJAR MINTA IZIN (Tanpa Cek Status Dulu)
-    // Ini akan memaksa aplikasi memunculkan Popup "Allow SiagaTani to access location?"
-    // (Selama belum di-blokir permanen oleh Android)
     LocationPermission permission = await Geolocator.requestPermission();
 
-    // 3. Cek Hasilnya
     if (permission == LocationPermission.always || permission == LocationPermission.whileInUse) {
-      // Mantap! Diizinkan. Langsung ambil data.
       fetchCurrentLocation(forceRefresh: true);
     } 
     else if (permission == LocationPermission.deniedForever) {
-      // Nah, kalau masuk sini, berarti Android udah ngunci pintu.
-      // Popup gak keluar karena diblokir sistem.
-      // Kita kasih info aja lewat Snackbar kecil (User gak dipaksa pindah halaman)
+
       Get.snackbar(
         "Izin Diblokir Sistem", 
         "HP Anda menolak menampilkan popup izin. Cek pengaturan jika ingin mengubah.",
@@ -141,8 +125,7 @@ class DashboardController extends GetxController {
         ),
       );
     }
-    // Kalau 'denied' biasa, kita diem aja. 
-    // Karena user baru aja nutup popupnya, jadi dia tau dia nolak.
+
   }
 
   void _stopLoading() {

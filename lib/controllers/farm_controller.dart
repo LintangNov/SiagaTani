@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:siaga_tani/controllers/map_setup_controller.dart';
-import 'package:siaga_tani/utils/ui_utils.dart'; // Import UiUtils
+import 'package:siaga_tani/utils/ui_utils.dart'; 
 import '../models/farm_model.dart';
 import '../services/firestore_service.dart';
 import '../view/farm_detail_screen.dart';
@@ -13,7 +13,7 @@ class FarmController extends GetxController {
   final nameController = TextEditingController();
   final sizeController = TextEditingController();
 
-  // Observable Values untuk Kuesioner
+
   var selectedVariety = "".obs;
   var selectedPattern = "".obs;
   var selectedPhase = "".obs;
@@ -33,36 +33,31 @@ class FarmController extends GetxController {
 
     isSaving.value = true;
     try {
-      // --- PERBAIKAN LOGIKA JARAK (SCIENTIFIC) ---
+      // --- LOGIKA JARAK (SCIENTIFIC) ---
       bool hasHostNearby = false;
       final Distance distanceCalc = const Distance();
 
-      // Lokasi lahan kita
       final myLocation = mapController.myFarmLocation.value!;
 
-      // Cek setiap pin yang ada di peta
       for (var data in mapController.surroundingData) {
-        // Abaikan jika jenisnya 'Lainnya'
         if (data['type'] == 'Lainnya') continue;
 
-        // Hitung jarak meter
+        
         double distanceMeters = distanceCalc.as(
           LengthUnit.Meter,
           myLocation,
           LatLng(data['lat'], data['lng']),
         );
 
-        // Ambang batas 1000 meter (1 KM) sesuai riset lalat buah
         if (distanceMeters <= 1000) {
           hasHostNearby = true;
           print(
             "Inang ${data['type']} terdeteksi dalam jarak ${distanceMeters.toStringAsFixed(0)}m",
           );
-          break; // Ketemu satu saja sudah cukup risiko
+          break; 
         }
       }
 
-      // 2. Konversi String ke Enum
       CropStage stage = CropStage.vegetative;
       if (selectedPhase.value == "Bibit")
         stage = CropStage.seedling;
@@ -83,7 +78,6 @@ class FarmController extends GetxController {
           ? "Lahan ${selectedVariety.value}"
           : nameController.text;
 
-      // 3. Buat Model
       FarmModel newFarm = FarmModel(
         farmName: finalName,
         address: mapController.currentAddress.value,
@@ -106,10 +100,8 @@ class FarmController extends GetxController {
         pesticideType: "",
       );
 
-      // 4. Simpan
       await _firestoreService.addFarm(newFarm);
 
-      // 5. Navigasi
       Get.off(() => const FarmDetailScreen(), arguments: newFarm);
 
       UiUtils.showSuccess(

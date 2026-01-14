@@ -3,20 +3,15 @@ import '../models/farm_model.dart';
 import '../models/weather_model.dart';
 import '../models/prediction_result.dart';
 
-// --- Abstract Strategy ---
 abstract class PestStrategy {
   PredictionResult? calculate(FarmModel farm, WeatherModel weather, List<String> nearbyPlants);
 }
 
-// ============================================================
-// 1. STRATEGI: THRIPS (Thrips parvispinus)
-// ============================================================
 class ThripsStrategy implements PestStrategy {
   @override
   PredictionResult? calculate(FarmModel farm, WeatherModel weather, List<String> nearbyPlants) {
     double score = 0.3; 
     
-    // A. Efek "Wash-out" Hujan
     if (weather.rainfall24h > 15.0) {
       return _buildResult(
         "Thrips (Daun Keriting)", 
@@ -27,7 +22,6 @@ class ThripsStrategy implements PestStrategy {
       );
     }
 
-    // B. Analisis Risiko
     String detail = "Kondisi lingkungan saat ini sangat mendukung perkembangan Thrips karena:";
     if (weather.season == "Musim Kemarau") {
       score += 0.35;
@@ -38,7 +32,6 @@ class ThripsStrategy implements PestStrategy {
       detail += "\n• Adanya tanaman inang sejenis di sekitar menjadi sumber migrasi.";
     }
     
-    // C. Mitigasi Mulsa
     if (farm.mulchType == MulchType.silver && farm.cropStage == CropStage.seedling) {
       score -= 0.25;
       detail += "\n• (Positif) Pantulan UV dari mulsa perak saat ini efektif membingungkan hama.";
@@ -59,9 +52,6 @@ class ThripsStrategy implements PestStrategy {
   }
 }
 
-// ============================================================
-// 2. STRATEGI: LALAT BUAH (Bactrocera spp.)
-// ============================================================
 class FruitFlyStrategy implements PestStrategy {
   @override
   PredictionResult? calculate(FarmModel farm, WeatherModel weather, List<String> nearbyPlants) {
@@ -70,7 +60,6 @@ class FruitFlyStrategy implements PestStrategy {
     double score = 0.4;
     String detail = "Lalat buah menjadi ancaman serius karena:";
 
-    // A. Suhu & Aktivitas
     if (weather.currentTemp >= 25 && weather.currentTemp <= 32) {
       score += 0.3; 
       detail += "\n• Suhu hangat (25-32°C) adalah rentang optimal untuk lalat kawin dan bertelur.";
@@ -79,13 +68,11 @@ class FruitFlyStrategy implements PestStrategy {
       return _buildResult("Lalat Buah", 0.1, "Suhu dingin hambat aktivitas.", "Suhu <16°C membuat lalat pasif.", ["Pantau saja."]);
     }
 
-    // B. Kelembapan (Kulit Buah)
     if (weather.humidity > 80 || weather.rainfall24h > 0) {
       score += 0.25;
       detail += "\n• Kelembapan tinggi membuat kulit buah menjadi lunak, memudahkan ovipositor lalat menusuk buah.";
     }
 
-    // C. Inang
     bool hasFruitHost = nearbyPlants.any((p) => ["Mangga", "Jambu", "Jeruk", "Pepaya"].contains(p));
     if (hasFruitHost) {
       score += 0.15;
@@ -107,16 +94,12 @@ class FruitFlyStrategy implements PestStrategy {
   }
 }
 
-// ============================================================
-// 3. STRATEGI: ANTRAKNOSA (Jamur Colletotrichum)
-// ============================================================
 class AnthracnoseStrategy implements PestStrategy {
   @override
   PredictionResult? calculate(FarmModel farm, WeatherModel weather, List<String> nearbyPlants) {
     double score = 0.15;
     String detail = "Analisis risiko infeksi jamur:";
 
-    // A. Rumus Hydrothermal
     bool isWet = weather.wetHours > 4 || weather.humidity > 85.0;
     bool isWarm = weather.currentTemp >= 20.0 && weather.currentTemp <= 30.0;
 
@@ -147,27 +130,22 @@ class AnthracnoseStrategy implements PestStrategy {
   }
 }
 
-// ============================================================
-// 4. STRATEGI: ULAT GRAYAK (Spodoptera litura)
-// ============================================================
 class ArmywormStrategy implements PestStrategy {
   @override
   PredictionResult? calculate(FarmModel farm, WeatherModel weather, List<String> nearbyPlants) {
     double score = 0.2;
     String detail = "Faktor pendukung Ulat Grayak:";
 
-    // A. Mulsa & Iklim Mikro
     if (farm.mulchType == MulchType.black) {
       score += 0.25;
       detail += "\n• Mulsa hitam menjaga tanah tetap hangat dan lembap, tempat ideal bagi pupa ulat bersembunyi siang hari.";
     }
 
-    // B. Suhu
     if (weather.currentTemp < 28.0) {
       score += 0.2;
       detail += "\n• Suhu sejuk (<28°C) meningkatkan nafsu makan larva.";
     } else if (weather.currentTemp > 35.0) {
-      score -= 0.2; // Panas ekstrem menekan ulat
+      score -= 0.2; 
     }
 
     return _buildResult(
@@ -185,28 +163,22 @@ class ArmywormStrategy implements PestStrategy {
   }
 }
 
-// ============================================================
-// 5. STRATEGI: KUTU KEBUL (Vektor Virus Gemini)
-// ============================================================
 class AphidStrategy implements PestStrategy {
   @override
   PredictionResult? calculate(FarmModel farm, WeatherModel weather, List<String> nearbyPlants) {
     double score = 0.2;
     String detail = "Potensi ledakan populasi Kutu Kebul:";
 
-    // A. Fase Rentan
     if (farm.cropStage == CropStage.seedling || farm.cropStage == CropStage.vegetative) {
       score += 0.35;
       detail += "\n• Tanaman muda memiliki jaringan lunak dan kaya nitrogen yang sangat disukai kutu.";
     }
 
-    // B. Suhu Panas (Reproduction Rate)
     if (weather.currentTemp > 30.0) {
       score += 0.3;
       detail += "\n• Suhu panas (>30°C) mempercepat siklus hidup dari 30 hari menjadi <20 hari.";
     }
 
-    // C. Inang
     if (nearbyPlants.any((p) => ["Terong", "Melon", "Semangka"].contains(p))) {
       score += 0.15;
       detail += "\n• Terdeteksi inang Solanaceae/Cucurbitaceae lain di sekitar.";
@@ -227,9 +199,7 @@ class AphidStrategy implements PestStrategy {
   }
 }
 
-// --- MAIN SERVICE ---
 class PredictionService {
-  final Random _rng = Random();
   final List<PestStrategy> _strategies = [
     ThripsStrategy(), FruitFlyStrategy(), AnthracnoseStrategy(), ArmywormStrategy(), AphidStrategy()
   ];
@@ -241,7 +211,6 @@ class PredictionService {
     for (var strategy in _strategies) {
       var result = strategy.calculate(farm, weather, nearbyPlants);
       if (result != null) {
-        // Cek Proteksi Kimia
         if (farm.lastPesticideTime.contains("< 3 hari")) {
            double newPercentage = result.percentage * 0.2;
            result = _buildResult(
@@ -252,7 +221,7 @@ class PredictionService {
              ["Lanjutkan jadwal monitoring rutin."]
            );
         }
-        if (result.percentage > 0.40) results.add(result); // Tampilkan jika risiko > 40%
+        if (result.percentage > 0.40) results.add(result); 
       }
     }
     results.sort((a, b) => b.percentage.compareTo(a.percentage));
@@ -260,7 +229,6 @@ class PredictionService {
   }
 }
 
-// --- HELPERS ---
 PredictionResult _buildResult(String name, double score, String shortReason, String detailReason, List<String> steps) {
   score = score.clamp(0.0, 0.99);
   return PredictionResult(

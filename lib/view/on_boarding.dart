@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:siaga_tani/view/login_screen.dart';
-import 'package:siaga_tani/view/main_screen.dart';
 import 'package:get/get.dart';
 
 class OnboardingScreen extends StatefulWidget {
@@ -19,36 +18,28 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     {
       "title": "Pertanian Digital\nMasa Depan",
       "desc": "Kami mengotomatisasi dan mengoptimalkan pertanian global.",
-      // Pastikan nama file sesuai dengan di folder assets/images/
       "icon": 'assets/images/onboarding_1.jpg',
     },
     {
       "title": "Monitor your crops\nin real-time",
       "desc": "Get instant insights about weather and pest predictions.",
-      // Ganti dengan file gambar slide 2
       "icon": 'assets/images/onboarding_1.jpg',
     },
     {
       "title": "Connect with\nlocal farmers",
       "desc": "Share knowledge and resources with the community.",
-      // Ganti dengan file gambar slide 3
       "icon": 'assets/images/onboarding_1.jpg',
     },
   ];
 
   @override
   Widget build(BuildContext context) {
-    // Dapatkan tinggi layar untuk perhitungan posisi
     final screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
-      // Warna background utama
       backgroundColor: const Color(0xFFE0F2F1),
       body: Stack(
         children: [
-          // --- LAPISAN 1 (Belakang): PageView Gambar ---
-          // Kita posisikan dia memenuhi layar, tapi kita akan atur paddingnya
-          // agar gambarnya berada di bagian atas.
           Positioned.fill(
             child: PageView.builder(
               controller: _pageController,
@@ -59,28 +50,19 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               },
               itemCount: _onboardingData.length,
               itemBuilder: (context, index) {
-                // Gunakan Container untuk mengatur posisi gambar
                 return Container(
-                  // Beri padding atas agar tidak nabrak status bar
-                  // padding: const EdgeInsets.only(top: 80, bottom: 250),
                   alignment: Alignment.topCenter,
                   child: Image.asset(
                     _onboardingData[index]['icon'],
-                    // Atur tinggi gambar relatif terhadap layar (misal 40%)
-                    // height: screenHeight * 0.4,
                     fit: BoxFit.fitWidth,
                   ),
                 );
               },
             ),
           ),
-
-          // --- LAPISAN 2 (Depan): Kartu Putih (Teks & Tombol) ---
-          // Gunakan Align untuk menempelkannya di bagian bawah
           Align(
             alignment: Alignment.bottomCenter,
             child: Container(
-              // Atur tinggi kartu putih (misal 45% dari tinggi layar)
               height: screenHeight * 0.35,
               width: double.infinity,
               decoration: const BoxDecoration(
@@ -100,10 +82,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(30, 30, 30, 30),
                 child: Column(
-                  mainAxisSize:
-                      MainAxisSize.min, // Agar column hanya setinggi kontennya
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Judul
                     Text(
                       _onboardingData[_currentPage]['title'],
                       textAlign: TextAlign.center,
@@ -115,8 +95,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       ),
                     ),
                     const SizedBox(height: 16),
-
-                    // Deskripsi
                     Text(
                       _onboardingData[_currentPage]['desc'],
                       textAlign: TextAlign.center,
@@ -125,9 +103,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         color: Colors.grey[600],
                       ),
                     ),
-
-                    const Spacer(), // Spacer akan mendorong konten ke atas/bawah
-                    // Indikator Slide (Titik-titik)
+                    const Spacer(),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: List.generate(
@@ -135,28 +111,18 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         (index) => _buildDot(index),
                       ),
                     ),
-
-                    const SizedBox(height: 30), // Jarak antara dot dan tombol
-                    // Tombol
+                    const SizedBox(height: 30),
                     SizedBox(
                       width: double.infinity,
                       height: 55,
                       child: ElevatedButton(
                         onPressed: () {
-                          // Di dalam onPressed tombol "Mulai Sekarang"
                           if (_currentPage == _onboardingData.length - 1) {
-                            // GANTI KE LOGIN SCREEN
                             Get.off(
-                              () => const LoginScreen(), // <-- Arahkan ke sini
+                              () => const LoginScreen(),
                               transition: Transition.fade,
                               duration: const Duration(milliseconds: 500),
                             );
-                            // if (_currentPage == _onboardingData.length - 1) {
-                            //   Get.offAll(
-                            //     () => const MainScreen(),
-                            //     transition: Transition.fade,
-                            //     duration: const Duration(milliseconds: 500),
-                            //   );
                           } else {
                             _pageController.nextPage(
                               duration: const Duration(milliseconds: 300),

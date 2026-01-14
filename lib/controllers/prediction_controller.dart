@@ -14,16 +14,16 @@ class PredictionController extends GetxController {
   final FirestoreService _firestoreService = FirestoreService();
 
   late FarmModel farm;
-  var predictionResults = <PredictionResult>[].obs;
-  var isAnalyzing = false.obs;
+  final predictionResults = <PredictionResult>[].obs;
+  final isAnalyzing = false.obs;
 
-  var weatherData = Rxn<WeatherModel>(); // Cuaca Saat Ini
-  var forecastData = Rxn<WeatherModel>(); // Ramalan Besok (BARU)
+  final weatherData = Rxn<WeatherModel>(); 
+  final forecastData = Rxn<WeatherModel>();
 
   @override
   void onInit() {
     super.onInit();
-    if (Get.arguments != null && Get.arguments is FarmModel) {
+    if (Get.arguments is FarmModel) {
       farm = Get.arguments;
     }
   }
@@ -33,46 +33,36 @@ class PredictionController extends GetxController {
     predictionResults.clear();
 
     try {
-      // 1. Ambil Cuaca Saat Ini & BESOK (Parallel biar cepat)
-      var weatherFuture = _weatherService.getWeatherByLocation(
-        farm.latitude,
-        farm.longitude,
-      );
-      var forecastFuture = _weatherService.getForecastByLocation(
-        farm.latitude,
-        farm.longitude,
-      );
+      final results = await Future.wait([
+        _weatherService.getWeatherByLocation(farm.latitude, farm.longitude),
+        _weatherService.getForecastByLocation(farm.latitude, farm.longitude),
+      ]);
 
-      var results = await Future.wait([weatherFuture, forecastFuture]);
+      weatherData.value = results[0];
+      forecastData.value = results[1];
 
-      WeatherModel currentWeather = results[0];
-      WeatherModel tomorrowWeather = results[1];
-
-      weatherData.value = currentWeather;
-      forecastData.value = tomorrowWeather;
-
-      // 2. Ambil Pin Tetangga (Filter Radius 1 KM)
-      List<SurroundingPinModel> allPins = await _firestoreService.getAllPins();
-      const Distance distance = Distance();
-      List<String> nearbyPlants = [];
+      final allPins = await _firestoreService.getAllPins();
+      const distance = Distance();
+      final nearbyPlants = <String>[];
 
       for (var pin in allPins) {
-        double km = distance.as(
+        final double meters = distance.as(
           LengthUnit.Meter,
           LatLng(farm.latitude, farm.longitude),
           LatLng(pin.latitude, pin.longitude),
         );
-        if (km <= 1000) {
+        
+        if (meters <= 1000) {
           nearbyPlants.add(pin.plantType);
         }
       }
 
-      // 3. Analisis (Pakai cuaca saat ini)
-      List<PredictionResult> analysis = _predictionService.analyzeRisk(
+      final analysis = _predictionService.analyzeRisk(
         farm,
-        currentWeather,
+        weatherData.value!,
         nearbyPlants,
       );
+      
       predictionResults.assignAll(analysis);
     } catch (e) {
       print("Error Analysis: $e");
