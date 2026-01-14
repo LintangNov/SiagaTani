@@ -102,7 +102,7 @@ class FarmController extends GetxController {
 
       await _firestoreService.addFarm(newFarm);
 
-      Get.off(() => const FarmDetailScreen(), arguments: newFarm);
+      Get.off(() => FarmDetailScreen(), arguments: newFarm);
 
       UiUtils.showSuccess(
         "Lahan berhasil disimpan! Analisis risiko sedang berjalan.",

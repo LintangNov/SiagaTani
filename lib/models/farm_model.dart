@@ -92,7 +92,7 @@ class FarmModel {
       address: map['address'] ?? 'Alamat tidak diketahui',
       latitude: geoPoint.latitude,
       longitude: geoPoint.longitude,
-      landSize: map['landSize'] ?? '',
+      landSize: map['landSize']?.toString() ?? '',
       variety: map['variety'] ?? '',
       cropStage: parseStage(map['cropStage']),
       mulchType: parseMulch(map['mulchType']),

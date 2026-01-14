@@ -13,7 +13,7 @@ class MyFarmScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final DashboardController controller = Get.put(DashboardController());
+    final DashboardController controller = Get.find<DashboardController>();
     final FirestoreService firestoreService = FirestoreService();
 
     return Scaffold(
@@ -95,7 +95,7 @@ class MyFarmScreen extends StatelessWidget {
 
   Widget _buildFarmCard(BuildContext context, FarmModel farm, FirestoreService service) {
     return GestureDetector(
-      onTap: () => Get.to(() => const FarmDetailScreen(), arguments: farm),
+      onTap: () => Get.to(() => FarmDetailScreen(), arguments: farm),
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white,
@@ -179,7 +179,7 @@ class MyFarmScreen extends StatelessWidget {
                     children: [
                       Expanded(
                         child: Text(
-                          farm.farmName,
+                          farm.farmName, 
                           style: GoogleFonts.poppins(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -190,7 +190,7 @@ class MyFarmScreen extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        farm.landSize,
+                        farm.landSize, 
                         style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey[600]),
                       ),
                     ],
@@ -340,7 +340,7 @@ class MyFarmScreen extends StatelessWidget {
   }
 
   void _showEditDialog(BuildContext context, FarmModel farm, FirestoreService service) {
-    final TextEditingController nameCtrl = TextEditingController(text: farm.farmName);
+    final TextEditingController nameCtrl = TextEditingController(text: farm.farmName); 
     Get.defaultDialog(
       title: "Ubah Nama",
       titleStyle: GoogleFonts.poppins(fontWeight: FontWeight.bold),
@@ -374,7 +374,8 @@ class MyFarmScreen extends StatelessWidget {
     Get.defaultDialog(
       title: "Hapus Lahan?",
       titleStyle: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: Colors.red),
-      middleText: "Anda yakin ingin menghapus '${farm.farmName}'? Data ini tidak bisa dikembalikan.",
+      // DIPERBAIKI: Menggunakan farm.name bukan farmName
+      middleText: "Anda yakin ingin menghapus '${farm.farmName}'? Data ini tidak bisa dikembalikan.", 
       middleTextStyle: GoogleFonts.poppins(),
       confirm: ElevatedButton(
         onPressed: () async {
