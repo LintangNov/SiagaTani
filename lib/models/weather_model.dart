@@ -22,33 +22,27 @@ class WeatherModel {
     this.wetHours = 0,
   });
 
-  // --- INI PABRIK PENGOLAH DATA DARI API ---
   factory WeatherModel.fromJson(Map<String, dynamic> json) {
-    // 1. Ambil data dasar
     var main = json['main'];
     var weather = json['weather'][0];
     var wind = json['wind'];
     
-    // 2. Cek Hujan (API kadang tidak kirim field 'rain' kalau gak hujan)
     double rain = 0.0;
     if (json['rain'] != null && json['rain']['1h'] != null) {
-      rain = (json['rain']['1h'] as num).toDouble() * 24; // Estimasi ke 24 jam
+      rain = (json['rain']['1h'] as num).toDouble() * 24;
     }
 
-    // 3. Tentukan Musim (Sederhana: Berdasarkan Bulan)
-    // Di Indo: Okt - Mar = Hujan, Apr - Sep = Kemarau
     int month = DateTime.now().month;
     String currentSeason = (month >= 4 && month <= 9) ? "Musim Kemarau" : "Musim Hujan";
 
     return WeatherModel(
       temperature: (main['temp'] as num).toDouble(),
       humidity: (main['humidity'] as num).toDouble(),
-      condition: weather['description'], // Contoh: "Hujan Ringan"
+      condition: weather['description'],
       season: currentSeason,
-      windSpeed: (wind['speed'] as num).toDouble() * 3.6, // m/s ke km/h
+      windSpeed: (wind['speed'] as num).toDouble() * 3.6,
       rainfall24h: rain,
       maxTemp: (main['temp_max'] as num).toDouble(),
-      // Logika Estimasi Wet Hours (Daun Basah)
       wetHours: (rain > 0 || (main['humidity'] as num) > 90) ? 12 : 0,
     );
   }

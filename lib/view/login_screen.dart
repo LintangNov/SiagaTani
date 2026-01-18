@@ -3,7 +3,6 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:siaga_tani/controllers/auth_controller.dart';
 import 'package:siaga_tani/view/register_screen.dart';
-// import 'package:flutter_svg/flutter_svg.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -28,7 +27,6 @@ class _LoginScreenState extends State<LoginScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // --- TOMBOL BACK ---
               GestureDetector(
                 onTap: () => Get.back(),
                 child: Container(
@@ -40,10 +38,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: const Icon(Icons.arrow_back, color: Colors.black87),
                 ),
               ),
-
               const SizedBox(height: 40),
-
-              // --- HEADING ---
               Text(
                 "Masuk Akun",
                 style: GoogleFonts.poppins(
@@ -59,20 +54,14 @@ class _LoginScreenState extends State<LoginScreen> {
                   color: Colors.grey[600],
                 ),
               ),
-
               const SizedBox(height: 40),
-
-              // --- INPUT EMAIL ---
               _buildLabel("Email"),
               _buildTextField(
                 controller: emailCtrl,
                 hint: "contoh@email.com",
                 icon: Icons.email_outlined,
               ),
-
               const SizedBox(height: 20),
-
-              // --- INPUT PASSWORD ---
               _buildLabel("Kata Sandi"),
               _buildTextField(
                 controller: passCtrl,
@@ -80,12 +69,10 @@ class _LoginScreenState extends State<LoginScreen> {
                 icon: Icons.lock_outline,
                 isPassword: true,
               ),
-
-              // Forgot Password
               Align(
                 alignment: Alignment.centerRight,
                 child: TextButton(
-                  onPressed: () {}, // Fitur nanti
+                  onPressed: () {},
                   child: Text(
                     "Lupa Kata Sandi?",
                     style: GoogleFonts.poppins(
@@ -95,10 +82,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
               ),
-
               const SizedBox(height: 20),
-
-              // --- TOMBOL LOGIN ---
               SizedBox(
                 width: double.infinity,
                 height: 55,
@@ -107,8 +91,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     onPressed: authController.isLoading.value
                         ? null
                         : () {
-                            if (emailCtrl.text.isEmpty ||
-                                passCtrl.text.isEmpty) {
+                            if (emailCtrl.text.isEmpty || passCtrl.text.isEmpty) {
                               Get.snackbar(
                                 "Error",
                                 "Email dan Password wajib diisi",
@@ -140,10 +123,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
               ),
-
               const SizedBox(height: 30),
-
-              // --- DIVIDER ---
               Row(
                 children: [
                   Expanded(child: Divider(color: Colors.grey[300])),
@@ -160,10 +140,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   Expanded(child: Divider(color: Colors.grey[300])),
                 ],
               ),
-
               const SizedBox(height: 30),
-
-              // --- GOOGLE BUTTON (PANJANG) ---
               SizedBox(
                 width: double.infinity,
                 height: 55,
@@ -178,15 +155,12 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      // Icon Google (bisa pakai asset image logo google kalau mau berwarna)
-                      // Disini saya pakai Icon standard dulu
                       Image.asset("assets/icons/google.png", height: 24),
-                      // const Icon(Icons.g_mobiledata, size: 35, color: Colors.black87),
                       const SizedBox(width: 10),
                       Text(
                         "Masuk dengan Google",
                         style: GoogleFonts.poppins(
-                          fontSize: 16,     
+                          fontSize: 16,
                           fontWeight: FontWeight.w500,
                           color: Colors.black87,
                         ),
@@ -195,10 +169,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
               ),
-
               const SizedBox(height: 40),
-
-              // --- KE REGISTER ---
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -262,9 +233,7 @@ class _LoginScreenState extends State<LoginScreen> {
           suffixIcon: isPassword
               ? IconButton(
                   icon: Icon(
-                    _isPasswordVisible
-                        ? Icons.visibility
-                        : Icons.visibility_off,
+                    _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
                     color: Colors.grey[400],
                     size: 20,
                   ),

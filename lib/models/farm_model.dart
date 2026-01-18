@@ -1,9 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-// Enum untuk Fase Tanaman
 enum CropStage { seedling, vegetative, flowering, fruiting, harvesting }
 
-// Enum untuk Jenis Mulsa
 enum MulchType { none, black, silver }
 
 class FarmModel {
@@ -15,12 +13,10 @@ class FarmModel {
   final String landSize;
   final String variety;
   
-  // --- FIELD BARU (Untuk Prediksi Cerdas) ---
   final CropStage cropStage;
   final MulchType mulchType;
-  final String lastPesticideTime; // Contoh: "Baru saja (< 3 hari)"
+  final String lastPesticideTime;
 
-  // --- FIELD LAMA (Untuk display UI) ---
   final String hostPlantsNearby;
   final bool isMulchUsed;
   final String plantingPattern;
@@ -51,7 +47,6 @@ class FarmModel {
     required this.wateringIntensity,
   });
 
-  // Konversi ke Map untuk disimpan di Firestore
   Map<String, dynamic> toMap() {
     return {
       'farmName': farmName,
@@ -59,12 +54,9 @@ class FarmModel {
       'location': GeoPoint(latitude, longitude),
       'landSize': landSize,
       'variety': variety,
-      
-      // Simpan Enum sebagai String
       'cropStage': cropStage.toString(), 
       'mulchType': mulchType.toString(),
       'lastPesticideTime': lastPesticideTime,
-
       'hostPlantsNearby': hostPlantsNearby,
       'isMulchUsed': isMulchUsed,
       'plantingPattern': plantingPattern,
@@ -77,11 +69,9 @@ class FarmModel {
     };
   }
 
-  // Konversi dari Firestore Map ke Object Dart
   factory FarmModel.fromMap(Map<String, dynamic> map, String documentId) {
     GeoPoint geoPoint = map['location'] as GeoPoint;
     
-    // Helper parsing Enum
     CropStage parseStage(String? val) {
       return CropStage.values.firstWhere(
         (e) => e.toString() == val, 
@@ -102,15 +92,11 @@ class FarmModel {
       address: map['address'] ?? 'Alamat tidak diketahui',
       latitude: geoPoint.latitude,
       longitude: geoPoint.longitude,
-      landSize: map['landSize'] ?? '',
+      landSize: map['landSize']?.toString() ?? '',
       variety: map['variety'] ?? '',
-      
-      // Parsing Field Baru
       cropStage: parseStage(map['cropStage']),
       mulchType: parseMulch(map['mulchType']),
       lastPesticideTime: map['lastPesticideTime'] ?? '',
-
-      // Parsing Field Lama
       hostPlantsNearby: map['hostPlantsNearby'] ?? 'Tidak Tahu',
       isMulchUsed: map['isMulchUsed'] ?? false,
       plantingPattern: map['plantingPattern'] ?? '',

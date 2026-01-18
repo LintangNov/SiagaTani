@@ -28,7 +28,6 @@ class DashboardScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // --- HEADER ---
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -74,18 +73,14 @@ class DashboardScreen extends StatelessWidget {
                         ),
                       ],
                     ),
-                    CircleAvatar(
+                    const CircleAvatar(
                       backgroundColor: Colors.white,
-                      child: const Icon(Icons.notifications_none, color: Colors.black54),
+                      child: Icon(Icons.notifications_none, color: Colors.black54),
                     ),
                   ],
                 ),
-
                 const SizedBox(height: 25),
-
-                // --- WEATHER WIDGET (YANG DIUBAH) ---
                 _buildWeatherSection(controller),
-                
                 const SizedBox(height: 25),
                 _buildTipsSection(controller),
                 const SizedBox(height: 30),
@@ -99,12 +94,10 @@ class DashboardScreen extends StatelessWidget {
     );
   }
 
-  // --- WIDGET CUACA DINAMIS DENGAN GRADIENT ---
   Widget _buildWeatherSection(DashboardController controller) {
     return Obx(() {
       var weather = controller.currentWeather.value;
       
-      // LOGIKA WARNA & GRADIENT
       List<Color> gradientColors;
       Color textColor;
       Color iconColor;
@@ -113,32 +106,29 @@ class DashboardScreen extends StatelessWidget {
       String condition = (weather?.condition ?? "").toLowerCase();
 
       if (condition.contains("hujan")) {
-        // ABU-ABU MENDUNG (Rainy)
         gradientColors = [
-          const Color(0xFF607D8B), // Blue Grey 500
-          const Color(0xFF90A4AE), // Blue Grey 300
+          const Color(0xFF607D8B),
+          const Color(0xFF90A4AE),
         ];
         textColor = Colors.white;
         iconColor = Colors.white70;
         weatherIcon = Icons.thunderstorm;
       } 
       else if (condition.contains("awan") || condition.contains("berawan")) {
-        // BIRU SEJUK (Cloudy)
         gradientColors = [
-          const Color(0xFF42A5F5), // Blue 400
-          const Color(0xFF90CAF9), // Blue 200
+          const Color(0xFF42A5F5),
+          const Color(0xFF90CAF9),
         ];
         textColor = Colors.white;
         iconColor = Colors.white70;
         weatherIcon = Icons.cloud;
       } 
       else {
-        // KUNING TERIK (Sunny - Default)
         gradientColors = [
-          const Color(0xFFFFB300), // Amber 600
-          const Color(0xFFFFD54F), // Amber 300
+          const Color(0xFFFFB300),
+          const Color(0xFFFFD54F),
         ];
-        textColor = const Color(0xFF4E342E); // Coklat tua biar kontras
+        textColor = const Color(0xFF4E342E);
         iconColor = Colors.white54;
         weatherIcon = Icons.wb_sunny_rounded;
       }
@@ -166,7 +156,6 @@ class DashboardScreen extends StatelessWidget {
             : Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Baris Atas: Suhu & Ikon Besar
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -176,13 +165,12 @@ class DashboardScreen extends StatelessWidget {
                           Text(
                             "${weather?.temperature.toStringAsFixed(0) ?? '--'}°C",
                             style: GoogleFonts.poppins(
-                              fontSize: 36, // Sedikit lebih besar
+                              fontSize: 36,
                               fontWeight: FontWeight.bold,
                               color: textColor,
                             ),
                           ),
                           Text(
-                            // Kapitalisasi huruf pertama
                             (weather?.condition ?? "Tidak ada data").capitalizeFirst ?? "",
                             style: GoogleFonts.poppins(
                               fontSize: 14,
@@ -200,9 +188,6 @@ class DashboardScreen extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 25),
-                  
-                  // Baris Bawah: Detail Data (Real Data API)
-                  // Kita ubah warna teks detail menyesuaikan background agar terbaca
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -216,7 +201,6 @@ class DashboardScreen extends StatelessWidget {
                         "${weather?.windSpeed.toStringAsFixed(1) ?? '-'} km/h",
                         textColor,
                       ),
-                      // Hujan (Rainfall 24h)
                       _buildWeatherInfo(
                         "Curah Hujan",
                         (weather?.rainfall24h ?? 0) > 0 
@@ -232,9 +216,6 @@ class DashboardScreen extends StatelessWidget {
     });
   }
 
-  // --- HELPER WIDGETS ---
-  
-  // Info Kecil di Bawah (Kelembapan, dll)
   Widget _buildWeatherInfo(String label, String value, Color contentColor) {
     return Column(
       children: [
@@ -249,7 +230,7 @@ class DashboardScreen extends StatelessWidget {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.25), // Semi-transparan
+            color: Colors.white.withOpacity(0.25),
             borderRadius: BorderRadius.circular(20),
           ),
           child: Text(
@@ -265,7 +246,6 @@ class DashboardScreen extends StatelessWidget {
     );
   }
 
-  // ... SISA WIDGET (Tips, Menu) TETAP SAMA (Copy dari file lama) ...
   Widget _buildTipsSection(DashboardController controller) {
     return Obx(() {
       if (controller.dailyTips.isEmpty) return const SizedBox.shrink();
@@ -347,7 +327,24 @@ class DashboardScreen extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 5))]),
-        child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [Container(padding: const EdgeInsets.all(15), decoration: BoxDecoration(color: color.withOpacity(0.1), shape: BoxShape.circle), child: Icon(icon, size: 30, color: color)), const SizedBox(height: 15), Text(title, style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600, color: const Color(0xFF2C3312)))])));
+        decoration: BoxDecoration(
+          color: Colors.white, 
+          borderRadius: BorderRadius.circular(20), 
+          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 5))]
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center, 
+          children: [
+            Container(
+              padding: const EdgeInsets.all(15), 
+              decoration: BoxDecoration(color: color.withOpacity(0.1), shape: BoxShape.circle), 
+              child: Icon(icon, size: 30, color: color)
+            ), 
+            const SizedBox(height: 15), 
+            Text(title, style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600, color: const Color(0xFF2C3312)))
+          ]
+        )
+      )
+    );
   }
 }

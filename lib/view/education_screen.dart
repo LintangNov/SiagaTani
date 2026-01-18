@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-// import 'package:url_launcher/url_launcher.dart'; // Jangan lupa: flutter pub add url_launcher
 
 class EducationScreen extends StatelessWidget {
   const EducationScreen({super.key});
 
-  // --- DATA DUMMY ARTIKEL (Nanti bisa dari API/Firebase) ---
   final List<Map<String, String>> articles = const [
     {
       "title": "Waspada! Cuaca Panas Picu Ledakan Kutu Kebul",
@@ -63,10 +61,7 @@ class EducationScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 1. HEADLINE BANNER
             _buildHeadline(),
-            
-            // 2. KATEGORI CHIPS
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -79,10 +74,7 @@ class EducationScreen extends StatelessWidget {
                 ],
               ),
             ),
-
             const SizedBox(height: 20),
-
-            // 3. LIST BERITA TERBARU
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Text(
@@ -95,7 +87,6 @@ class EducationScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 10),
-
             ListView.builder(
               physics: const NeverScrollableScrollPhysics(),
               shrinkWrap: true,
@@ -105,7 +96,6 @@ class EducationScreen extends StatelessWidget {
                 return _buildNewsCard(articles[index]);
               },
             ),
-            
             const SizedBox(height: 30),
           ],
         ),
@@ -113,7 +103,6 @@ class EducationScreen extends StatelessWidget {
     );
   }
 
-  // WIDGET: HEADLINE
   Widget _buildHeadline() {
     return Container(
       margin: const EdgeInsets.all(20),
@@ -166,7 +155,6 @@ class EducationScreen extends StatelessWidget {
     );
   }
 
-  // WIDGET: KATEGORI CHIP
   Widget _buildCategoryChip(String label, bool isActive) {
     return Container(
       margin: const EdgeInsets.only(right: 10),
@@ -183,7 +171,6 @@ class EducationScreen extends StatelessWidget {
     );
   }
 
-  // WIDGET: KARTU BERITA LIST
   Widget _buildNewsCard(Map<String, String> article) {
     return Container(
       margin: const EdgeInsets.only(bottom: 15),
@@ -197,7 +184,6 @@ class EducationScreen extends StatelessWidget {
       ),
       child: Row(
         children: [
-          // Thumbnail
           ClipRRect(
             borderRadius: BorderRadius.circular(10),
             child: Image.network(
@@ -209,7 +195,6 @@ class EducationScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 15),
-          // Konten
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

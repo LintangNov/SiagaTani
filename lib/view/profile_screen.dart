@@ -13,7 +13,7 @@ class ProfileScreen extends StatelessWidget {
     final AuthController authController = Get.find<AuthController>();
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA), // Background abu-abu muda
+      backgroundColor: const Color(0xFFF8F9FA),
       appBar: AppBar(
         backgroundColor: const Color(0xFFF8F9FA),
         elevation: 0,
@@ -33,13 +33,11 @@ class ProfileScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 1. KARTU PROFIL (HEADER)
             Container(
               padding: const EdgeInsets.all(15),
               decoration: _boxDecoration(),
               child: Row(
                 children: [
-                  // Foto Profil
                   Container(
                     padding: const EdgeInsets.all(2),
                     decoration: BoxDecoration(
@@ -65,7 +63,6 @@ class ProfileScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 15),
-                  // Nama & Email
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -89,7 +86,6 @@ class ProfileScreen extends StatelessWidget {
                       ],
                     ),
                   ),
-                  // Tombol Edit Kecil
                   Icon(
                     Icons.arrow_forward_ios_rounded,
                     size: 16,
@@ -98,10 +94,7 @@ class ProfileScreen extends StatelessWidget {
                 ],
               ),
             ),
-
             const SizedBox(height: 25),
-
-            // LABEL SECTION 1
             Padding(
               padding: const EdgeInsets.only(left: 5, bottom: 10),
               child: Text(
@@ -113,8 +106,6 @@ class ProfileScreen extends StatelessWidget {
                 ),
               ),
             ),
-
-            // 2. GROUP MENU UTAMA
             Container(
               decoration: _boxDecoration(),
               child: Column(
@@ -137,7 +128,6 @@ class ProfileScreen extends StatelessWidget {
                     onTap: () {},
                   ),
                   _buildDivider(),
-                  // Switch Dark Mode (Visual Saja Dulu)
                   ListTile(
                     leading: const Icon(
                       Icons.dark_mode_outlined,
@@ -153,16 +143,13 @@ class ProfileScreen extends StatelessWidget {
                     trailing: Switch(
                       value: false,
                       activeColor: const Color(0xFF4CAF50),
-                      onChanged: (val) {}, // Nanti diisi logic theme
+                      onChanged: (val) {},
                     ),
                   ),
                 ],
               ),
             ),
-
             const SizedBox(height: 25),
-
-            // LABEL SECTION 2
             Padding(
               padding: const EdgeInsets.only(left: 5, bottom: 10),
               child: Text(
@@ -174,8 +161,6 @@ class ProfileScreen extends StatelessWidget {
                 ),
               ),
             ),
-
-            // 3. GROUP INFO & LOGOUT
             Container(
               decoration: _boxDecoration(),
               child: Column(
@@ -192,7 +177,6 @@ class ProfileScreen extends StatelessWidget {
                     onTap: () {},
                   ),
                   _buildDivider(),
-                  // TOMBOL LOGOUT (Merah)
                   ListTile(
                     leading: const Icon(
                       Icons.logout_rounded,
@@ -217,7 +201,6 @@ class ProfileScreen extends StatelessWidget {
                 ],
               ),
             ),
-
             const SizedBox(height: 30),
             Center(
               child: Text(
@@ -235,9 +218,6 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  // --- HELPER WIDGETS & STYLING ---
-
-  // Style Kotak Putih + Bayangan Halus
   BoxDecoration _boxDecoration() {
     return BoxDecoration(
       color: Colors.white,
@@ -252,7 +232,6 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  // Item List Biasa
   Widget _buildMenuItem({
     required IconData icon,
     required String title,
@@ -277,13 +256,9 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  // Garis Pemisah Tipis
   Widget _buildDivider() {
     return const Divider(height: 1, thickness: 0.5, indent: 50, endIndent: 20);
   }
-
-  // Dialog Konfirmasi Logout
-  // --- GANTI BAGIAN INI SAJA DI profile_screen.dart ---
 
   void _showLogoutConfirmation(
     BuildContext context,
@@ -296,9 +271,8 @@ class ProfileScreen extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
           child: Column(
-            mainAxisSize: MainAxisSize.min, // Agar dialog menyesuaikan isi
+            mainAxisSize: MainAxisSize.min,
             children: [
-              // 1. IKON (Lingkaran Merah Muda)
               Container(
                 padding: const EdgeInsets.all(15),
                 decoration: BoxDecoration(
@@ -311,10 +285,7 @@ class ProfileScreen extends StatelessWidget {
                   color: Colors.red,
                 ),
               ),
-
               const SizedBox(height: 20),
-
-              // 2. JUDUL
               Text(
                 "Keluar Akun",
                 style: GoogleFonts.poppins(
@@ -323,26 +294,19 @@ class ProfileScreen extends StatelessWidget {
                   color: const Color(0xFF2C3312),
                 ),
               ),
-
               const SizedBox(height: 8),
-
-              // 3. PESAN
               Text(
                 "Apakah Anda yakin ingin keluar dari aplikasi SiagaTani?",
                 textAlign: TextAlign.center,
                 style: GoogleFonts.poppins(
                   fontSize: 14,
                   color: Colors.grey[600],
-                  height: 1.5, // Spasi antar baris biar enak dibaca
+                  height: 1.5,
                 ),
               ),
-
               const SizedBox(height: 25),
-
-              // 4. TOMBOL AKSI (Sejajar)
               Row(
                 children: [
-                  // Tombol Batal (Abu-abu)
                   Expanded(
                     child: ElevatedButton(
                       onPressed: () => Get.back(),
@@ -364,14 +328,12 @@ class ProfileScreen extends StatelessWidget {
                       ),
                     ),
                   ),
-
-                  const SizedBox(width: 12), // Jarak antar tombol
-                  // Tombol Keluar (Merah)
+                  const SizedBox(width: 12),
                   Expanded(
                     child: ElevatedButton(
                       onPressed: () {
-                        Get.back(); // Tutup dialog
-                        controller.logout(); // Proses logout
+                        Get.back();
+                        controller.logout();
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.red,
@@ -381,7 +343,6 @@ class ProfileScreen extends StatelessWidget {
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        // Efek bayangan merah halus biar modern
                         shadowColor: Colors.red.withOpacity(0.4),
                       ),
                       child: Text(
@@ -399,7 +360,7 @@ class ProfileScreen extends StatelessWidget {
           ),
         ),
       ),
-      barrierDismissible: false, // User harus pilih tombol, gak bisa klik luar
+      barrierDismissible: false,
     );
   }
 }

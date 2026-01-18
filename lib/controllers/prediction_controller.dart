@@ -3,81 +3,110 @@ import 'package:latlong2/latlong.dart';
 import '../models/farm_model.dart';
 import '../models/weather_model.dart';
 import '../models/prediction_result.dart';
-import '../models/surrounding_pin_model.dart';
 import '../services/weather_service.dart';
 import '../services/prediction_service.dart';
 import '../services/firestore_service.dart';
+import '../services/ai_service.dart';
 
 class PredictionController extends GetxController {
   final WeatherService _weatherService = WeatherService();
   final PredictionService _predictionService = PredictionService();
   final FirestoreService _firestoreService = FirestoreService();
+  final AIService _aiService = AIService();
 
-  late FarmModel farm;
-  var predictionResults = <PredictionResult>[].obs;
-  var isAnalyzing = false.obs;
+  FarmModel? farm; 
+  final predictionResults = <PredictionResult>[].obs;
+  final isAnalyzing = false.obs;
+  
+  final weatherData = Rxn<WeatherModel>();
+  final forecastData = Rxn<WeatherModel>();
 
-  var weatherData = Rxn<WeatherModel>(); // Cuaca Saat Ini
-  var forecastData = Rxn<WeatherModel>(); // Ramalan Besok (BARU)
+  var aiAdvice = "".obs;
+  var isLoadingAI = false.obs;
 
   @override
   void onInit() {
     super.onInit();
+   
     if (Get.arguments != null && Get.arguments is FarmModel) {
       farm = Get.arguments;
+      runAnalysis(); 
+    } else {
+      Get.snackbar("Error", "Data lahan tidak ditemukan atau tidak valid");
     }
   }
 
   Future<void> runAnalysis() async {
+    final currentFarm = farm;
+    if (currentFarm == null) return; 
+    
     isAnalyzing.value = true;
     predictionResults.clear();
+    aiAdvice.value = ""; 
 
     try {
-      // 1. Ambil Cuaca Saat Ini & BESOK (Parallel biar cepat)
-      var weatherFuture = _weatherService.getWeatherByLocation(
-        farm.latitude,
-        farm.longitude,
-      );
-      var forecastFuture = _weatherService.getForecastByLocation(
-        farm.latitude,
-        farm.longitude,
-      );
+      final results = await Future.wait([
+        _weatherService.getWeatherByLocation(currentFarm.latitude, currentFarm.longitude),
+        _weatherService.getForecastByLocation(currentFarm.latitude, currentFarm.longitude),
+      ]);
 
-      var results = await Future.wait([weatherFuture, forecastFuture]);
+      if (results[0] != null) {
+        weatherData.value = results[0];
+        forecastData.value = results[1];
+        
+        final allPins = await _firestoreService.getAllPins();
+        const distance = Distance();
+        final nearbyPlants = <String>[];
 
-      WeatherModel currentWeather = results[0];
-      WeatherModel tomorrowWeather = results[1];
+        for (var pin in allPins) {
+          final double meters = distance.as(
+            LengthUnit.Meter,
+            LatLng(currentFarm.latitude, currentFarm.longitude),
+            LatLng(pin.latitude, pin.longitude),
+          );
+          
+          if (meters <= 1000) { 
+            nearbyPlants.add(pin.plantType);
+          }
+        }
 
-      weatherData.value = currentWeather;
-      forecastData.value = tomorrowWeather;
-
-      // 2. Ambil Pin Tetangga (Filter Radius 1 KM)
-      List<SurroundingPinModel> allPins = await _firestoreService.getAllPins();
-      const Distance distance = Distance();
-      List<String> nearbyPlants = [];
-
-      for (var pin in allPins) {
-        double km = distance.as(
-          LengthUnit.Meter,
-          LatLng(farm.latitude, farm.longitude),
-          LatLng(pin.latitude, pin.longitude),
+        final analysis = _predictionService.analyzeRisk(
+          currentFarm,
+          weatherData.value!,
+          nearbyPlants,
         );
-        if (km <= 1000) {
-          nearbyPlants.add(pin.plantType);
+        
+        predictionResults.assignAll(analysis);
+
+        if (predictionResults.isNotEmpty) {
+          fetchAISuggestion();
         }
       }
-
-      // 3. Analisis (Pakai cuaca saat ini)
-      List<PredictionResult> analysis = _predictionService.analyzeRisk(
-        farm,
-        currentWeather,
-        nearbyPlants,
-      );
-      predictionResults.assignAll(analysis);
     } catch (e) {
       print("Error Analysis: $e");
+      Get.snackbar("Kesalahan", "Gagal memproses analisis risiko hama.");
     } finally {
       isAnalyzing.value = false;
+    }
+  }
+
+  Future<void> fetchAISuggestion() async {
+    if (predictionResults.isEmpty || weatherData.value == null || farm == null) return;
+    
+    isLoadingAI.value = true;
+    
+    try {
+      final advice = await _aiService.generateSmartAdvice(
+        weather: weatherData.value!,
+        farm: farm!, 
+        risks: predictionResults, 
+      );
+      aiAdvice.value = advice;
+    } catch (e) {
+      print("AI Error: $e");
+      aiAdvice.value = "Saran dari asisten AI gagal dimuat.";
+    } finally {
+      isLoadingAI.value = false;
     }
   }
 }

@@ -3,7 +3,7 @@ import 'package:latlong2/latlong.dart';
 
 class SurroundingPinModel {
   String? id;
-  final String plantType; // Contoh: "Terong", "Jagung"
+  final String plantType;
   final double latitude;
   final double longitude;
 

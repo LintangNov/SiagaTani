@@ -13,7 +13,7 @@ class MyFarmScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final DashboardController controller = Get.put(DashboardController());
+    final DashboardController controller = Get.find<DashboardController>();
     final FirestoreService firestoreService = FirestoreService();
 
     return Scaffold(
@@ -93,10 +93,9 @@ class MyFarmScreen extends StatelessWidget {
     );
   }
 
-  // --- WIDGET KARTU LAHAN ---
   Widget _buildFarmCard(BuildContext context, FarmModel farm, FirestoreService service) {
     return GestureDetector(
-      onTap: () => Get.to(() => const FarmDetailScreen(), arguments: farm),
+      onTap: () => Get.to(() => FarmDetailScreen(), arguments: farm),
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white,
@@ -112,7 +111,6 @@ class MyFarmScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // A. GAMBAR PETA
             ClipRRect(
               borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
               child: SizedBox(
@@ -141,7 +139,6 @@ class MyFarmScreen extends StatelessWidget {
                         ),
                       ],
                     ),
-                    // Gradient & Tombol Opsi
                     Container(
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
@@ -172,8 +169,6 @@ class MyFarmScreen extends StatelessWidget {
                 ),
               ),
             ),
-
-            // B. INFORMASI DETAIL
             Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -184,7 +179,7 @@ class MyFarmScreen extends StatelessWidget {
                     children: [
                       Expanded(
                         child: Text(
-                          farm.farmName,
+                          farm.farmName, 
                           style: GoogleFonts.poppins(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -195,7 +190,7 @@ class MyFarmScreen extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        farm.landSize,
+                        farm.landSize, 
                         style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey[600]),
                       ),
                     ],
@@ -241,7 +236,6 @@ class MyFarmScreen extends StatelessWidget {
     );
   }
 
-  // --- LOGIKA MENU OPSI ---
   void _showOptionsDialog(BuildContext context, FarmModel farm, FirestoreService service) {
     Get.bottomSheet(
       Container(
@@ -255,8 +249,6 @@ class MyFarmScreen extends StatelessWidget {
           children: [
             Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2))),
             const SizedBox(height: 20),
-            
-            // 1. UPDATE FASE (NEW)
             ListTile(
               leading: Container(
                 padding: const EdgeInsets.all(8),
@@ -271,8 +263,6 @@ class MyFarmScreen extends StatelessWidget {
               },
             ),
             const Divider(),
-
-            // 2. EDIT NAMA
             ListTile(
               leading: Container(
                 padding: const EdgeInsets.all(8),
@@ -285,8 +275,6 @@ class MyFarmScreen extends StatelessWidget {
                 _showEditDialog(context, farm, service);
               },
             ),
-
-            // 3. HAPUS
             ListTile(
               leading: Container(
                 padding: const EdgeInsets.all(8),
@@ -305,7 +293,6 @@ class MyFarmScreen extends StatelessWidget {
     );
   }
 
-  // --- DIALOG UPDATE FASE (ANTI ERROR) ---
   void _showUpdatePhaseDialog(BuildContext context, FarmModel farm, FirestoreService service) {
     final phases = [
       {"label": "Bibit", "enum": "CropStage.seedling"},
@@ -318,8 +305,6 @@ class MyFarmScreen extends StatelessWidget {
     Get.defaultDialog(
       title: "Pilih Fase Baru",
       titleStyle: GoogleFonts.poppins(fontWeight: FontWeight.bold),
-      // PERBAIKAN UTAMA: Ganti ListView dengan Column + SingleChildScrollView
-      // Ini mencegah error "Intrinsic Dimensions"
       content: SizedBox(
         width: double.maxFinite,
         child: SingleChildScrollView(
@@ -355,7 +340,7 @@ class MyFarmScreen extends StatelessWidget {
   }
 
   void _showEditDialog(BuildContext context, FarmModel farm, FirestoreService service) {
-    final TextEditingController nameCtrl = TextEditingController(text: farm.farmName);
+    final TextEditingController nameCtrl = TextEditingController(text: farm.farmName); 
     Get.defaultDialog(
       title: "Ubah Nama",
       titleStyle: GoogleFonts.poppins(fontWeight: FontWeight.bold),
@@ -389,7 +374,8 @@ class MyFarmScreen extends StatelessWidget {
     Get.defaultDialog(
       title: "Hapus Lahan?",
       titleStyle: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: Colors.red),
-      middleText: "Anda yakin ingin menghapus '${farm.farmName}'? Data ini tidak bisa dikembalikan.",
+      // DIPERBAIKI: Menggunakan farm.name bukan farmName
+      middleText: "Anda yakin ingin menghapus '${farm.farmName}'? Data ini tidak bisa dikembalikan.", 
       middleTextStyle: GoogleFonts.poppins(),
       confirm: ElevatedButton(
         onPressed: () async {

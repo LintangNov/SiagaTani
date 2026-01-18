@@ -15,7 +15,7 @@ class MapSetupController extends GetxController {
   var surroundingPins = <Marker>[].obs;
   var surroundingData = <Map<String, dynamic>>[].obs;
   
-  // Default lokasi (Jogja) buat jaga-jaga
+  // default location: Yogyakarta, Indonesia
   var currentCenter = const LatLng(-7.795, 110.369).obs;
   var currentAddress = "Geser pin untuk lokasi...".obs;
   var isLoadingAddress = false.obs;
@@ -25,81 +25,69 @@ class MapSetupController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    // Mulai cek lokasi dengan sopan
     checkLocationPermissionAndFetch();
   }
 
   @override
   void onClose() {
     _debounce?.cancel();
-    mapController.dispose(); // Bersihkan controller
+    mapController.dispose(); 
     super.onClose();
   }
 
-  /// Fungsi pintar: Cek Izin -> Cek GPS -> Ambil Lokasi
   Future<void> checkLocationPermissionAndFetch() async {
     bool serviceEnabled;
     LocationPermission permission;
 
-    // 1. Cek GPS Hardware
     serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
       _showDialogServiceDisabled();
       return;
     }
 
-    // 2. Cek Izin Aplikasi
     permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied) {
-        // User nolak? Tanya baik-baik lagi
+
         _showDialogPermissionDenied(); 
         return;
       }
     }
 
     if (permission == LocationPermission.deniedForever) {
-      // User nolak permanen? Arahkan ke settings
       _showDialogSettingsNeeded();
       return;
     }
 
-    // 3. Aman, gas ambil lokasi
     await _getCurrentLocation();
   }
 
   Future<void> _getCurrentLocation() async {
     try {
-      // Kasih loading dikit biar user tau ada proses
       isLoadingAddress.value = true;
       currentAddress.value = "Sedang mencari koordinat...";
 
       Position position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high,
-        timeLimit: const Duration(seconds: 10), // Jangan lama-lama, 10 detik timeout
+        timeLimit: const Duration(seconds: 10),
       );
 
       LatLng userPos = LatLng(position.latitude, position.longitude);
-      
-      // UPDATE DATA DULU (Penting!)
+
       currentCenter.value = userPos;
       
-      // COBA GERAKKAN PETA (Safe Mode)
-      // Kita bungkus try-catch khusus buat move map.
-      // Kalau map belum siap, biarin aja errornya (silent), 
-      // karena 'currentCenter' udah update, nanti map menyesuaikan sendiri.
       try {
         mapController.move(userPos, 16.0);
       } catch (e) {
         print("Info: Map belum siap digerakkan, tapi data lokasi aman. ($e)");
       }
       
-      // Ambil alamat cantik
+
       _getAddressFromLatLng(userPos.latitude, userPos.longitude);
       
     } catch (e) {
-      // Ini baru error beneran (misal timeout / sinyal bapuk)
+
       print("Gagal ambil GPS: $e");
       _showErrorSnackbar(e.toString());
     } finally {
@@ -120,7 +108,6 @@ class MapSetupController extends GetxController {
       onConfirm: () async {
         Get.back();
         await Geolocator.openLocationSettings();
-        // Tunggu bentar, terus cek lagi
         Future.delayed(const Duration(seconds: 2), () => checkLocationPermissionAndFetch());
       },
     );
@@ -136,7 +123,7 @@ class MapSetupController extends GetxController {
       buttonColor: const Color(0xFF2C3312),
       onConfirm: () {
         Get.back();
-        checkLocationPermissionAndFetch(); // Tanya lagi
+        checkLocationPermissionAndFetch(); 
       },
     );
   }
@@ -175,7 +162,6 @@ class MapSetupController extends GetxController {
     );
   }
 
-  // --- LOGIKA LAIN (Tetap Sama) ---
 
   void onPositionChanged(MapCamera camera, bool hasGesture) {
     currentCenter.value = camera.center;
@@ -195,7 +181,6 @@ class MapSetupController extends GetxController {
         String subLoc = place.subLocality ?? "";
         String loc = place.locality ?? "";
         
-        // Bersihkan format alamat biar rapi
         String address = "$street, $subLoc, $loc".replaceAll(RegExp(r'^, | , '), '');
         if (address.trim().isEmpty) address = "Lokasi Terpilih";
         
@@ -204,7 +189,6 @@ class MapSetupController extends GetxController {
         currentAddress.value = "Alamat tidak ditemukan";
       }
     } catch (e) {
-      // Fallback kalau geocoding gagal (misal gak ada internet)
       currentAddress.value = "Koordinat: ${lat.toStringAsFixed(4)}, ${lng.toStringAsFixed(4)}";
     } finally {
       isLoadingAddress.value = false;
@@ -213,7 +197,6 @@ class MapSetupController extends GetxController {
 
   void saveMyFarmLocation() {
     myFarmLocation.value = currentCenter.value;
-    // Feedback positif (hijau)
     UiUtils.showSuccess(
       "Lokasi tersimpan: ${currentAddress.value}",
       title: "Lokasi Aman!",

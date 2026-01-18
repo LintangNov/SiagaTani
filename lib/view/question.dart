@@ -16,43 +16,36 @@ class QuestionnaireScreen extends StatefulWidget {
 class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
   final PageController _pageController = PageController();
 
-  // Panggil Controller
   final MapSetupController _mapController = Get.put(MapSetupController());
   final FarmController _farmController = Get.put(FarmController());
 
   int _currentPage = 0;
 
-  // --- DATA PERTANYAAN (DENGAN GAMBAR) ---
   final List<Map<String, dynamic>> _questions = [
     {
       "key": "phase",
       "question": "Fase tanaman cabai Anda saat ini?",
-      "type": "image_grid", // Tipe Baru: Grid Gambar
+      "type": "image_grid",
       "options": [
         {
           "label": "Bibit",
-          "image":
-              "assets/images/phase/bibit.png",
+          "image": "assets/images/phase/bibit.png",
         },
         {
           "label": "Vegetatif",
-          "image":
-              "assets/images/phase/vegetatif.png",
+          "image": "assets/images/phase/vegetatif.png",
         },
         {
           "label": "Berbunga",
-          "image":
-              "assets/images/phase/berbungaa.png",
+          "image": "assets/images/phase/berbungaa.png",
         },
         {
           "label": "Berbuah",
-          "image":
-              "assets/images/phase/berbuah.png",
+          "image": "assets/images/phase/berbuah.png",
         },
         {
           "label": "Panen",
-          "image":
-              "assets/images/phase/berbuah_besar.png",
+          "image": "assets/images/phase/berbuah_besar.png",
         },
       ],
     },
@@ -69,17 +62,15 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
     {
       "key": "variety",
       "question": "Varietas cabai apa yang Anda tanam?",
-      "type": "image_grid", // Tipe Baru
+      "type": "image_grid",
       "options": [
         {
           "label": "Cabai Rawit",
-          "image":
-              "assets/images/varietas/rawit.png",
+          "image": "assets/images/varietas/rawit.png",
         },
         {
           "label": "Cabai Keriting",
-          "image":
-              "assets/images/varietas/keriting.png",
+          "image": "assets/images/varietas/keriting.png",
         },
         {
           "label": "Cabai Besar",
@@ -169,8 +160,9 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
               final q = _questions[index];
 
               if (q['type'] == 'map_main') return _buildMapMainStep(q);
-              if (q['type'] == 'map_surrounding')
+              if (q['type'] == 'map_surrounding') {
                 return _buildMapSurroundingStep(q);
+              }
 
               return SafeArea(
                 child: Padding(
@@ -189,19 +181,16 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
                         ),
                       ),
                       const SizedBox(height: 20),
-
-                      // LOGIKA BUILDER
                       if (q['type'] == 'image_grid')
                         _buildImageGridOptions(
                           q,
                           q['key'],
                           accentColor,
-                        ) // WIDGET BARU
+                        )
                       else if (q['type'] == 'list')
                         _buildListOptions(q, q['key'], accentColor)
                       else if (q['type'] == 'text')
                         _buildTextInput(q, accentColor),
-
                       const SizedBox(height: 20),
                       _buildNextButton(primaryColor, q['key']),
                     ],
@@ -215,7 +204,6 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
     );
   }
 
-  // --- WIDGET BARU: IMAGE CARD GRID ---
   Widget _buildImageGridOptions(
     Map<String, dynamic> q,
     String key,
@@ -225,10 +213,10 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
       child: GridView.builder(
         physics: const BouncingScrollPhysics(),
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2, // 2 Kolom
+          crossAxisCount: 2,
           mainAxisSpacing: 15,
           crossAxisSpacing: 15,
-          childAspectRatio: 0.90, // Rasio Card (Sedikit memanjang ke bawah)
+          childAspectRatio: 0.90,
         ),
         itemCount: (q['options'] as List).length,
         itemBuilder: (ctx, i) {
@@ -242,7 +230,6 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
                 duration: const Duration(milliseconds: 200),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(20),
-                  // Jika selected: Border Hijau Tebal
                   border: isSelected
                       ? Border.all(color: color, width: 2)
                       : Border.all(color: Colors.transparent, width: 0),
@@ -254,7 +241,7 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
                     ),
                   ],
                   image: DecorationImage(
-                    image: AssetImage(opt['image']), // Gambar dari URL
+                    image: AssetImage(opt['image']),
                     fit: BoxFit.cover,
                     colorFilter: isSelected
                         ? null
@@ -267,7 +254,6 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
                 child: Stack(
                   alignment: Alignment.bottomCenter,
                   children: [
-                    // Gradient Putih di Bawah (Agar teks terbaca)
                     Container(
                       height: 80,
                       decoration: BoxDecoration(
@@ -285,8 +271,6 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
                         ),
                       ),
                     ),
-
-                    // Teks Label & Icon Check
                     Padding(
                       padding: const EdgeInsets.only(
                         bottom: 15,
@@ -329,7 +313,6 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
     );
   }
 
-  // --- WIDGET TEXT INPUT (Dengan Info Luas Lahan) ---
   Widget _buildTextInput(Map<String, dynamic> q, Color activeColor) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -355,8 +338,6 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
           ),
         ),
         const SizedBox(height: 15),
-
-        // INFO LUAS LAHAN
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
@@ -379,7 +360,7 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
                     ),
                   ),
                   Text(
-                    "1000 m²", // Nilai Default dari Controller
+                    "1000 m²",
                     style: GoogleFonts.poppins(
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
@@ -394,9 +375,6 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
       ],
     );
   }
-
-  // ... (SISA KODE SAMA: _buildListOptions, Helper, & Maps) ...
-  // Pastikan copy bagian ini agar tidak error:
 
   Widget _buildListOptions(Map<String, dynamic> q, String key, Color color) {
     return Expanded(
@@ -423,9 +401,9 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
                   ),
                   boxShadow: const [
                     BoxShadow(
-                      color: const Color.fromARGB(13, 0, 0, 0),
+                      color: Color.fromARGB(13, 0, 0, 0),
                       blurRadius: 4,
-                      offset: const Offset(0, 4),
+                      offset: Offset(0, 4),
                     ),
                   ],
                 ),
@@ -513,10 +491,11 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
       height: 50,
       child: Obx(() {
         bool isEnabled = false;
-        if (key == 'name')
+        if (key == 'name') {
           isEnabled = _farmController.nameController.text.isNotEmpty;
-        else if (key != null)
+        } else if (key != null) {
           isEnabled = _getValue(key).isNotEmpty;
+        }
 
         return ElevatedButton(
           onPressed: isEnabled
@@ -565,7 +544,7 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
         ),
         SizedBox(width: 10),
         Expanded(
-          child: LinearProgressIndicator(            
+          child: LinearProgressIndicator(
             minHeight: 7,
             borderRadius: BorderRadius.circular(30),
             value: (_currentPage + 1) / _questions.length,
@@ -576,7 +555,7 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
       ],
     );
   }
-  // --- PETA 1: GOJEK STYLE ---
+
   Widget _buildMapMainStep(Map<String, dynamic> q) {
     return Stack(
       children: [
@@ -602,7 +581,6 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
             child: Icon(Icons.location_on, color: Colors.red, size: 50),
           ),
         ),
-
         Positioned(
           bottom: 0,
           left: 0,
@@ -689,15 +667,13 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
     );
   }
 
-  // --- PETA 2: DATA PENDUKUNG ---
   Widget _buildMapSurroundingStep(Map<String, dynamic> q) {
     return Stack(
       children: [
         Obx(
           () => FlutterMap(
             options: MapOptions(
-              initialCenter:
-                  _mapController.myFarmLocation.value ??
+              initialCenter: _mapController.myFarmLocation.value ??
                   const LatLng(-7.795, 110.369),
               initialZoom: 16.0,
               onTap: (tapPos, latLng) =>
@@ -727,7 +703,6 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
             ],
           ),
         ),
-
         Positioned(
           bottom: 0,
           left: 0,
@@ -753,8 +728,6 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
                   style: GoogleFonts.poppins(color: Colors.grey, fontSize: 12),
                 ),
                 const SizedBox(height: 15),
-
-                // LIST CHIP DENGAN ICON SILANG
                 Obx(
                   () => Wrap(
                     spacing: 8,
@@ -763,40 +736,37 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
                         .asMap()
                         .entries
                         .map((entry) {
-                          int idx = entry.key;
-                          Map<String, dynamic> data = entry.value;
-                          return Chip(
-                            label: Text(data['type']),
-                            backgroundColor: Colors.orange[50],
-                            avatar: const Icon(
-                              Icons.grass,
-                              size: 14,
-                              color: Colors.orange,
-                            ),
-                            labelStyle: const TextStyle(fontSize: 12),
-                            deleteIcon: const Icon(
-                              Icons.close,
-                              size: 16,
-                              color: Colors.red,
-                            ),
-                            onDeleted: () {
-                              _mapController.surroundingData.removeAt(idx);
-                              _mapController.surroundingPins.removeAt(idx);
-                            },
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(20),
-                              side: BorderSide(
-                                color: Colors.orange.withOpacity(0.2),
-                              ),
-                            ),
-                          );
-                        })
-                        .toList(),
+                      int idx = entry.key;
+                      Map<String, dynamic> data = entry.value;
+                      return Chip(
+                        label: Text(data['type']),
+                        backgroundColor: Colors.orange[50],
+                        avatar: const Icon(
+                          Icons.grass,
+                          size: 14,
+                          color: Colors.orange,
+                        ),
+                        labelStyle: const TextStyle(fontSize: 12),
+                        deleteIcon: const Icon(
+                          Icons.close,
+                          size: 16,
+                          color: Colors.red,
+                        ),
+                        onDeleted: () {
+                          _mapController.surroundingData.removeAt(idx);
+                          _mapController.surroundingPins.removeAt(idx);
+                        },
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                          side: BorderSide(
+                            color: Colors.orange.withOpacity(0.2),
+                          ),
+                        ),
+                      );
+                    }).toList(),
                   ),
                 ),
                 const SizedBox(height: 15),
-
-                // TOMBOL LANJUT (KE HALAMAN NAMA)
                 SizedBox(
                   width: double.infinity,
                   height: 50,
@@ -850,6 +820,4 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
       ),
     );
   }
-
-  
 }
