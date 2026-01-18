@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:siaga_tani/view/login_screen.dart';
+// import 'package:siaga_tani/view/main_screen.dart';
 import 'package:get/get.dart';
 
 class OnboardingScreen extends StatefulWidget {
@@ -16,22 +17,23 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   final List<Map<String, dynamic>> _onboardingData = [
     {
-      "title": "Pertanian Digital\nMasa Depan",
-      "desc": "Kami mengotomatisasi dan mengoptimalkan pertanian global.",
+      "title":
+          "Bertani Lebih\nModern & Mudah", // Lebih mengajak daripada "Digital Masa Depan"
+      "desc": "Teknologi pintar untuk bantu tingkatkan hasil panen Anda.",
       "icon": 'assets/images/onboarding_1.jpg',
     },
     {
-      "title": "Monitor your crops\nin real-time",
-      "desc": "Get instant insights about weather and pest predictions.",
+      "title": "Pantau Cuaca\n& Risiko Hama", // Langsung to the point fiturnya
+      "desc": "Cek prediksi cuaca dan ancaman hama langsung dari HP.",
       "icon": 'assets/images/onboarding_1.jpg',
     },
     {
-      "title": "Connect with\nlocal farmers",
-      "desc": "Share knowledge and resources with the community.",
+      "title":
+          "Terhubung dengan\nSesama Petani", // Lebih akrab daripada "Komunitas Local"
+      "desc": "Saling berbagi ilmu dan pengalaman dengan petani sekitar.",
       "icon": 'assets/images/onboarding_1.jpg',
     },
   ];
-
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
@@ -174,7 +176,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       duration: const Duration(milliseconds: 200),
       margin: const EdgeInsets.only(right: 5),
       height: 6,
-      width: _currentPage == index ? 25 : 6,
+      width: _currentPage == index ? 25 :   6,
       decoration: BoxDecoration(
         color: _currentPage == index
             ? const Color(0xFF4CAF50)
