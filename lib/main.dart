@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:get/get.dart'; 
-import 'package:flutter_dotenv/flutter_dotenv.dart'; // 1. Import ini
+import 'package:get/get.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart'; 
 import 'controllers/auth_controller.dart';
 import 'firebase_options.dart';
 
