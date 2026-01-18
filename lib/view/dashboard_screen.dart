@@ -3,7 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:get/get.dart';
 import 'package:siaga_tani/controllers/dashboard_controller.dart';
 import 'package:siaga_tani/view/my_farm_screen.dart';
-import 'package:siaga_tani/view/question.dart'; 
+import 'package:siaga_tani/view/question.dart';
 
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
@@ -18,7 +18,7 @@ class DashboardScreen extends StatelessWidget {
         child: RefreshIndicator(
           onRefresh: () async {
             await controller.fetchCurrentLocation(forceRefresh: true);
-            controller.fetchUserData(); 
+            controller.fetchUserData();
           },
           color: const Color(0xFF2C3312),
           backgroundColor: Colors.white,
@@ -34,50 +34,72 @@ class DashboardScreen extends StatelessWidget {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Obx(() => Text(
-                          "Hai, ${controller.userName.value} 👋",
-                          style: GoogleFonts.poppins(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: const Color(0xFF2C3312),
-                          ),
-                        )),
-                        const SizedBox(height: 4),
-                        GestureDetector(
-                          onTap: () => controller.handleLocationTap(),
-                          child: Row(
-                            children: [
-                              Obx(() => Icon(
-                                Icons.location_on,
-                                color: controller.currentLocation.value.contains("Ketuk") 
-                                    ? Colors.red 
-                                    : const Color(0xFFE57373),
-                                size: 16,
-                              )),
-                              const SizedBox(width: 4),
-                              Obx(() => Text(
-                                controller.currentLocation.value,
-                                style: GoogleFonts.poppins(
-                                  fontSize: 13,
-                                  color: controller.currentLocation.value.contains("Ketuk") 
-                                      ? Colors.red 
-                                      : Colors.grey[600],
-                                  fontWeight: FontWeight.w500,
-                                  decoration: controller.currentLocation.value.contains("Ketuk") 
-                                      ? TextDecoration.underline 
-                                      : TextDecoration.none,
-                                ),
-                              )),
-                            ],
+                        Obx(
+                          () => Text(
+                            "Hai, ${controller.userName.value} 👋",
+                            style: GoogleFonts.poppins(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: const Color(0xFF2C3312),
+                            ),
                           ),
                         ),
+                        const SizedBox(height: 4),
                       ],
                     ),
+                    // Notification
                     const CircleAvatar(
                       backgroundColor: Colors.white,
-                      child: Icon(Icons.notifications_none, color: Colors.black54),
+                      child: Icon(
+                        Icons.notifications_none,
+                        color: Colors.black54,
+                      ),
                     ),
                   ],
+                ),
+                GestureDetector(
+                  onTap: () => controller.handleLocationTap(),
+                  child: Row(
+                    children: [
+                      Obx(
+                        () => Icon(
+                          Icons.location_on,
+                          color:
+                              controller.currentLocation.value.contains("Ketuk")
+                              ? Colors.red
+                              : const Color(0xFFE57373),
+                          size: 16,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Obx(
+                        () => SizedBox(
+                          width: MediaQuery.of(context).size.width * 0.6,
+                          child: Text(
+                            controller.currentLocation.value,
+                            style: GoogleFonts.poppins(
+                              fontSize: 13,
+                              color:
+                                  controller.currentLocation.value.contains(
+                                    "Ketuk",
+                                  )
+                                  ? Colors.red
+                                  : Colors.grey[600],
+                              fontWeight: FontWeight.w500,
+                              decoration:
+                                  controller.currentLocation.value.contains(
+                                    "Ketuk",
+                                  )
+                                  ? TextDecoration.underline
+                                  : TextDecoration.none,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 25),
                 _buildWeatherSection(controller),
@@ -97,37 +119,26 @@ class DashboardScreen extends StatelessWidget {
   Widget _buildWeatherSection(DashboardController controller) {
     return Obx(() {
       var weather = controller.currentWeather.value;
-      
+
       List<Color> gradientColors;
       Color textColor;
       Color iconColor;
       IconData weatherIcon;
-      
+
       String condition = (weather?.condition ?? "").toLowerCase();
 
       if (condition.contains("hujan")) {
-        gradientColors = [
-          const Color(0xFF607D8B),
-          const Color(0xFF90A4AE),
-        ];
+        gradientColors = [const Color(0xFF607D8B), const Color(0xFF90A4AE)];
         textColor = Colors.white;
         iconColor = Colors.white70;
         weatherIcon = Icons.thunderstorm;
-      } 
-      else if (condition.contains("awan") || condition.contains("berawan")) {
-        gradientColors = [
-          const Color(0xFF42A5F5),
-          const Color(0xFF90CAF9),
-        ];
+      } else if (condition.contains("awan") || condition.contains("berawan")) {
+        gradientColors = [const Color(0xFF42A5F5), const Color(0xFF90CAF9)];
         textColor = Colors.white;
         iconColor = Colors.white70;
         weatherIcon = Icons.cloud;
-      } 
-      else {
-        gradientColors = [
-          const Color(0xFFFFB300),
-          const Color(0xFFFFD54F),
-        ];
+      } else {
+        gradientColors = [const Color(0xFFFFB300), const Color(0xFFFFD54F)];
         textColor = const Color(0xFF4E342E);
         iconColor = Colors.white54;
         weatherIcon = Icons.wb_sunny_rounded;
@@ -152,7 +163,9 @@ class DashboardScreen extends StatelessWidget {
           ],
         ),
         child: controller.isLoadingWeather.value
-            ? const Center(child: CircularProgressIndicator(color: Colors.white))
+            ? const Center(
+                child: CircularProgressIndicator(color: Colors.white),
+              )
             : Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -171,7 +184,9 @@ class DashboardScreen extends StatelessWidget {
                             ),
                           ),
                           Text(
-                            (weather?.condition ?? "Tidak ada data").capitalizeFirst ?? "",
+                            (weather?.condition ?? "Tidak ada data")
+                                    .capitalizeFirst ??
+                                "",
                             style: GoogleFonts.poppins(
                               fontSize: 14,
                               color: textColor.withOpacity(0.9),
@@ -180,11 +195,7 @@ class DashboardScreen extends StatelessWidget {
                           ),
                         ],
                       ),
-                      Icon(
-                        weatherIcon,
-                        size: 60,
-                        color: iconColor,
-                      ),
+                      Icon(weatherIcon, size: 60, color: iconColor),
                     ],
                   ),
                   const SizedBox(height: 25),
@@ -203,9 +214,9 @@ class DashboardScreen extends StatelessWidget {
                       ),
                       _buildWeatherInfo(
                         "Curah Hujan",
-                        (weather?.rainfall24h ?? 0) > 0 
-                            ? "${weather!.rainfall24h.toStringAsFixed(1)} mm" 
-                            : "0 mm", 
+                        (weather?.rainfall24h ?? 0) > 0
+                            ? "${weather!.rainfall24h.toStringAsFixed(1)} mm"
+                            : "0 mm",
                         textColor,
                       ),
                     ],
@@ -252,7 +263,14 @@ class DashboardScreen extends StatelessWidget {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text("Rekomendasi Hari Ini", style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold, color: const Color(0xFF2C3312))),
+          Text(
+            "Rekomendasi Hari Ini",
+            style: GoogleFonts.poppins(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: const Color(0xFF2C3312),
+            ),
+          ),
           const SizedBox(height: 10),
           SizedBox(
             height: 120,
@@ -268,14 +286,27 @@ class DashboardScreen extends StatelessWidget {
                     color: tip['color'],
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(color: Colors.white, width: 2),
-                    boxShadow: [BoxShadow(color: Colors.grey.withOpacity(0.1), blurRadius: 5, offset: const Offset(0, 3))],
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.grey.withOpacity(0.1),
+                        blurRadius: 5,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
                   ),
                   child: Row(
                     children: [
                       Container(
                         padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(color: Colors.white.withOpacity(0.5), shape: BoxShape.circle),
-                        child: Icon(tip['icon'], size: 30, color: tip['textColor']),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.5),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          tip['icon'],
+                          size: 30,
+                          color: tip['textColor'],
+                        ),
                       ),
                       const SizedBox(width: 15),
                       Expanded(
@@ -283,9 +314,24 @@ class DashboardScreen extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Text(tip['title'], style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 15, color: tip['textColor'])),
+                            Text(
+                              tip['title'],
+                              style: GoogleFonts.poppins(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 15,
+                                color: tip['textColor'],
+                              ),
+                            ),
                             const SizedBox(height: 4),
-                            Text(tip['body'], style: GoogleFonts.poppins(fontSize: 11, color: Colors.black87), maxLines: 2, overflow: TextOverflow.ellipsis),
+                            Text(
+                              tip['body'],
+                              style: GoogleFonts.poppins(
+                                fontSize: 11,
+                                color: Colors.black87,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ],
                         ),
                       ),
@@ -303,9 +349,25 @@ class DashboardScreen extends StatelessWidget {
   Widget _buildMenuSection() {
     return Column(
       children: [
-        Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2)))),
+        Center(
+          child: Container(
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: Colors.grey[300],
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+        ),
         const SizedBox(height: 10),
-        Text("Kelola Lahanmu", style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.w600, color: const Color(0xFF2C3312))),
+        Text(
+          "Kelola Lahanmu",
+          style: GoogleFonts.poppins(
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+            color: const Color(0xFF2C3312),
+          ),
+        ),
         const SizedBox(height: 20),
         GridView.count(
           shrinkWrap: true,
@@ -315,36 +377,67 @@ class DashboardScreen extends StatelessWidget {
           mainAxisSpacing: 15,
           childAspectRatio: 1.1,
           children: [
-            _buildMenuCard("Tambah Lahan", Icons.add_location_alt_rounded, Colors.green, onTap: () => Get.to(() => const QuestionnaireScreen())),
-            _buildMenuCard("Tanaman", Icons.grass, Colors.teal, onTap: () => Get.to(() => const MyFarmScreen())),
+            _buildMenuCard(
+              "Tambah Lahan",
+              Icons.add_location_alt_rounded,
+              Colors.green,
+              onTap: () => Get.to(() => const QuestionnaireScreen()),
+            ),
+            _buildMenuCard(
+              "Tanaman",
+              Icons.grass,
+              Colors.teal,
+              onTap: () => Get.to(() => const MyFarmScreen()),
+            ),
           ],
         ),
       ],
     );
   }
 
-  Widget _buildMenuCard(String title, IconData icon, Color color, {required VoidCallback onTap}) {
+  Widget _buildMenuCard(
+    String title,
+    IconData icon,
+    Color color, {
+    required VoidCallback onTap,
+  }) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white, 
-          borderRadius: BorderRadius.circular(20), 
-          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 5))]
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 5),
+            ),
+          ],
         ),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center, 
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              padding: const EdgeInsets.all(15), 
-              decoration: BoxDecoration(color: color.withOpacity(0.1), shape: BoxShape.circle), 
-              child: Icon(icon, size: 30, color: color)
-            ), 
-            const SizedBox(height: 15), 
-            Text(title, style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600, color: const Color(0xFF2C3312)))
-          ]
-        )
-      )
+              padding: const EdgeInsets.all(15),
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, size: 30, color: color),
+            ),
+            const SizedBox(height: 15),
+            Text(
+              title,
+              style: GoogleFonts.poppins(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFF2C3312),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

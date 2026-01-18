@@ -27,26 +27,11 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
       "question": "Fase tanaman cabai Anda saat ini?",
       "type": "image_grid",
       "options": [
-        {
-          "label": "Bibit",
-          "image": "assets/images/phase/bibit.png",
-        },
-        {
-          "label": "Vegetatif",
-          "image": "assets/images/phase/vegetatif.png",
-        },
-        {
-          "label": "Berbunga",
-          "image": "assets/images/phase/berbungaa.png",
-        },
-        {
-          "label": "Berbuah",
-          "image": "assets/images/phase/berbuah.png",
-        },
-        {
-          "label": "Panen",
-          "image": "assets/images/phase/berbuah_besar.png",
-        },
+        {"label": "Bibit", "image": "assets/images/phase/bibit.png"},
+        {"label": "Vegetatif", "image": "assets/images/phase/vegetatif.png"},
+        {"label": "Berbunga", "image": "assets/images/phase/berbungaa.png"},
+        {"label": "Berbuah", "image": "assets/images/phase/berbuah.png"},
+        {"label": "Panen", "image": "assets/images/phase/berbuah_besar.png"},
       ],
     },
     {
@@ -64,18 +49,12 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
       "question": "Varietas cabai apa yang Anda tanam?",
       "type": "image_grid",
       "options": [
-        {
-          "label": "Cabai Rawit",
-          "image": "assets/images/varietas/rawit.png",
-        },
+        {"label": "Cabai Rawit", "image": "assets/images/varietas/rawit.png"},
         {
           "label": "Cabai Keriting",
           "image": "assets/images/varietas/keriting.png",
         },
-        {
-          "label": "Cabai Besar",
-          "image": "assets/images/varietas/besar.png",
-        },
+        {"label": "Cabai Besar", "image": "assets/images/varietas/besar.png"},
       ],
     },
     {
@@ -182,11 +161,7 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
                       ),
                       const SizedBox(height: 20),
                       if (q['type'] == 'image_grid')
-                        _buildImageGridOptions(
-                          q,
-                          q['key'],
-                          accentColor,
-                        )
+                        _buildImageGridOptions(q, q['key'], accentColor)
                       else if (q['type'] == 'list')
                         _buildListOptions(q, q['key'], accentColor)
                       else if (q['type'] == 'text')
@@ -643,7 +618,7 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
                   height: 50,
                   child: ElevatedButton(
                     onPressed: () {
-                      _mapController.saveMyFarmLocation();
+                      _mapController.saveMyFarmLocation(context);
                       _nextPage();
                     },
                     style: ElevatedButton.styleFrom(
@@ -673,11 +648,12 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
         Obx(
           () => FlutterMap(
             options: MapOptions(
-              initialCenter: _mapController.myFarmLocation.value ??
+              initialCenter:
+                  _mapController.myFarmLocation.value ??
                   const LatLng(-7.795, 110.369),
               initialZoom: 16.0,
               onTap: (tapPos, latLng) =>
-                  _mapController.addSurroundingPin(latLng),
+                  _mapController.addSurroundingPin(context, latLng),
             ),
             children: [
               TileLayer(
@@ -736,34 +712,35 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
                         .asMap()
                         .entries
                         .map((entry) {
-                      int idx = entry.key;
-                      Map<String, dynamic> data = entry.value;
-                      return Chip(
-                        label: Text(data['type']),
-                        backgroundColor: Colors.orange[50],
-                        avatar: const Icon(
-                          Icons.grass,
-                          size: 14,
-                          color: Colors.orange,
-                        ),
-                        labelStyle: const TextStyle(fontSize: 12),
-                        deleteIcon: const Icon(
-                          Icons.close,
-                          size: 16,
-                          color: Colors.red,
-                        ),
-                        onDeleted: () {
-                          _mapController.surroundingData.removeAt(idx);
-                          _mapController.surroundingPins.removeAt(idx);
-                        },
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
-                          side: BorderSide(
-                            color: Colors.orange.withOpacity(0.2),
-                          ),
-                        ),
-                      );
-                    }).toList(),
+                          int idx = entry.key;
+                          Map<String, dynamic> data = entry.value;
+                          return Chip(
+                            label: Text(data['type']),
+                            backgroundColor: Colors.orange[50],
+                            avatar: const Icon(
+                              Icons.grass,
+                              size: 14,
+                              color: Colors.orange,
+                            ),
+                            labelStyle: const TextStyle(fontSize: 12),
+                            deleteIcon: const Icon(
+                              Icons.close,
+                              size: 16,
+                              color: Colors.red,
+                            ),
+                            onDeleted: () {
+                              _mapController.surroundingData.removeAt(idx);
+                              _mapController.surroundingPins.removeAt(idx);
+                            },
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                              side: BorderSide(
+                                color: Colors.orange.withOpacity(0.2),
+                              ),
+                            ),
+                          );
+                        })
+                        .toList(),
                   ),
                 ),
                 const SizedBox(height: 15),
