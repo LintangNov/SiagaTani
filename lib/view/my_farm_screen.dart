@@ -32,7 +32,7 @@ class MyFarmScreen extends StatelessWidget {
         automaticallyImplyLeading: false,
       ),
       body: StreamBuilder<List<FarmModel>>(
-        stream: controller.farmListStream, 
+        stream: controller.farmListStream,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(
@@ -57,7 +57,11 @@ class MyFarmScreen extends StatelessWidget {
                       color: Colors.green.shade50,
                       shape: BoxShape.circle,
                     ),
-                    child: Icon(Icons.spa_outlined, size: 60, color: Colors.green.shade300),
+                    child: Icon(
+                      Icons.spa_outlined,
+                      size: 60,
+                      color: Colors.green.shade300,
+                    ),
                   ),
                   const SizedBox(height: 20),
                   Text(
@@ -93,7 +97,11 @@ class MyFarmScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildFarmCard(BuildContext context, FarmModel farm, FirestoreService service) {
+  Widget _buildFarmCard(
+    BuildContext context,
+    FarmModel farm,
+    FirestoreService service,
+  ) {
     return GestureDetector(
       onTap: () => Get.to(() => FarmDetailScreen(), arguments: farm),
       child: Container(
@@ -112,7 +120,9 @@ class MyFarmScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(20),
+              ),
               child: SizedBox(
                 height: 150,
                 width: double.infinity,
@@ -122,18 +132,25 @@ class MyFarmScreen extends StatelessWidget {
                       options: MapOptions(
                         initialCenter: LatLng(farm.latitude, farm.longitude),
                         initialZoom: 15.0,
-                        interactionOptions: const InteractionOptions(flags: InteractiveFlag.none),
+                        interactionOptions: const InteractionOptions(
+                          flags: InteractiveFlag.none,
+                        ),
                       ),
                       children: [
                         TileLayer(
-                          urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                          urlTemplate:
+                              'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                           userAgentPackageName: 'com.example.siaga_tani',
                         ),
                         MarkerLayer(
                           markers: [
                             Marker(
                               point: LatLng(farm.latitude, farm.longitude),
-                              child: const Icon(Icons.location_on, color: Colors.red, size: 35),
+                              child: const Icon(
+                                Icons.location_on,
+                                color: Colors.red,
+                                size: 35,
+                              ),
                             ),
                           ],
                         ),
@@ -144,7 +161,10 @@ class MyFarmScreen extends StatelessWidget {
                         gradient: LinearGradient(
                           begin: Alignment.topCenter,
                           end: Alignment.center,
-                          colors: [Colors.black.withOpacity(0.2), Colors.transparent],
+                          colors: [
+                            Colors.black.withOpacity(0.2),
+                            Colors.transparent,
+                          ],
                         ),
                       ),
                     ),
@@ -157,10 +177,15 @@ class MyFarmScreen extends StatelessWidget {
                         elevation: 2,
                         child: InkWell(
                           customBorder: const CircleBorder(),
-                          onTap: () => _showOptionsDialog(context, farm, service),
+                          onTap: () =>
+                              _showOptionsDialog(context, farm, service),
                           child: const Padding(
                             padding: EdgeInsets.all(6),
-                            child: Icon(Icons.more_horiz, size: 20, color: Colors.black87),
+                            child: Icon(
+                              Icons.more_horiz,
+                              size: 20,
+                              color: Colors.black87,
+                            ),
                           ),
                         ),
                       ),
@@ -179,7 +204,7 @@ class MyFarmScreen extends StatelessWidget {
                     children: [
                       Expanded(
                         child: Text(
-                          farm.farmName, 
+                          farm.farmName,
                           style: GoogleFonts.poppins(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -190,8 +215,11 @@ class MyFarmScreen extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        farm.landSize, 
-                        style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey[600]),
+                        farm.landSize,
+                        style: GoogleFonts.poppins(
+                          fontSize: 12,
+                          color: Colors.grey[600],
+                        ),
                       ),
                     ],
                   ),
@@ -202,7 +230,11 @@ class MyFarmScreen extends StatelessWidget {
                     children: [
                       _buildInfoChip(Icons.grass, farm.variety, Colors.green),
                       const SizedBox(width: 8),
-                      _buildInfoChip(Icons.timeline, farm.currentPhase, Colors.orange),
+                      _buildInfoChip(
+                        Icons.timeline,
+                        farm.currentPhase,
+                        Colors.orange,
+                      ),
                     ],
                   ),
                 ],
@@ -229,14 +261,22 @@ class MyFarmScreen extends StatelessWidget {
           const SizedBox(width: 6),
           Text(
             label,
-            style: GoogleFonts.poppins(fontSize: 11, fontWeight: FontWeight.w600, color: color.shade800),
+            style: GoogleFonts.poppins(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: color.shade800,
+            ),
           ),
         ],
       ),
     );
   }
 
-  void _showOptionsDialog(BuildContext context, FarmModel farm, FirestoreService service) {
+  void _showOptionsDialog(
+    BuildContext context,
+    FarmModel farm,
+    FirestoreService service,
+  ) {
     Get.bottomSheet(
       Container(
         padding: const EdgeInsets.all(20),
@@ -247,16 +287,36 @@ class MyFarmScreen extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2))),
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
             const SizedBox(height: 20),
             ListTile(
               leading: Container(
                 padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(color: Colors.orange.shade50, shape: BoxShape.circle),
-                child: Icon(Icons.update, color: Colors.orange.shade700, size: 20),
+                decoration: BoxDecoration(
+                  color: Colors.orange.shade50,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.update,
+                  color: Colors.orange.shade700,
+                  size: 20,
+                ),
               ),
-              title: Text("Update Fase Tanam", style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
-              subtitle: Text("Ubah fase (misal: Berbunga -> Berbuah)", style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey)),
+              title: Text(
+                "Update Fase Tanam",
+                style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+              ),
+              subtitle: Text(
+                "Ubah fase (misal: Berbunga -> Berbuah)",
+                style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey),
+              ),
               onTap: () {
                 Get.back();
                 _showUpdatePhaseDialog(context, farm, service);
@@ -266,10 +326,16 @@ class MyFarmScreen extends StatelessWidget {
             ListTile(
               leading: Container(
                 padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(color: Colors.blue.shade50, shape: BoxShape.circle),
+                decoration: BoxDecoration(
+                  color: Colors.blue.shade50,
+                  shape: BoxShape.circle,
+                ),
                 child: Icon(Icons.edit, color: Colors.blue.shade700, size: 20),
               ),
-              title: Text("Ubah Nama Lahan", style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
+              title: Text(
+                "Ubah Nama Lahan",
+                style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+              ),
               onTap: () {
                 Get.back();
                 _showEditDialog(context, farm, service);
@@ -278,10 +344,23 @@ class MyFarmScreen extends StatelessWidget {
             ListTile(
               leading: Container(
                 padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(color: Colors.red.shade50, shape: BoxShape.circle),
-                child: Icon(Icons.delete_outline, color: Colors.red.shade700, size: 20),
+                decoration: BoxDecoration(
+                  color: Colors.red.shade50,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.delete_outline,
+                  color: Colors.red.shade700,
+                  size: 20,
+                ),
               ),
-              title: Text("Hapus Lahan", style: GoogleFonts.poppins(fontWeight: FontWeight.w600, color: Colors.red)),
+              title: Text(
+                "Hapus Lahan",
+                style: GoogleFonts.poppins(
+                  fontWeight: FontWeight.w600,
+                  color: Colors.red,
+                ),
+              ),
               onTap: () {
                 Get.back();
                 _showDeleteConfirmation(context, farm, service);
@@ -293,7 +372,11 @@ class MyFarmScreen extends StatelessWidget {
     );
   }
 
-  void _showUpdatePhaseDialog(BuildContext context, FarmModel farm, FirestoreService service) {
+  void _showUpdatePhaseDialog(
+    BuildContext context,
+    FarmModel farm,
+    FirestoreService service,
+  ) {
     final phases = [
       {"label": "Bibit", "enum": "CropStage.seedling"},
       {"label": "Vegetatif", "enum": "CropStage.vegetative"},
@@ -302,93 +385,175 @@ class MyFarmScreen extends StatelessWidget {
       {"label": "Panen", "enum": "CropStage.harvesting"},
     ];
 
-    Get.defaultDialog(
-      title: "Pilih Fase Baru",
-      titleStyle: GoogleFonts.poppins(fontWeight: FontWeight.bold),
-      content: SizedBox(
-        width: double.maxFinite,
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: phases.map((phase) {
-              bool isSelected = farm.currentPhase == phase['label'];
-              return Column(
-                children: [
-                  const Divider(height: 1),
-                  ListTile(
-                    title: Text(phase['label']!, style: GoogleFonts.poppins()),
-                    trailing: isSelected ? const Icon(Icons.check_circle, color: Colors.green) : null,
-                    onTap: () async {
-                      if (farm.id != null) {
-                        await service.updateFarmPhase(
-                          farm.id!, 
-                          phase['label']!, 
-                          phase['enum']!
-                        );
-                        Get.back();
-                        Get.snackbar("Sukses", "Fase tanaman diperbarui!", backgroundColor: Colors.green, colorText: Colors.white);
-                      }
-                    },
-                  ),
-                ],
-              );
-            }).toList(),
+    showDialog(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: Text(
+            "Pilih Fase Baru",
+            style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
           ),
-        ),
-      ),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: phases.map((phase) {
+                  bool isSelected = farm.currentPhase == phase['label'];
+                  return Column(
+                    children: [
+                      const Divider(height: 1),
+                      ListTile(
+                        title: Text(
+                          phase['label']!,
+                          style: GoogleFonts.poppins(),
+                        ),
+                        trailing: isSelected
+                            ? const Icon(
+                                Icons.check_circle,
+                                color: Colors.green,
+                              )
+                            : null,
+                        onTap: () async {
+                          if (farm.id != null) {
+                            await service.updateFarmPhase(
+                              farm.id!,
+                              phase['label']!,
+                              phase['enum']!,
+                            );
+                            if (dialogContext.mounted) {
+                              Navigator.pop(dialogContext); // Close dialog
+                            }
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text("Fase tanaman diperbarui!"),
+                                  backgroundColor: Colors.green,
+                                ),
+                              );
+                            }
+                          }
+                        },
+                      ),
+                    ],
+                  );
+                }).toList(),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 
-  void _showEditDialog(BuildContext context, FarmModel farm, FirestoreService service) {
-    final TextEditingController nameCtrl = TextEditingController(text: farm.farmName); 
-    Get.defaultDialog(
-      title: "Ubah Nama",
-      titleStyle: GoogleFonts.poppins(fontWeight: FontWeight.bold),
-      content: Padding(
-        padding: const EdgeInsets.all(15),
-        child: TextField(
-          controller: nameCtrl,
-          decoration: const InputDecoration(
-            border: OutlineInputBorder(),
-            labelText: "Nama Lahan Baru",
-            isDense: true,
+  void _showEditDialog(
+    BuildContext context,
+    FarmModel farm,
+    FirestoreService service,
+  ) {
+    final TextEditingController nameCtrl = TextEditingController(
+      text: farm.farmName,
+    );
+    showDialog(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: Text(
+            "Ubah Nama",
+            style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
           ),
-        ),
-      ),
-      confirm: ElevatedButton(
-        onPressed: () async {
-          if (nameCtrl.text.isNotEmpty && farm.id != null) {
-            await service.updateFarmName(farm.id!, nameCtrl.text);
-            Get.back();
-            Get.snackbar("Sukses", "Nama lahan diperbarui", backgroundColor: Colors.green, colorText: Colors.white);
-          }
-        },
-        style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF2C3312)),
-        child: const Text("Simpan", style: TextStyle(color: Colors.white)),
-      ),
-      cancel: TextButton(onPressed: () => Get.back(), child: const Text("Batal")),
+          content: TextField(
+            controller: nameCtrl,
+            decoration: const InputDecoration(
+              border: OutlineInputBorder(),
+              labelText: "Nama Lahan Baru",
+              isDense: true,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text("Batal"),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                if (nameCtrl.text.isNotEmpty && farm.id != null) {
+                  await service.updateFarmName(farm.id!, nameCtrl.text);
+                  if (dialogContext.mounted) {
+                    Navigator.pop(dialogContext); // Close dialog
+                  }
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text("Nama lahan diperbarui"),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                  }
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF2C3312),
+              ),
+              child: const Text(
+                "Simpan",
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 
-  void _showDeleteConfirmation(BuildContext context, FarmModel farm, FirestoreService service) {
-    Get.defaultDialog(
-      title: "Hapus Lahan?",
-      titleStyle: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: Colors.red),
-      // DIPERBAIKI: Menggunakan farm.name bukan farmName
-      middleText: "Anda yakin ingin menghapus '${farm.farmName}'? Data ini tidak bisa dikembalikan.", 
-      middleTextStyle: GoogleFonts.poppins(),
-      confirm: ElevatedButton(
-        onPressed: () async {
-          if (farm.id != null) {
-            await service.deleteFarm(farm.id!);
-            Get.back();
-            Get.snackbar("Terhapus", "Lahan berhasil dihapus", backgroundColor: Colors.red, colorText: Colors.white);
-          }
-        },
-        style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-        child: const Text("Hapus", style: TextStyle(color: Colors.white)),
-      ),
-      cancel: OutlinedButton(onPressed: () => Get.back(), child: const Text("Batal")),
+  void _showDeleteConfirmation(
+    BuildContext context,
+    FarmModel farm,
+    FirestoreService service,
+  ) {
+    showDialog(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: Text(
+            "Hapus Lahan?",
+            style: GoogleFonts.poppins(
+              fontWeight: FontWeight.bold,
+              color: Colors.red,
+            ),
+          ),
+          content: Text(
+            "Anda yakin ingin menghapus '${farm.farmName}'? Data ini tidak bisa dikembalikan.",
+            style: GoogleFonts.poppins(),
+          ),
+          actions: [
+            OutlinedButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text("Batal"),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                if (farm.id != null) {
+                  await service.deleteFarm(farm.id!);
+                  if (dialogContext.mounted) {
+                    Navigator.pop(dialogContext); // Close dialog
+                  }
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text("Lahan berhasil dihapus"),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                }
+              },
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+              child: const Text("Hapus", style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        );
+      },
     );
   }
 }

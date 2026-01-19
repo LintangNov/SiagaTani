@@ -12,7 +12,7 @@ class FarmModel {
   final double longitude;
   final String landSize;
   final String variety;
-  
+
   final CropStage cropStage;
   final MulchType mulchType;
   final String lastPesticideTime;
@@ -21,10 +21,11 @@ class FarmModel {
   final bool isMulchUsed;
   final String plantingPattern;
   final String pestHistory;
-  final String currentPhase; 
+  final String currentPhase;
   final bool recentlySprayedPesticide;
   final String pesticideType;
   final String wateringIntensity;
+  final String? imageUrl;
 
   FarmModel({
     this.id,
@@ -45,6 +46,7 @@ class FarmModel {
     required this.recentlySprayedPesticide,
     this.pesticideType = '',
     required this.wateringIntensity,
+    this.imageUrl,
   });
 
   Map<String, dynamic> toMap() {
@@ -54,7 +56,7 @@ class FarmModel {
       'location': GeoPoint(latitude, longitude),
       'landSize': landSize,
       'variety': variety,
-      'cropStage': cropStage.toString(), 
+      'cropStage': cropStage.toString(),
       'mulchType': mulchType.toString(),
       'lastPesticideTime': lastPesticideTime,
       'hostPlantsNearby': hostPlantsNearby,
@@ -65,24 +67,25 @@ class FarmModel {
       'recentlySprayedPesticide': recentlySprayedPesticide,
       'pesticideType': pesticideType,
       'wateringIntensity': wateringIntensity,
+      'imageUrl': imageUrl,
       'createdAt': FieldValue.serverTimestamp(),
     };
   }
 
   factory FarmModel.fromMap(Map<String, dynamic> map, String documentId) {
     GeoPoint geoPoint = map['location'] as GeoPoint;
-    
+
     CropStage parseStage(String? val) {
       return CropStage.values.firstWhere(
-        (e) => e.toString() == val, 
-        orElse: () => CropStage.vegetative 
+        (e) => e.toString() == val,
+        orElse: () => CropStage.vegetative,
       );
     }
-    
+
     MulchType parseMulch(String? val) {
       return MulchType.values.firstWhere(
-        (e) => e.toString() == val, 
-        orElse: () => MulchType.none 
+        (e) => e.toString() == val,
+        orElse: () => MulchType.none,
       );
     }
 
@@ -105,6 +108,7 @@ class FarmModel {
       recentlySprayedPesticide: map['recentlySprayedPesticide'] ?? false,
       pesticideType: map['pesticideType'] ?? '',
       wateringIntensity: map['wateringIntensity'] ?? 'Sedang',
+      imageUrl: map['imageUrl'],
     );
   }
 }

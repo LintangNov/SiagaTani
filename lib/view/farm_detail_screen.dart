@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
+import 'package:intl/intl.dart';
 import '../controllers/prediction_controller.dart';
 import '../models/prediction_result.dart';
-import '../utils/farm_constants.dart';
+import '../models/weather_model.dart';
+// import '../utils/farm_constants.dart';
 
 class FarmDetailScreen extends StatelessWidget {
   final PredictionController controller = Get.put(PredictionController());
@@ -13,72 +17,528 @@ class FarmDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        title: Text(
-          controller.farm?.farmName ?? "Detail Lahan", 
-          style: GoogleFonts.poppins(fontWeight: FontWeight.w600, color: Colors.black),
+      backgroundColor: const Color(0xFFF8F9FA),
+      body: Obx(() {
+        if (controller.farm == null) {
+          return const Center(child: Text("Data lahan tidak ditemukan"));
+        }
+
+        return CustomScrollView(
+          slivers: [
+            _buildSliverAppBar(context),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildWeatherCard(),
+                    const SizedBox(height: 24),
+                    _buildFarmInfoGrid(),
+                    // Tampilkan peta di body HANYA jika header menampilkan gambar
+                    if (controller.farm!.imageUrl != null) ...[
+                      const SizedBox(height: 24),
+                      _buildSectionTitle("Lokasi Lahan"),
+                      const SizedBox(height: 12),
+                      _buildMapSection(),
+                    ],
+                    const SizedBox(height: 24),
+                    _buildSectionTitle("Analisis Risiko Hama"),
+                    const SizedBox(height: 12),
+                    _buildPredictionResults(),
+                    const SizedBox(height: 40),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        );
+      }),
+    );
+  }
+
+  Widget _buildSliverAppBar(BuildContext context) {
+    bool hasImage = controller.farm!.imageUrl != null;
+
+    return SliverAppBar(
+      expandedHeight: 250,
+      pinned: true,
+      backgroundColor: const Color(0xFF2C3312),
+      title: Text(
+        controller.farm!.farmName,
+        style: GoogleFonts.poppins(
+          fontWeight: FontWeight.bold,
+          color: Colors.white,
         ),
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
+      ),
+      centerTitle: false, // Title aligns to start when collapsed
+      leading: Container(
+        margin: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: Colors.black.withOpacity(0.3),
+          shape: BoxShape.circle,
+        ),
+        child: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Get.back(),
         ),
       ),
-      body: controller.farm == null 
-        ? const Center(child: Text("Data lahan tidak ditemukan")) 
-        : SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildFarmInfoCard(),
-              const SizedBox(height: 24),
-              _buildSectionTitle("Analisis Risiko Hama"),
-              const SizedBox(height: 16),
-              _buildPredictionResults(),
+      actions: [
+        Container(
+          margin: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: Colors.black.withOpacity(0.3),
+            shape: BoxShape.circle,
+          ),
+          child: PopupMenuButton<String>(
+            icon: const Icon(Icons.more_horiz, color: Colors.white),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(15),
+            ),
+            onSelected: (value) {
+              if (value == 'photo') _showImagePicker(context);
+              if (value == 'edit') _showEditDialog(context);
+              if (value == 'delete') _showDeleteDialog(context);
+            },
+            itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+              PopupMenuItem<String>(
+                value: 'photo',
+                child: Row(
+                  children: [
+                    const Icon(Icons.add_a_photo, color: Colors.blue, size: 20),
+                    const SizedBox(width: 10),
+                    Text(
+                      'Ubah Foto Header',
+                      style: GoogleFonts.poppins(fontSize: 14),
+                    ),
+                  ],
+                ),
+              ),
+              PopupMenuItem<String>(
+                value: 'edit',
+                child: Row(
+                  children: [
+                    const Icon(Icons.edit, color: Colors.orange, size: 20),
+                    const SizedBox(width: 10),
+                    Text(
+                      'Ubah Data Lahan',
+                      style: GoogleFonts.poppins(fontSize: 14),
+                    ),
+                  ],
+                ),
+              ),
+              const PopupMenuDivider(),
+              PopupMenuItem<String>(
+                value: 'delete',
+                child: Row(
+                  children: [
+                    const Icon(Icons.delete, color: Colors.red, size: 20),
+                    const SizedBox(width: 10),
+                    Text(
+                      'Hapus Lahan',
+                      style: GoogleFonts.poppins(
+                        fontSize: 14,
+                        color: Colors.red,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
         ),
+      ],
+      flexibleSpace: FlexibleSpaceBar(
+        background: hasImage ? _buildHeaderImage() : _buildHeaderMap(),
       ),
     );
   }
 
-  Widget _buildFarmInfoCard() {
+  Widget _buildHeaderImage() {
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        Image.network(
+          controller.farm!.imageUrl!,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) {
+            return Container(color: Colors.green.shade800);
+          },
+        ),
+        Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Colors.black.withOpacity(0.2),
+                Colors.transparent,
+                Colors.black.withOpacity(0.7),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildHeaderMap() {
+    // Fallback: Use FlutterMap if no image
+    return FlutterMap(
+      options: MapOptions(
+        initialCenter: LatLng(
+          controller.farm!.latitude,
+          controller.farm!.longitude,
+        ),
+        initialZoom: 15.0,
+        interactionOptions: const InteractionOptions(
+          flags: InteractiveFlag.none,
+        ),
+      ),
+      children: [
+        TileLayer(
+          urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+          userAgentPackageName: 'com.example.siaga_tani',
+        ),
+        MarkerLayer(
+          markers: [
+            Marker(
+              point: LatLng(
+                controller.farm!.latitude,
+                controller.farm!.longitude,
+              ),
+              child: const Icon(Icons.location_on, color: Colors.red, size: 35),
+            ),
+          ],
+        ),
+        // Overlay tipis agar teks tetap terbaca jika collapsed transisi
+        Container(color: Colors.black.withOpacity(0.1)),
+      ],
+    );
+  }
+
+  Widget _buildWeatherCard() {
+    // Current date formatting
+    final now = DateTime.now();
+    final dateStr = DateFormat('d MMMM y', 'id_ID').format(
+      now,
+    ); // Requires initializeDateFormatting usually, but default en works if locale unavailable
+
+    // Safety check for weather data
+    final temp = controller.weatherData.value?.temperature.round() ?? 0;
+    final rawCondition = controller.weatherData.value?.condition ?? "Cerah";
+    final condition = _formatCondition(rawCondition);
+
+    // Choose icon based on condition (Basic logic)
+    IconData weatherIcon = Icons.wb_sunny_rounded;
+    if (condition.contains("Hujan")) {
+      weatherIcon = Icons.thunderstorm;
+    } else if (condition.contains("Berawan")) {
+      weatherIcon = Icons.cloud;
+    }
+
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.green.shade50,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.green.shade100),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.green.withOpacity(0.1),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildInfoRow(Icons.eco, "Varietas", controller.farm?.variety ?? "-"),
-          const Divider(),
-          _buildInfoRow(Icons.layers, "Mulsa", controller.farm?.mulchType.name.capitalizeFirst ?? "-"),
-          const Divider(),
-          _buildInfoRow(Icons.calendar_today, "Fase", controller.farm?.currentPhase ?? "-"),
-          const Divider(),
-          _buildInfoRow(Icons.pest_control, "Semprot Terakhir", controller.farm?.lastPesticideTime ?? "-"),
+          Text(
+            "Informasi Cuaca",
+            style: GoogleFonts.poppins(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Colors.green.shade800,
+            ),
+          ),
+          const SizedBox(height: 20),
+          // Main Info Row
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    dateStr,
+                    style: GoogleFonts.poppins(
+                      fontSize: 14,
+                      color: Colors.green.shade600,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 5),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "$temp",
+                        style: GoogleFonts.poppins(
+                          fontSize: 56,
+                          fontWeight: FontWeight.bold,
+                          color: const Color(0xFF2C3312),
+                          height: 1.0,
+                        ),
+                      ),
+                      Text(
+                        "°C",
+                        style: GoogleFonts.poppins(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.orange,
+                          height: 1.5,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.green.shade50,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      condition,
+                      style: GoogleFonts.poppins(
+                        color: Colors.green.shade800,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              // Big Icon
+              Icon(weatherIcon, size: 90, color: Colors.green.shade300),
+            ],
+          ),
+          const SizedBox(height: 30),
+          Divider(height: 1, color: Colors.green.shade50),
+          const SizedBox(height: 20),
+          Text(
+            "Cuaca Hari Ini",
+            style: GoogleFonts.poppins(
+              fontSize: 13,
+              color: Colors.green.shade700,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 15),
+          // Hourly Forecast List (Mocked)
+          SizedBox(
+            height: 90,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: 5,
+              separatorBuilder: (_, __) => const SizedBox(width: 20),
+              itemBuilder: (context, index) {
+                // Mocking time starting from now
+                final time = now.add(Duration(hours: index + 1));
+                final timeStr = DateFormat('HH:00').format(time);
+                // Varies temp slightly
+                final mockTemp = temp + (index % 2 == 0 ? 1 : -1);
+
+                return Column(
+                  children: [
+                    Text(
+                      timeStr,
+                      style: GoogleFonts.poppins(
+                        fontSize: 12,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Icon(
+                      index == 2
+                          ? Icons.cloud
+                          : Icons.wb_sunny_rounded, // Random mix
+                      color: index == 2 ? Colors.grey : Colors.orange,
+                      size: 24,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      "$mockTemp°",
+                      style: GoogleFonts.poppins(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: const Color(0xFF2C3312),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildInfoRow(IconData icon, String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+  String _formatCondition(String raw) {
+    String lower = raw.toLowerCase();
+    if (lower.contains("hujan") || lower.contains("rain"))
+      return "Hujan Ringan";
+    if (lower.contains("awan") ||
+        lower.contains("cloud") ||
+        lower.contains("mendung"))
+      return "Berawan";
+    if (lower.contains("cerah") ||
+        lower.contains("clear") ||
+        lower.contains("sunny"))
+      return "Cerah";
+    return raw.capitalizeFirst ?? raw;
+  }
+
+  Widget _buildFarmInfoGrid() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionTitle("Informasi Tanaman"),
+        const SizedBox(height: 12),
+        GridView.count(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          crossAxisCount: 2,
+          childAspectRatio: 2.5,
+          crossAxisSpacing: 12,
+          mainAxisSpacing: 12,
+          children: [
+            _buildGridItem(Icons.eco, "Varietas", controller.farm!.variety),
+            _buildGridItem(
+              Icons.layers,
+              "Mulsa",
+              controller.farm!.mulchType.name.capitalizeFirst ?? "-",
+            ),
+            _buildGridItem(
+              Icons.calendar_today,
+              "Fase",
+              controller.farm!.currentPhase,
+            ),
+            _buildGridItem(
+              Icons.pest_control,
+              "Pestisida",
+              controller.farm!.lastPesticideTime,
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildGridItem(IconData icon, String label, String value) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey.shade100),
+      ),
       child: Row(
         children: [
-          Icon(icon, size: 20, color: Colors.green.shade700),
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.green.shade50,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, size: 20, color: Colors.green.shade700),
+          ),
           const SizedBox(width: 12),
-          Text(label, style: GoogleFonts.poppins(fontSize: 14, color: Colors.black54)),
-          const Spacer(),
-          Text(value, style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.black87)),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  label,
+                  style: GoogleFonts.poppins(
+                    fontSize: 11,
+                    color: Colors.grey[600],
+                  ),
+                ),
+                Text(
+                  value,
+                  style: GoogleFonts.poppins(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF2C3312),
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildMapSection() {
+    // Standard FlutterMap implementation in a card
+    if (controller.farm == null) return const SizedBox.shrink();
+
+    return Container(
+      height: 200,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: FlutterMap(
+          options: MapOptions(
+            initialCenter: LatLng(
+              controller.farm!.latitude,
+              controller.farm!.longitude,
+            ),
+            initialZoom: 15.0,
+            interactionOptions: const InteractionOptions(
+              flags: InteractiveFlag.none,
+            ),
+          ),
+          children: [
+            TileLayer(
+              urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+              userAgentPackageName: 'com.example.siaga_tani',
+            ),
+            MarkerLayer(
+              markers: [
+                Marker(
+                  point: LatLng(
+                    controller.farm!.latitude,
+                    controller.farm!.longitude,
+                  ),
+                  child: const Icon(
+                    Icons.location_on,
+                    color: Colors.red,
+                    size: 35,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -86,7 +546,11 @@ class FarmDetailScreen extends StatelessWidget {
   Widget _buildSectionTitle(String title) {
     return Text(
       title,
-      style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black),
+      style: GoogleFonts.poppins(
+        fontSize: 18,
+        fontWeight: FontWeight.bold,
+        color: const Color(0xFF2C3312),
+      ),
     );
   }
 
@@ -102,20 +566,47 @@ class FarmDetailScreen extends StatelessWidget {
       }
 
       if (controller.predictionResults.isEmpty) {
-        return Center(
-          child: Padding(
-            padding: const EdgeInsets.all(32.0),
-            child: Text(
-              "Tidak ada risiko hama yang signifikan terdeteksi berdasarkan cuaca saat ini.",
-              textAlign: TextAlign.center,
-              style: GoogleFonts.poppins(color: Colors.black54),
-            ),
+        return Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: Colors.green.shade50,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.green.shade100),
+          ),
+          child: Column(
+            children: [
+              Icon(
+                Icons.check_circle_outline,
+                size: 48,
+                color: Colors.green.shade300,
+              ),
+              const SizedBox(height: 12),
+              Text(
+                "Lahan Aman",
+                style: GoogleFonts.poppins(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                  color: Colors.green.shade800,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                "Tidak ada risiko hama signifikan.",
+                textAlign: TextAlign.center,
+                style: GoogleFonts.poppins(
+                  color: Colors.green.shade700,
+                  fontSize: 13,
+                ),
+              ),
+            ],
           ),
         );
       }
 
       return Column(
         children: [
+          // AI Advice Section
           Obx(() {
             if (controller.isLoadingAI.value) {
               return Container(
@@ -134,8 +625,11 @@ class FarmDetailScreen extends StatelessWidget {
                     ),
                     const SizedBox(width: 16),
                     Text(
-                      "Asisten AI sedang menyusun saran...",
-                      style: GoogleFonts.poppins(fontSize: 12, color: Colors.blue.shade800),
+                      "AI sedang menyusun saran...",
+                      style: GoogleFonts.poppins(
+                        fontSize: 12,
+                        color: Colors.blue.shade800,
+                      ),
                     ),
                   ],
                 ),
@@ -148,22 +642,33 @@ class FarmDetailScreen extends StatelessWidget {
               margin: const EdgeInsets.only(bottom: 16),
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.green.shade50,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.green.shade200),
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.blue.shade100),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Colors.black12,
+                    blurRadius: 4,
+                    offset: Offset(0, 2),
+                  ),
+                ],
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.auto_awesome, color: Colors.green.shade700, size: 20),
+                      Icon(
+                        Icons.auto_awesome,
+                        color: Colors.blue.shade600,
+                        size: 20,
+                      ),
                       const SizedBox(width: 8),
                       Text(
-                        "Saran Pencegahan AI",
+                        "Saran Cerdas (AI)",
                         style: GoogleFonts.poppins(
                           fontWeight: FontWeight.bold,
-                          color: Colors.green.shade900,
+                          color: Colors.blue.shade800,
                         ),
                       ),
                     ],
@@ -171,7 +676,10 @@ class FarmDetailScreen extends StatelessWidget {
                   const SizedBox(height: 8),
                   Text(
                     controller.aiAdvice.value,
-                    style: GoogleFonts.poppins(fontSize: 13, color: Colors.black87),
+                    style: GoogleFonts.poppins(
+                      fontSize: 13,
+                      color: Colors.black87,
+                    ),
                   ),
                 ],
               ),
@@ -197,64 +705,87 @@ class FarmDetailScreen extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       elevation: 0,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
         side: BorderSide(color: Colors.grey.shade200),
       ),
-      child: ExpansionTile(
-        leading: Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: _getSeverityColor(result.percentage).withOpacity(0.1),
-            shape: BoxShape.circle,
-          ),
-          child: Text(
-            "${(result.percentage * 100).toInt()}%",
-            style: TextStyle(
-              color: _getSeverityColor(result.percentage),
-              fontWeight: FontWeight.bold,
-              fontSize: 12,
+      child: Theme(
+        data: Theme.of(Get.context!).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          leading: Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: _getSeverityColor(result.percentage).withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Text(
+              "${(result.percentage * 100).toInt()}%",
+              style: TextStyle(
+                color: _getSeverityColor(result.percentage),
+                fontWeight: FontWeight.bold,
+                fontSize: 12,
+              ),
             ),
           ),
-        ),
-        title: Text(
-          result.pestName,
-          style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 14),
-        ),
-        subtitle: Padding(
-          padding: const EdgeInsets.only(top: 4),
-          child: Text(
-            result.shortDescription,
-            style: GoogleFonts.poppins(fontSize: 12, color: Colors.black87),
+          title: Text(
+            result.pestName,
+            style: GoogleFonts.poppins(
+              fontWeight: FontWeight.bold,
+              fontSize: 15,
+            ),
           ),
-        ),
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildCardDetailSection("Kenapa Waspada?", result.detailedAnalysis),
-                const SizedBox(height: 12),
-                _buildCardDetailSection("Langkah Pencegahan", ""),
-                ...result.preventionSteps.map((step) => Padding(
-                      padding: const EdgeInsets.only(top: 4),
+          subtitle: Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Text(
+              result.shortDescription,
+              style: GoogleFonts.poppins(fontSize: 12, color: Colors.black54),
+            ),
+          ),
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Divider(),
+                  const SizedBox(height: 10),
+                  _buildCardDetailSection(
+                    "Kenapa Waspada?",
+                    result.detailedAnalysis,
+                  ),
+                  const SizedBox(height: 12),
+                  _buildCardDetailSection("Langkah Pencegahan", ""),
+                  ...result.preventionSteps.map(
+                    (step) => Padding(
+                      padding: const EdgeInsets.only(top: 6),
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text("• ", style: TextStyle(fontWeight: FontWeight.bold)),
+                          const Text(
+                            "• ",
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.green,
+                            ),
+                          ),
                           Expanded(
                             child: Text(
                               step,
-                              style: GoogleFonts.poppins(fontSize: 12),
+                              style: GoogleFonts.poppins(
+                                fontSize: 13,
+                                color: Colors.black87,
+                              ),
                             ),
                           ),
                         ],
                       ),
-                    )),
-              ],
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -265,12 +796,19 @@ class FarmDetailScreen extends StatelessWidget {
       children: [
         Text(
           title,
-          style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.green.shade800),
+          style: GoogleFonts.poppins(
+            fontSize: 13,
+            fontWeight: FontWeight.bold,
+            color: const Color(0xFF2C3312),
+          ),
         ),
         if (content.isNotEmpty)
-          Text(
-            content,
-            style: GoogleFonts.poppins(fontSize: 12, color: Colors.black54),
+          Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Text(
+              content,
+              style: GoogleFonts.poppins(fontSize: 13, color: Colors.black87),
+            ),
           ),
       ],
     );
@@ -280,5 +818,24 @@ class FarmDetailScreen extends StatelessWidget {
     if (percentage > 0.7) return Colors.red;
     if (percentage > 0.4) return Colors.orange;
     return Colors.blue;
+  }
+
+  // PLACEHOLER ACTIONS
+  void _showImagePicker(BuildContext context) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Fitur Upload Foto akan segera hadir!")),
+    );
+  }
+
+  void _showEditDialog(BuildContext context) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Dialog Edit Data Lahan (Placeholder)")),
+    );
+  }
+
+  void _showDeleteDialog(BuildContext context) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Dialog Hapus Lahan (Placeholder)")),
+    );
   }
 }
