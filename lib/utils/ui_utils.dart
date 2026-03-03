@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'app_theme.dart';
 
 class UiUtils {
   static void showSuccess(String message, {String title = "Berhasil"}) {
     Get.snackbar(
       title,
       message,
-      backgroundColor: Colors.green.shade600,
+      backgroundColor: AppColors.primary,
       colorText: Colors.white,
       icon: const Icon(Icons.check_circle_outline, color: Colors.white),
       snackPosition: SnackPosition.TOP,
@@ -24,10 +25,7 @@ class UiUtils {
       ),
       messageText: Text(
         message,
-        style: GoogleFonts.poppins(
-          color: Colors.white,
-          fontSize: 14,
-        ),
+        style: GoogleFonts.poppins(color: Colors.white, fontSize: 14),
       ),
     );
   }
@@ -53,10 +51,7 @@ class UiUtils {
       ),
       messageText: Text(
         message,
-        style: GoogleFonts.poppins(
-          color: Colors.white,
-          fontSize: 14,
-        ),
+        style: GoogleFonts.poppins(color: Colors.white, fontSize: 14),
       ),
     );
   }
@@ -82,10 +77,7 @@ class UiUtils {
       ),
       messageText: Text(
         message,
-        style: GoogleFonts.poppins(
-          color: Colors.white,
-          fontSize: 14,
-        ),
+        style: GoogleFonts.poppins(color: Colors.white, fontSize: 14),
       ),
     );
   }

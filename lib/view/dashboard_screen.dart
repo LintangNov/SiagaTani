@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:siaga_tani/controllers/dashboard_controller.dart';
 import 'package:siaga_tani/view/my_farm_screen.dart';
 import 'package:siaga_tani/view/question.dart';
+import '../utils/app_theme.dart';
 
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
@@ -20,7 +21,7 @@ class DashboardScreen extends StatelessWidget {
             await controller.fetchCurrentLocation(forceRefresh: true);
             controller.fetchUserData();
           },
-          color: const Color(0xFF2C3312),
+          color: AppColors.primary,
           backgroundColor: Colors.white,
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
@@ -40,7 +41,7 @@ class DashboardScreen extends StatelessWidget {
                             style: GoogleFonts.poppins(
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
-                              color: const Color(0xFF2C3312),
+                              color: AppColors.textDark,
                             ),
                           ),
                         ),
@@ -268,7 +269,7 @@ class DashboardScreen extends StatelessWidget {
             style: GoogleFonts.poppins(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: const Color(0xFF2C3312),
+              color: AppColors.textDark,
             ),
           ),
           const SizedBox(height: 10),
@@ -365,7 +366,7 @@ class DashboardScreen extends StatelessWidget {
           style: GoogleFonts.poppins(
             fontSize: 18,
             fontWeight: FontWeight.w600,
-            color: const Color(0xFF2C3312),
+            color: AppColors.textDark,
           ),
         ),
         const SizedBox(height: 20),
@@ -432,7 +433,7 @@ class DashboardScreen extends StatelessWidget {
               style: GoogleFonts.poppins(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
-                color: const Color(0xFF2C3312),
+                color: AppColors.textDark,
               ),
             ),
           ],

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../utils/app_theme.dart';
 
 class EducationScreen extends StatelessWidget {
   const EducationScreen({super.key});
@@ -9,29 +10,32 @@ class EducationScreen extends StatelessWidget {
       "title": "Waspada! Cuaca Panas Picu Ledakan Kutu Kebul",
       "category": "Info Hama",
       "date": "25 Nov 2025",
-      "image": "https://images.unsplash.com/photo-1591035897819-f4bdf739f446?auto=format&fit=crop&w=800&q=80",
-      "url": "https://pertanian.go.id"
+      "image":
+          "https://images.unsplash.com/photo-1591035897819-f4bdf739f446?auto=format&fit=crop&w=800&q=80",
+      "url": "https://pertanian.go.id",
     },
     {
       "title": "Harga Cabai Rawit Meroket di Pasar Induk",
       "category": "Berita Pasar",
       "date": "24 Nov 2025",
       "image": "https://images.unsplash.com/photo-1558380381-c280df4d1b8b?q=80",
-      "url": "https://bi.go.id/hargapangan"
+      "url": "https://bi.go.id/hargapangan",
     },
     {
       "title": "Cara Membuat Pestisida Nabati dari Daun Pepaya",
       "category": "Tips Tani",
       "date": "20 Nov 2025",
-      "image": "https://images.unsplash.com/photo-1530836369250-ef72a3f5cda8?auto=format&fit=crop&w=800&q=80",
-      "url": "https://cybex.pertanian.go.id"
+      "image":
+          "https://images.unsplash.com/photo-1530836369250-ef72a3f5cda8?auto=format&fit=crop&w=800&q=80",
+      "url": "https://cybex.pertanian.go.id",
     },
     {
       "title": "Mengenal Gejala Serangan Antraknosa (Patek)",
       "category": "Penyakit",
       "date": "18 Nov 2025",
-      "image": "https://bumikita.id/img/img_artikel/ca15310f591eb3d1a424af8441338051.jpg",
-      "url": "https://example.com"
+      "image":
+          "https://bumikita.id/img/img_artikel/ca15310f591eb3d1a424af8441338051.jpg",
+      "url": "https://example.com",
     },
   ];
 
@@ -45,7 +49,7 @@ class EducationScreen extends StatelessWidget {
         title: Text(
           "Pojok Tani",
           style: GoogleFonts.poppins(
-            color: const Color(0xFF2C3312),
+            color: AppColors.textDark,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -82,7 +86,7 @@ class EducationScreen extends StatelessWidget {
                 style: GoogleFonts.poppins(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: const Color(0xFF2C3312),
+                  color: AppColors.textDark,
                 ),
               ),
             ),
@@ -111,7 +115,9 @@ class EducationScreen extends StatelessWidget {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
         image: const DecorationImage(
-          image: NetworkImage("https://images.unsplash.com/photo-1625246333195-78d9c38ad449?auto=format&fit=crop&w=1000&q=80"),
+          image: NetworkImage(
+            "https://images.unsplash.com/photo-1625246333195-78d9c38ad449?auto=format&fit=crop&w=1000&q=80",
+          ),
           fit: BoxFit.cover,
         ),
       ),
@@ -136,7 +142,14 @@ class EducationScreen extends StatelessWidget {
                 color: Colors.orange,
                 borderRadius: BorderRadius.circular(4),
               ),
-              child: Text("HOT NEWS", style: GoogleFonts.poppins(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white)),
+              child: Text(
+                "HOT NEWS",
+                style: GoogleFonts.poppins(
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
             ),
             const SizedBox(height: 8),
             Text(
@@ -164,8 +177,10 @@ class EducationScreen extends StatelessWidget {
           color: isActive ? Colors.white : Colors.grey[700],
           fontSize: 12,
         ),
-        backgroundColor: isActive ? const Color(0xFF2C3312) : Colors.white,
-        side: isActive ? BorderSide.none : BorderSide(color: Colors.grey.shade300),
+        backgroundColor: isActive ? AppColors.textDark : Colors.white,
+        side: isActive
+            ? BorderSide.none
+            : BorderSide(color: Colors.grey.shade300),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       ),
     );
@@ -179,7 +194,11 @@ class EducationScreen extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(15),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 2)),
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
         ],
       ),
       child: Row(
@@ -191,7 +210,12 @@ class EducationScreen extends StatelessWidget {
               width: 80,
               height: 80,
               fit: BoxFit.cover,
-              errorBuilder: (c, o, s) => Container(width: 80, height: 80, color: Colors.grey[300], child: const Icon(Icons.image_not_supported)),
+              errorBuilder: (c, o, s) => Container(
+                width: 80,
+                height: 80,
+                color: Colors.grey[300],
+                child: const Icon(Icons.image_not_supported),
+              ),
             ),
           ),
           const SizedBox(width: 15),
@@ -201,7 +225,11 @@ class EducationScreen extends StatelessWidget {
               children: [
                 Text(
                   article['category']!.toUpperCase(),
-                  style: GoogleFonts.poppins(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.orange),
+                  style: GoogleFonts.poppins(
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.orange,
+                  ),
                 ),
                 const SizedBox(height: 4),
                 Text(
@@ -209,7 +237,7 @@ class EducationScreen extends StatelessWidget {
                   style: GoogleFonts.poppins(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    color: const Color(0xFF2C3312),
+                    color: AppColors.textDark,
                   ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
@@ -217,17 +245,24 @@ class EducationScreen extends StatelessWidget {
                 const SizedBox(height: 8),
                 Row(
                   children: [
-                    const Icon(Icons.calendar_today, size: 12, color: Colors.grey),
+                    const Icon(
+                      Icons.calendar_today,
+                      size: 12,
+                      color: Colors.grey,
+                    ),
                     const SizedBox(width: 4),
                     Text(
                       article['date']!,
-                      style: GoogleFonts.poppins(fontSize: 10, color: Colors.grey),
+                      style: GoogleFonts.poppins(
+                        fontSize: 10,
+                        color: Colors.grey,
+                      ),
                     ),
                   ],
                 ),
               ],
             ),
-          )
+          ),
         ],
       ),
     );

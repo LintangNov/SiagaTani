@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:siaga_tani/view/login_screen.dart';
 // import 'package:siaga_tani/view/main_screen.dart';
 import 'package:get/get.dart';
+import '../utils/app_theme.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -20,18 +21,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       "title":
           "Bertani Lebih\nModern & Mudah", // Lebih mengajak daripada "Digital Masa Depan"
       "desc": "Teknologi pintar untuk bantu tingkatkan hasil panen Anda.",
-      "icon": 'assets/images/onboarding_1.jpg',
     },
     {
       "title": "Pantau Cuaca\n& Risiko Hama", // Langsung to the point fiturnya
       "desc": "Cek prediksi cuaca dan ancaman hama langsung dari HP.",
-      "icon": 'assets/images/onboarding_1.jpg',
     },
     {
       "title":
           "Terhubung dengan\nSesama Petani", // Lebih akrab daripada "Komunitas Local"
       "desc": "Saling berbagi ilmu dan pengalaman dengan petani sekitar.",
-      "icon": 'assets/images/onboarding_1.jpg',
     },
   ];
   @override
@@ -42,26 +40,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       backgroundColor: const Color(0xFFE0F2F1),
       body: Stack(
         children: [
-          Positioned.fill(
-            child: PageView.builder(
-              controller: _pageController,
-              onPageChanged: (value) {
-                setState(() {
-                  _currentPage = value;
-                });
-              },
-              itemCount: _onboardingData.length,
-              itemBuilder: (context, index) {
-                return Container(
-                  alignment: Alignment.topCenter,
-                  child: Image.asset(
-                    _onboardingData[index]['icon'],
-                    fit: BoxFit.fitWidth,
-                  ),
-                );
-              },
-            ),
-          ),
+          Positioned.fill(child: Image.asset('assets/images/onboarding_1.jpg')),
           Align(
             alignment: Alignment.bottomCenter,
             child: Container(
@@ -92,7 +71,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       style: GoogleFonts.poppins(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
-                        color: const Color(0xFF2C3312),
+                        color: AppColors.textDark,
                         height: 1.2,
                       ),
                     ),
@@ -176,11 +155,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       duration: const Duration(milliseconds: 200),
       margin: const EdgeInsets.only(right: 5),
       height: 6,
-      width: _currentPage == index ? 25 :   6,
+      width: _currentPage == index ? 25 : 6,
       decoration: BoxDecoration(
-        color: _currentPage == index
-            ? const Color(0xFF4CAF50)
-            : Colors.grey[300],
+        color: _currentPage == index ? AppColors.primary : Colors.grey[300],
         borderRadius: BorderRadius.circular(3),
       ),
     );

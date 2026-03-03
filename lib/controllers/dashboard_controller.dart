@@ -9,6 +9,7 @@ import '../models/weather_model.dart';
 import '../models/farm_model.dart';
 import '../services/firestore_service.dart';
 import '../services/weather_service.dart';
+import '../utils/app_theme.dart';
 
 class DashboardController extends GetxController {
   final WeatherService _weatherService = WeatherService();
@@ -17,29 +18,34 @@ class DashboardController extends GetxController {
 
   var currentWeather = Rxn<WeatherModel>();
   var isLoadingWeather = true.obs;
-  
+
   var userName = "Petani".obs;
-  var currentLocation = "Mencari lokasi...".obs; 
-  
+  var currentLocation = "Mencari lokasi...".obs;
+
   var dailyTips = <Map<String, dynamic>>[].obs;
-  DateTime? _lastWeatherFetchTime; 
+  DateTime? _lastWeatherFetchTime;
 
   Stream<List<FarmModel>> get farmListStream => _firestoreService.getFarms();
 
   @override
   void onInit() {
     super.onInit();
-    fetchUserData(); 
-    fetchCurrentLocation(); 
+    fetchUserData();
+    fetchCurrentLocation();
     ever(currentWeather, (_) => generateSmartTips());
   }
 
   Future<void> fetchUserData() async {
     User? user = _auth.currentUser;
     if (user != null) {
-      try { await user.reload(); user = _auth.currentUser; } catch (e) {}
+      try {
+        await user.reload();
+        user = _auth.currentUser;
+      } catch (e) {}
       String fullName = user?.displayName ?? "";
-      userName.value = fullName.trim().isEmpty ? "Petani" : fullName.split(" ")[0];
+      userName.value = fullName.trim().isEmpty
+          ? "Petani"
+          : fullName.split(" ")[0];
     }
   }
 
@@ -51,16 +57,15 @@ class DashboardController extends GetxController {
     }
 
     try {
-
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
-        currentLocation.value = "GPS Mati. Ketuk untuk nyalakan"; 
+        currentLocation.value = "GPS Mati. Ketuk untuk nyalakan";
         _stopLoading();
         return;
       }
 
       LocationPermission permission = await Geolocator.checkPermission();
-      
+
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
         if (permission == LocationPermission.denied) {
@@ -81,14 +86,23 @@ class DashboardController extends GetxController {
         timeLimit: const Duration(seconds: 10),
       );
 
-      fetchWeather(position.latitude, position.longitude, isRefresh: forceRefresh);
+      fetchWeather(
+        position.latitude,
+        position.longitude,
+        isRefresh: forceRefresh,
+      );
 
-      List<Placemark> placemarks = await placemarkFromCoordinates(position.latitude, position.longitude);
+      List<Placemark> placemarks = await placemarkFromCoordinates(
+        position.latitude,
+        position.longitude,
+      );
       if (placemarks.isNotEmpty) {
         Placemark place = placemarks[0];
         String subLoc = place.subLocality ?? "";
         String loc = place.locality ?? "";
-        currentLocation.value = (subLoc.isNotEmpty && loc.isNotEmpty) ? "$subLoc, $loc" : loc;
+        currentLocation.value = (subLoc.isNotEmpty && loc.isNotEmpty)
+            ? "$subLoc, $loc"
+            : loc;
       }
     } catch (e) {
       print("Gagal ambil lokasi: $e");
@@ -96,7 +110,6 @@ class DashboardController extends GetxController {
       _stopLoading();
     }
   }
-
 
   void handleLocationTap() async {
     bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
@@ -107,13 +120,12 @@ class DashboardController extends GetxController {
 
     LocationPermission permission = await Geolocator.requestPermission();
 
-    if (permission == LocationPermission.always || permission == LocationPermission.whileInUse) {
+    if (permission == LocationPermission.always ||
+        permission == LocationPermission.whileInUse) {
       fetchCurrentLocation(forceRefresh: true);
-    } 
-    else if (permission == LocationPermission.deniedForever) {
-
+    } else if (permission == LocationPermission.deniedForever) {
       Get.snackbar(
-        "Izin Diblokir Sistem", 
+        "Izin Diblokir Sistem",
         "HP Anda menolak menampilkan popup izin. Cek pengaturan jika ingin mengubah.",
         backgroundColor: Colors.red,
         colorText: Colors.white,
@@ -121,11 +133,13 @@ class DashboardController extends GetxController {
         margin: const EdgeInsets.all(20),
         mainButton: TextButton(
           onPressed: () => Geolocator.openAppSettings(),
-          child: const Text("Buka", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          child: const Text(
+            "Buka",
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          ),
         ),
       );
     }
-
   }
 
   void _stopLoading() {
@@ -133,8 +147,8 @@ class DashboardController extends GetxController {
   }
 
   void fetchWeather(double lat, double lng, {bool isRefresh = false}) async {
-    if (!isRefresh && 
-        _lastWeatherFetchTime != null && 
+    if (!isRefresh &&
+        _lastWeatherFetchTime != null &&
         currentWeather.value != null &&
         DateTime.now().difference(_lastWeatherFetchTime!).inMinutes < 15) {
       isLoadingWeather.value = false;
@@ -145,7 +159,7 @@ class DashboardController extends GetxController {
     try {
       var weather = await _weatherService.getWeatherByLocation(lat, lng);
       currentWeather.value = weather;
-      _lastWeatherFetchTime = DateTime.now(); 
+      _lastWeatherFetchTime = DateTime.now();
     } catch (e) {
       print("Error Weather: $e");
     } finally {
@@ -159,22 +173,50 @@ class DashboardController extends GetxController {
     var tips = <Map<String, dynamic>>[];
 
     if (w.temperature > 30) {
-      tips.add({"title": "Cuaca Panas", "body": "Suhu ${w.temperature}°C. Siram tanaman.", "icon": Icons.wb_sunny, "color": Colors.orange.shade100, "textColor": Colors.orange.shade900});
+      tips.add({
+        "title": "Cuaca Panas",
+        "body": "Suhu ${w.temperature}°C. Siram tanaman.",
+        "icon": Icons.wb_sunny,
+        "color": Colors.orange.shade100,
+        "textColor": Colors.orange.shade900,
+      });
     }
     if (w.condition.toLowerCase().contains("hujan")) {
-      tips.add({"title": "Potensi Hujan", "body": "Tunda pemupukan.", "icon": Icons.water_drop, "color": Colors.blue.shade100, "textColor": Colors.blue.shade900});
+      tips.add({
+        "title": "Potensi Hujan",
+        "body": "Tunda pemupukan.",
+        "icon": Icons.water_drop,
+        "color": Colors.blue.shade100,
+        "textColor": Colors.blue.shade900,
+      });
     }
     if (w.humidity > 80) {
-      tips.add({"title": "Lembap Tinggi", "body": "Waspada jamur.", "icon": Icons.cloud, "color": Colors.grey.shade200, "textColor": Colors.grey.shade800});
+      tips.add({
+        "title": "Lembap Tinggi",
+        "body": "Waspada jamur.",
+        "icon": Icons.cloud,
+        "color": Colors.grey.shade200,
+        "textColor": Colors.grey.shade800,
+      });
     }
-    
+
     var generalTips = [
-      {"title": "Info Pasar", "body": "Harga cabai stabil.", "icon": Icons.monetization_on, "color": Colors.green.shade100, "textColor": Colors.green.shade900},
-      {"title": "Tips Budidaya", "body": "Rotasi tanaman itu penting.", "icon": Icons.lightbulb, "color": Colors.yellow.shade100, "textColor": Colors.yellow.shade900}
+      {
+        "title": "Info Pasar",
+        "body": "Harga cabai stabil.",
+        "icon": Icons.monetization_on,
+        "color": AppColors.primaryLight,
+        "textColor": AppColors.secondary,
+      },
+      {
+        "title": "Tips Budidaya",
+        "body": "Rotasi tanaman itu penting.",
+        "icon": Icons.lightbulb,
+        "color": Colors.yellow.shade100,
+        "textColor": Colors.yellow.shade900,
+      },
     ];
     tips.add(generalTips[Random().nextInt(generalTips.length)]);
     dailyTips.assignAll(tips);
   }
-
-  
 }

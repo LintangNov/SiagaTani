@@ -7,6 +7,7 @@ import '../controllers/dashboard_controller.dart';
 import '../services/firestore_service.dart';
 import '../models/farm_model.dart';
 import 'farm_detail_screen.dart';
+import '../utils/app_theme.dart';
 
 class MyFarmScreen extends StatelessWidget {
   const MyFarmScreen({super.key});
@@ -24,7 +25,7 @@ class MyFarmScreen extends StatelessWidget {
         title: Text(
           "Lahan Saya",
           style: GoogleFonts.poppins(
-            color: const Color(0xFF2C3312),
+            color: AppColors.textDark,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -36,7 +37,7 @@ class MyFarmScreen extends StatelessWidget {
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(
-              child: CircularProgressIndicator(color: Color(0xFF2C3312)),
+              child: CircularProgressIndicator(color: AppColors.primary),
             );
           }
 
@@ -60,14 +61,14 @@ class MyFarmScreen extends StatelessWidget {
                     child: Icon(
                       Icons.spa_outlined,
                       size: 60,
-                      color: Colors.green.shade300,
+                      color: AppColors.tertiary,
                     ),
                   ),
                   const SizedBox(height: 20),
                   Text(
                     "Belum ada lahan.",
                     style: GoogleFonts.poppins(
-                      color: const Color(0xFF2C3312),
+                      color: AppColors.textDark,
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
                     ),
@@ -208,7 +209,7 @@ class MyFarmScreen extends StatelessWidget {
                           style: GoogleFonts.poppins(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
-                            color: const Color(0xFF2C3312),
+                            color: AppColors.textDark,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -409,10 +410,7 @@ class MyFarmScreen extends StatelessWidget {
                           style: GoogleFonts.poppins(),
                         ),
                         trailing: isSelected
-                            ? const Icon(
-                                Icons.check_circle,
-                                color: Colors.green,
-                              )
+                            ? Icon(Icons.check_circle, color: AppColors.primary)
                             : null,
                         onTap: () async {
                           if (farm.id != null) {
@@ -428,7 +426,7 @@ class MyFarmScreen extends StatelessWidget {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
                                   content: Text("Fase tanaman diperbarui!"),
-                                  backgroundColor: Colors.green,
+                                  backgroundColor: AppColors.primary,
                                 ),
                               );
                             }
@@ -486,14 +484,14 @@ class MyFarmScreen extends StatelessWidget {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
                         content: Text("Nama lahan diperbarui"),
-                        backgroundColor: Colors.green,
+                        backgroundColor: AppColors.primary,
                       ),
                     );
                   }
                 }
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF2C3312),
+                backgroundColor: AppColors.textDark,
               ),
               child: const Text(
                 "Simpan",

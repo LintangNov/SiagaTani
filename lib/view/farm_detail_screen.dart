@@ -8,6 +8,7 @@ import '../controllers/prediction_controller.dart';
 import '../models/prediction_result.dart';
 import '../models/weather_model.dart';
 // import '../utils/farm_constants.dart';
+import '../utils/app_theme.dart';
 
 class FarmDetailScreen extends StatelessWidget {
   final PredictionController controller = Get.put(PredictionController());
@@ -63,7 +64,7 @@ class FarmDetailScreen extends StatelessWidget {
     return SliverAppBar(
       expandedHeight: 250,
       pinned: true,
-      backgroundColor: const Color(0xFF2C3312),
+      backgroundColor: AppColors.secondary,
       title: Text(
         controller.farm!.farmName,
         style: GoogleFonts.poppins(
@@ -162,7 +163,7 @@ class FarmDetailScreen extends StatelessWidget {
           controller.farm!.imageUrl!,
           fit: BoxFit.cover,
           errorBuilder: (context, error, stackTrace) {
-            return Container(color: Colors.green.shade800);
+            return Container(color: AppColors.secondary);
           },
         ),
         Container(
@@ -258,7 +259,7 @@ class FarmDetailScreen extends StatelessWidget {
             style: GoogleFonts.poppins(
               fontSize: 16,
               fontWeight: FontWeight.bold,
-              color: Colors.green.shade800,
+              color: AppColors.secondary,
             ),
           ),
           const SizedBox(height: 20),
@@ -273,7 +274,7 @@ class FarmDetailScreen extends StatelessWidget {
                     dateStr,
                     style: GoogleFonts.poppins(
                       fontSize: 14,
-                      color: Colors.green.shade600,
+                      color: AppColors.primary,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -286,7 +287,7 @@ class FarmDetailScreen extends StatelessWidget {
                         style: GoogleFonts.poppins(
                           fontSize: 56,
                           fontWeight: FontWeight.bold,
-                          color: const Color(0xFF2C3312),
+                          color: AppColors.textDark,
                           height: 1.0,
                         ),
                       ),
@@ -308,13 +309,13 @@ class FarmDetailScreen extends StatelessWidget {
                       vertical: 6,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.green.shade50,
+                      color: AppColors.primaryLight,
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
                       condition,
                       style: GoogleFonts.poppins(
-                        color: Colors.green.shade800,
+                        color: AppColors.secondary,
                         fontWeight: FontWeight.w600,
                         fontSize: 12,
                       ),
@@ -323,17 +324,17 @@ class FarmDetailScreen extends StatelessWidget {
                 ],
               ),
               // Big Icon
-              Icon(weatherIcon, size: 90, color: Colors.green.shade300),
+              Icon(weatherIcon, size: 90, color: AppColors.tertiary),
             ],
           ),
           const SizedBox(height: 30),
-          Divider(height: 1, color: Colors.green.shade50),
+          Divider(height: 1, color: AppColors.primaryLight),
           const SizedBox(height: 20),
           Text(
             "Cuaca Hari Ini",
             style: GoogleFonts.poppins(
               fontSize: 13,
-              color: Colors.green.shade700,
+              color: AppColors.primary,
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -375,7 +376,7 @@ class FarmDetailScreen extends StatelessWidget {
                       style: GoogleFonts.poppins(
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
-                        color: const Color(0xFF2C3312),
+                        color: AppColors.textDark,
                       ),
                     ),
                   ],
@@ -452,10 +453,10 @@ class FarmDetailScreen extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: Colors.green.shade50,
+              color: AppColors.primaryLight,
               shape: BoxShape.circle,
             ),
-            child: Icon(icon, size: 20, color: Colors.green.shade700),
+            child: Icon(icon, size: 20, color: AppColors.primary),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -475,7 +476,7 @@ class FarmDetailScreen extends StatelessWidget {
                   style: GoogleFonts.poppins(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
-                    color: const Color(0xFF2C3312),
+                    color: AppColors.textDark,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -549,7 +550,7 @@ class FarmDetailScreen extends StatelessWidget {
       style: GoogleFonts.poppins(
         fontSize: 18,
         fontWeight: FontWeight.bold,
-        color: const Color(0xFF2C3312),
+        color: AppColors.textDark,
       ),
     );
   }
@@ -570,16 +571,16 @@ class FarmDetailScreen extends StatelessWidget {
           width: double.infinity,
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: Colors.green.shade50,
+            color: AppColors.primaryLight,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.green.shade100),
+            border: Border.all(color: AppColors.primaryLight),
           ),
           child: Column(
             children: [
               Icon(
                 Icons.check_circle_outline,
                 size: 48,
-                color: Colors.green.shade300,
+                color: AppColors.tertiary,
               ),
               const SizedBox(height: 12),
               Text(
@@ -587,7 +588,7 @@ class FarmDetailScreen extends StatelessWidget {
                 style: GoogleFonts.poppins(
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
-                  color: Colors.green.shade800,
+                  color: AppColors.secondary,
                 ),
               ),
               const SizedBox(height: 4),
@@ -595,7 +596,7 @@ class FarmDetailScreen extends StatelessWidget {
                 "Tidak ada risiko hama signifikan.",
                 textAlign: TextAlign.center,
                 style: GoogleFonts.poppins(
-                  color: Colors.green.shade700,
+                  color: AppColors.primary,
                   fontSize: 13,
                 ),
               ),
@@ -765,7 +766,7 @@ class FarmDetailScreen extends StatelessWidget {
                             "• ",
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
-                              color: Colors.green,
+                              color: AppColors.primary,
                             ),
                           ),
                           Expanded(

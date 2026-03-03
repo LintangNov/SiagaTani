@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../controllers/auth_controller.dart';
+import '../utils/app_theme.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -21,7 +22,7 @@ class ProfileScreen extends StatelessWidget {
         title: Text(
           "Profil & Pengaturan",
           style: GoogleFonts.poppins(
-            color: const Color(0xFF2C3312),
+            color: AppColors.textDark,
             fontWeight: FontWeight.bold,
             fontSize: 18,
           ),
@@ -42,10 +43,7 @@ class ProfileScreen extends StatelessWidget {
                     padding: const EdgeInsets.all(2),
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      border: Border.all(
-                        color: const Color(0xFF4CAF50),
-                        width: 2,
-                      ),
+                      border: Border.all(color: AppColors.primary, width: 2),
                     ),
                     child: CircleAvatar(
                       radius: 30,
@@ -72,7 +70,7 @@ class ProfileScreen extends StatelessWidget {
                           style: GoogleFonts.poppins(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
-                            color: const Color(0xFF2C3312),
+                            color: AppColors.textDark,
                           ),
                         ),
                         const SizedBox(height: 2),
@@ -142,7 +140,7 @@ class ProfileScreen extends StatelessWidget {
                     ),
                     trailing: Switch(
                       value: false,
-                      activeColor: const Color(0xFF4CAF50),
+                      activeColor: AppColors.primary,
                       onChanged: (val) {},
                     ),
                   ),
@@ -238,13 +236,13 @@ class ProfileScreen extends StatelessWidget {
     required VoidCallback onTap,
   }) {
     return ListTile(
-      leading: Icon(icon, color: const Color(0xFF2C3312)),
+      leading: Icon(icon, color: AppColors.textDark),
       title: Text(
         title,
         style: GoogleFonts.poppins(
           fontSize: 14,
           fontWeight: FontWeight.w500,
-          color: const Color(0xFF2C3312),
+          color: AppColors.textDark,
         ),
       ),
       trailing: Icon(
@@ -291,7 +289,7 @@ class ProfileScreen extends StatelessWidget {
                 style: GoogleFonts.poppins(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
-                  color: const Color(0xFF2C3312),
+                  color: AppColors.textDark,
                 ),
               ),
               const SizedBox(height: 8),

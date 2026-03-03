@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:siaga_tani/controllers/auth_controller.dart';
 import 'package:siaga_tani/view/register_screen.dart';
+import '../utils/app_theme.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -44,8 +45,9 @@ class _LoginScreenState extends State<LoginScreen> {
                 style: GoogleFonts.poppins(
                   fontSize: 28,
                   fontWeight: FontWeight.bold,
-                  color: const Color(0xFF2C3312),
+                  color: AppColors.textDark,
                 ),
+                textAlign: TextAlign.center,
               ),
               Text(
                 "Selamat datang kembali, Pejuang Pangan!",
@@ -53,6 +55,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   fontSize: 14,
                   color: Colors.grey[600],
                 ),
+                textAlign: TextAlign.center,
               ),
               const SizedBox(height: 40),
               _buildLabel("Email"),
@@ -76,7 +79,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: Text(
                     "Lupa Kata Sandi?",
                     style: GoogleFonts.poppins(
-                      color: const Color(0xFF4CAF50),
+                      color: AppColors.primary,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -91,7 +94,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     onPressed: authController.isLoading.value
                         ? null
                         : () {
-                            if (emailCtrl.text.isEmpty || passCtrl.text.isEmpty) {
+                            if (emailCtrl.text.isEmpty ||
+                                passCtrl.text.isEmpty) {
                               Get.snackbar(
                                 "Error",
                                 "Email dan Password wajib diisi",
@@ -104,7 +108,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             );
                           },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF2C3312),
+                      backgroundColor: AppColors.textDark,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
                       ),
@@ -182,7 +186,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: Text(
                       "Daftar Sekarang",
                       style: GoogleFonts.poppins(
-                        color: const Color(0xFF4CAF50),
+                        color: AppColors.primary,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -204,7 +208,7 @@ class _LoginScreenState extends State<LoginScreen> {
         style: GoogleFonts.poppins(
           fontSize: 14,
           fontWeight: FontWeight.w500,
-          color: const Color(0xFF2C3312),
+          color: AppColors.textDark,
         ),
       ),
     );
@@ -233,7 +237,9 @@ class _LoginScreenState extends State<LoginScreen> {
           suffixIcon: isPassword
               ? IconButton(
                   icon: Icon(
-                    _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                    _isPasswordVisible
+                        ? Icons.visibility
+                        : Icons.visibility_off,
                     color: Colors.grey[400],
                     size: 20,
                   ),

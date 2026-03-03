@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:get/get.dart';
 import 'package:siaga_tani/controllers/map_setup_controller.dart';
 import 'package:siaga_tani/controllers/farm_controller.dart';
+import '../utils/app_theme.dart';
 
 class QuestionnaireScreen extends StatefulWidget {
   const QuestionnaireScreen({super.key});
@@ -123,8 +124,8 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final primaryColor = const Color(0xFF2C3312);
-    final accentColor = const Color(0xFF4CAF50);
+    final primaryColor = AppColors.textDark;
+    final accentColor = AppColors.primary;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
@@ -598,7 +599,7 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
                   }
                   return Row(
                     children: [
-                      const Icon(Icons.map, color: Colors.green, size: 18),
+                      const Icon(Icons.map, color: AppColors.primary, size: 18),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
@@ -622,7 +623,7 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
                       _nextPage();
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF2C3312),
+                      backgroundColor: AppColors.textDark,
                     ),
                     child: Text(
                       "Konfirmasi Lokasi",
@@ -750,7 +751,7 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
                   child: ElevatedButton(
                     onPressed: _nextPage,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF2C3312),
+                      backgroundColor: AppColors.textDark,
                     ),
                     child: Text(
                       "Lanjut",
@@ -798,3 +799,4 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
     );
   }
 }
+
