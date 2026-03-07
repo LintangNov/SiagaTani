@@ -33,7 +33,6 @@ dependencies:
   flutter_dotenv: ^6.0.0
   url_launcher: ^6.3.2
   
-  # SVG support - UNCOMMENT INI!
   flutter_svg: ^2.0.10+1
 
 dev_dependencies:
@@ -41,34 +40,14 @@ dev_dependencies:
     sdk: flutter
   flutter_native_splash: ^2.4.0
 
-# ========================================
-# KONFIGURASI NATIVE SPLASH
-# ========================================
-# CATATAN: Native splash TIDAK SUPPORT SVG!
-# Jadi tetap pakai PNG untuk native splash
-# SVG hanya dipakai di custom Flutter splash screen
 flutter_native_splash:
-  # Warna background
-  color: "#069F45"
-  
-  # Logo PNG (bukan SVG, karena native splash tidak support SVG)
-  # Pastikan file ini ada: assets/images/logo.png
-  image: "assets/images/logo.png"
-  
-  # Android 12+ config
+  color: "#E5EFD6" 
+  image: assets/images/logo_app.png
   android_12:
-    image: "assets/images/logo.png"
-    color: "#069F45"
-    # Background putih di sekitar logo agar lebih kecil
-    icon_background_color: "#FFFFFF"
-  
-  # iOS config
+    color: "#E5EFD6"
+    image: assets/images/logo_app.png
   ios_content_mode: center
-  
-  # Fullscreen
   fullscreen: true
-  
-  # Disable web
   web: false
 
 flutter:
@@ -79,5 +58,4 @@ flutter:
     - assets/images/varietas/
     - assets/images/
     - assets/icons/
-    # Pastikan SVG juga ter-include (sudah ter-cover di assets/icons/)
     - .env

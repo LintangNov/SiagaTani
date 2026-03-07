@@ -1,13 +1,13 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
-import '../utils/farm_constants.dart';
-import '../utils/ui_utils.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../core/constants/farm_constants.dart';
 
 class MapSetupController extends GetxController {
   final MapController mapController = MapController();
@@ -18,7 +18,7 @@ class MapSetupController extends GetxController {
 
   // default location: Yogyakarta, Indonesia
   var currentCenter = const LatLng(-7.795, 110.369).obs;
-  var currentAddress = "Geser pin untuk lokasi...".obs;
+  var currentAddress = 'Geser pin untuk lokasi...'.obs;
   var isLoadingAddress = false.obs;
 
   Timer? _debounce;
@@ -37,16 +37,13 @@ class MapSetupController extends GetxController {
   }
 
   Future<void> checkLocationPermissionAndFetch() async {
-    bool serviceEnabled;
-    LocationPermission permission;
-
-    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    final bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
       _showDialogServiceDisabled();
       return;
     }
 
-    permission = await Geolocator.checkPermission();
+    LocationPermission permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied) {
@@ -66,26 +63,28 @@ class MapSetupController extends GetxController {
   Future<void> _getCurrentLocation() async {
     try {
       isLoadingAddress.value = true;
-      currentAddress.value = "Sedang mencari koordinat...";
+      currentAddress.value = 'Sedang mencari koordinat...';
 
-      Position position = await Geolocator.getCurrentPosition(
+      final Position position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high,
         timeLimit: const Duration(seconds: 10),
       );
 
-      LatLng userPos = LatLng(position.latitude, position.longitude);
+      final LatLng userPos = LatLng(position.latitude, position.longitude);
 
       currentCenter.value = userPos;
 
       try {
         mapController.move(userPos, 16.0);
       } catch (e) {
-        print("Info: Map belum siap digerakkan, tapi data lokasi aman. ($e)");
+        debugPrint(
+          'Info: Map belum siap digerakkan, tapi data lokasi aman. ($e)',
+        );
       }
 
       _getAddressFromLatLng(userPos.latitude, userPos.longitude);
     } catch (e) {
-      print("Gagal ambil GPS: $e");
+      debugPrint('Gagal ambil GPS: $e');
       _showErrorSnackbar(e.toString());
     } finally {
       isLoadingAddress.value = false;
@@ -96,11 +95,11 @@ class MapSetupController extends GetxController {
 
   void _showDialogServiceDisabled() {
     Get.defaultDialog(
-      title: "GPS Mati",
+      title: 'GPS Mati',
       middleText:
-          "SiagaTani butuh GPS nyala biar bisa nemuin lahanmu otomatis.",
-      textConfirm: "Nyalakan",
-      textCancel: "Nanti",
+          'SiagaTani butuh GPS nyala biar bisa nemuin lahanmu otomatis.',
+      textConfirm: 'Nyalakan',
+      textCancel: 'Nanti',
       confirmTextColor: Colors.white,
       buttonColor: const Color(0xFF2C3312),
       onConfirm: () async {
@@ -116,11 +115,11 @@ class MapSetupController extends GetxController {
 
   void _showDialogPermissionDenied() {
     Get.defaultDialog(
-      title: "Butuh Izin Lokasi",
+      title: 'Butuh Izin Lokasi',
       middleText:
-          "Boleh minta izin lokasi? Biar kamu gak capek geser-geser peta manual.",
-      textConfirm: "Boleh, Izinkan",
-      textCancel: "Gak Dulu",
+          'Boleh minta izin lokasi? Biar kamu gak capek geser-geser peta manual.',
+      textConfirm: 'Boleh, Izinkan',
+      textCancel: 'Gak Dulu',
       confirmTextColor: Colors.white,
       buttonColor: const Color(0xFF2C3312),
       onConfirm: () {
@@ -132,11 +131,11 @@ class MapSetupController extends GetxController {
 
   void _showDialogSettingsNeeded() {
     Get.defaultDialog(
-      title: "Izin Ditolak Permanen",
+      title: 'Izin Ditolak Permanen',
       middleText:
-          "Yah, izinnya ditolak permanen. Mau buka pengaturan buat aktifin manual?",
-      textConfirm: "Buka Pengaturan",
-      textCancel: "Biarin Aja",
+          'Yah, izinnya ditolak permanen. Mau buka pengaturan buat aktifin manual?',
+      textConfirm: 'Buka Pengaturan',
+      textCancel: 'Biarin Aja',
       confirmTextColor: Colors.white,
       buttonColor: const Color(0xFF2C3312),
       onConfirm: () async {
@@ -148,8 +147,8 @@ class MapSetupController extends GetxController {
 
   void _showErrorSnackbar(String error) {
     Get.snackbar(
-      "Gagal Deteksi Lokasi",
-      "Sinyal kurang oke nih. Mau coba lagi?",
+      'Gagal Deteksi Lokasi',
+      'Sinyal kurang oke nih. Mau coba lagi?',
       backgroundColor: Colors.orange.shade800,
       colorText: Colors.white,
       icon: const Icon(Icons.signal_wifi_bad, color: Colors.white),
@@ -163,7 +162,7 @@ class MapSetupController extends GetxController {
             borderRadius: BorderRadius.circular(20),
           ),
           child: const Text(
-            "Coba Lagi",
+            'Coba Lagi',
             style: TextStyle(fontWeight: FontWeight.bold, color: Colors.orange),
           ),
         ),
@@ -182,26 +181,29 @@ class MapSetupController extends GetxController {
   Future<void> _getAddressFromLatLng(double lat, double lng) async {
     isLoadingAddress.value = true;
     try {
-      List<Placemark> placemarks = await placemarkFromCoordinates(lat, lng);
+      final List<Placemark> placemarks = await placemarkFromCoordinates(
+        lat,
+        lng,
+      );
       if (placemarks.isNotEmpty) {
-        Placemark place = placemarks[0];
-        String street = place.street ?? "";
-        String subLoc = place.subLocality ?? "";
-        String loc = place.locality ?? "";
+        final Placemark place = placemarks[0];
+        final String street = place.street ?? '';
+        final String subLoc = place.subLocality ?? '';
+        final String loc = place.locality ?? '';
 
-        String address = "$street, $subLoc, $loc".replaceAll(
+        String address = '$street, $subLoc, $loc'.replaceAll(
           RegExp(r'^, | , '),
           '',
         );
-        if (address.trim().isEmpty) address = "Lokasi Terpilih";
+        if (address.trim().isEmpty) address = 'Lokasi Terpilih';
 
         currentAddress.value = address;
       } else {
-        currentAddress.value = "Alamat tidak ditemukan";
+        currentAddress.value = 'Alamat tidak ditemukan';
       }
     } catch (e) {
       currentAddress.value =
-          "Koordinat: ${lat.toStringAsFixed(4)}, ${lng.toStringAsFixed(4)}";
+          'Koordinat: ${lat.toStringAsFixed(4)}, ${lng.toStringAsFixed(4)}';
     } finally {
       isLoadingAddress.value = false;
     }
@@ -216,7 +218,7 @@ class MapSetupController extends GetxController {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              "Lokasi Aman!",
+              'Lokasi Aman!',
               style: GoogleFonts.poppins(
                 fontWeight: FontWeight.bold,
                 fontSize: 14,
@@ -224,7 +226,7 @@ class MapSetupController extends GetxController {
               ),
             ),
             Text(
-              "Lokasi tersimpan: ${currentAddress.value}",
+              'Lokasi tersimpan: ${currentAddress.value}',
               style: GoogleFonts.poppins(fontSize: 12, color: Colors.white),
             ),
           ],
@@ -243,9 +245,9 @@ class MapSetupController extends GetxController {
       context: context,
       builder: (BuildContext dialogContext) {
         return AlertDialog(
-          title: Text(
-            "Apa yang ditanam disini?",
-            style: const TextStyle(fontWeight: FontWeight.bold),
+          title: const Text(
+            'Apa yang ditanam disini?',
+            style: TextStyle(fontWeight: FontWeight.bold),
           ),
           content: SizedBox(
             height: 300,
@@ -284,17 +286,17 @@ class MapSetupController extends GetxController {
                         ),
                       );
                       surroundingData.add({
-                        "type": plant,
-                        "lat": point.latitude,
-                        "lng": point.longitude,
+                        'type': plant,
+                        'lat': point.latitude,
+                        'lng': point.longitude,
                       });
-                      Navigator.pop(dialogContext); // Close dialog
+                      Navigator.pop(dialogContext);
 
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Text(
-                              "Berhasil menandai $plant",
+                              'Berhasil menandai $plant',
                               style: GoogleFonts.poppins(),
                             ),
                             backgroundColor: Colors.green.shade600,

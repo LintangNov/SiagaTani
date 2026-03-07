@@ -5,7 +5,7 @@ import 'package:siaga_tani/view/dashboard_screen.dart';
 import 'package:siaga_tani/view/my_farm_screen.dart';
 import 'package:siaga_tani/view/education_screen.dart';
 import 'package:siaga_tani/view/profile_screen.dart';
-import '../utils/app_theme.dart';
+import '../core/theme/app_theme.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});

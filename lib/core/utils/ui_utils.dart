@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'app_theme.dart';
+import '../theme/app_theme.dart';
 
 class UiUtils {
   static void showSuccess(String message, {String title = "Berhasil"}) {

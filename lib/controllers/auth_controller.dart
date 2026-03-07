@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:siaga_tani/view/main_screen.dart';
 import 'package:siaga_tani/view/on_boarding.dart';
-import '../utils/ui_utils.dart'; 
+import '../core/utils/ui_utils.dart';
 
 class AuthController extends GetxController {
   static AuthController instance = Get.find();
@@ -22,13 +22,10 @@ class AuthController extends GetxController {
     ever(_user, _setInitialScreen);
   }
 
-
-  _setInitialScreen(User? user) {
+  void _setInitialScreen(User? user) {
     if (user == null) {
-      
       Get.offAll(() => const OnboardingScreen());
     } else {
-
       Get.offAll(() => const MainScreen());
     }
   }
@@ -37,16 +34,14 @@ class AuthController extends GetxController {
   Future<void> register(String name, String email, String password) async {
     try {
       isLoading.value = true;
-      UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
-      
+      final UserCredential userCredential = await _auth
+          .createUserWithEmailAndPassword(email: email, password: password);
+
       await userCredential.user!.updateDisplayName(name);
-      
-      UiUtils.showSuccess("Akun berhasil dibuat! Selamat datang, $name.");
+
+      UiUtils.showSuccess('Akun berhasil dibuat! Selamat datang, $name.');
     } catch (e) {
-      UiUtils.showError("Gagal daftar: ${e.toString()}");
+      UiUtils.showError('Gagal daftar: ${e.toString()}');
     } finally {
       isLoading.value = false;
     }
@@ -57,9 +52,9 @@ class AuthController extends GetxController {
     try {
       isLoading.value = true;
       await _auth.signInWithEmailAndPassword(email: email, password: password);
-      UiUtils.showSuccess("Login berhasil!");
+      UiUtils.showSuccess('Login berhasil!');
     } catch (e) {
-      UiUtils.showError("Login gagal. Cek email/password Anda.");
+      UiUtils.showError('Login gagal. Cek email/password Anda.');
     } finally {
       isLoading.value = false;
     }
@@ -72,19 +67,20 @@ class AuthController extends GetxController {
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
       if (googleUser == null) {
         isLoading.value = false;
-        return; 
+        return;
       }
 
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
       final AuthCredential credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
 
       await _auth.signInWithCredential(credential);
-      UiUtils.showSuccess("Berhasil masuk dengan Google!");
+      UiUtils.showSuccess('Berhasil masuk dengan Google!');
     } catch (e) {
-      UiUtils.showError("Google Sign-In Error: $e");
+      UiUtils.showError('Google Sign-In Error: $e');
     } finally {
       isLoading.value = false;
     }

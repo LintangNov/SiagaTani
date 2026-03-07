@@ -3,10 +3,10 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:get/get.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:siaga_tani/view/main_screen.dart';
 import 'controllers/auth_controller.dart';
 import 'firebase_options.dart';
-import 'view/splash_screen.dart';
-import 'utils/app_theme.dart';
+import 'core/theme/app_theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -34,7 +34,7 @@ class MyApp extends StatelessWidget {
       title: 'SiagaTani',
       theme: AppTheme.lightTheme,
       // AuthController will handle navigation, but show Splash first
-      home: const SplashScreen(),
+      home: const MainScreen(),
     );
   }
 }

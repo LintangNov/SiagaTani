@@ -8,9 +8,6 @@ class WeatherModel {
   final double maxTemp;
   final int wetHours;
 
-  double get currentTemp => temperature;
-  double get maxTemp24h => maxTemp;
-
   WeatherModel({
     required this.temperature,
     required this.humidity,
@@ -23,17 +20,19 @@ class WeatherModel {
   });
 
   factory WeatherModel.fromJson(Map<String, dynamic> json) {
-    var main = json['main'];
-    var weather = json['weather'][0];
-    var wind = json['wind'];
-    
+    final main = json['main'];
+    final weather = json['weather'][0];
+    final wind = json['wind'];
+
     double rain = 0.0;
     if (json['rain'] != null && json['rain']['1h'] != null) {
       rain = (json['rain']['1h'] as num).toDouble() * 24;
     }
 
-    int month = DateTime.now().month;
-    String currentSeason = (month >= 4 && month <= 9) ? "Musim Kemarau" : "Musim Hujan";
+    final int month = DateTime.now().month;
+    final String currentSeason = (month >= 4 && month <= 9)
+        ? 'Musim Kemarau'
+        : 'Musim Hujan';
 
     return WeatherModel(
       temperature: (main['temp'] as num).toDouble(),

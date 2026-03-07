@@ -1,23 +1,31 @@
+import 'package:flutter/foundation.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../models/weather_model.dart';
 import '../models/farm_model.dart';
 import '../models/prediction_result.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class AIService {
-  static final String _apiKey = dotenv.env['GOOGLE_GEMINI_API_KEY'] ?? ''; 
+  static final String _apiKey = dotenv.env['GOOGLE_GEMINI_API_KEY'] ?? '';
   final GenerativeModel _model;
 
-  AIService() : _model = GenerativeModel(model: 'gemini-1.5-flash', apiKey: _apiKey);
+  AIService()
+    : _model = GenerativeModel(model: 'gemini-1.5-flash', apiKey: _apiKey);
 
   Future<String> generateSmartAdvice({
     required WeatherModel weather,
     required FarmModel farm,
     required List<PredictionResult> risks,
   }) async {
-    String riskString = risks.map((r) => "- ${r.pestName} (${(r.percentage * 100).toInt()}%): ${r.shortDescription}").join("\n");
+    final String riskString = risks
+        .map(
+          (r) =>
+              '- ${r.pestName} (${(r.percentage * 100).toInt()}%): ${r.shortDescription}',
+        )
+        .join('\n');
 
-    final prompt = '''
+    final prompt =
+        '''
       Anda adalah asisten ahli pertanian cerdas untuk aplikasi "Siaga Tani".
       
       KONDISI SAAT INI:
@@ -36,9 +44,10 @@ class AIService {
     try {
       final content = [Content.text(prompt)];
       final response = await _model.generateContent(content);
-      return response.text ?? "Tetap pantau kondisi lahan secara rutin!.";
+      return response.text ?? 'Tetap pantau kondisi lahan secara rutin!';
     } catch (e) {
-      return "Gagal terhubung dengan asisten AI. Pastikan koneksi internet tersedia.";
+      debugPrint('AIService error: $e');
+      return 'Gagal terhubung dengan asisten AI. Pastikan koneksi internet tersedia.';
     }
   }
 }

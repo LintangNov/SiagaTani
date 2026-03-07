@@ -1,5 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-
 enum CropStage { seedling, vegetative, flowering, fruiting, harvesting }
 
 enum MulchType { none, black, silver }
@@ -49,11 +47,13 @@ class FarmModel {
     this.imageUrl,
   });
 
-  Map<String, dynamic> toMap() {
+  /// Serializes to a plain Map (no Firestore types).
+  Map<String, dynamic> toJson() {
     return {
       'farmName': farmName,
       'address': address,
-      'location': GeoPoint(latitude, longitude),
+      'latitude': latitude,
+      'longitude': longitude,
       'landSize': landSize,
       'variety': variety,
       'cropStage': cropStage.toString(),
@@ -68,13 +68,10 @@ class FarmModel {
       'pesticideType': pesticideType,
       'wateringIntensity': wateringIntensity,
       'imageUrl': imageUrl,
-      'createdAt': FieldValue.serverTimestamp(),
     };
   }
 
-  factory FarmModel.fromMap(Map<String, dynamic> map, String documentId) {
-    GeoPoint geoPoint = map['location'] as GeoPoint;
-
+  factory FarmModel.fromJson(Map<String, dynamic> map, String documentId) {
     CropStage parseStage(String? val) {
       return CropStage.values.firstWhere(
         (e) => e.toString() == val,
@@ -93,8 +90,8 @@ class FarmModel {
       id: documentId,
       farmName: map['farmName'] ?? 'Lahan Tanpa Nama',
       address: map['address'] ?? 'Alamat tidak diketahui',
-      latitude: geoPoint.latitude,
-      longitude: geoPoint.longitude,
+      latitude: (map['latitude'] as num?)?.toDouble() ?? 0.0,
+      longitude: (map['longitude'] as num?)?.toDouble() ?? 0.0,
       landSize: map['landSize']?.toString() ?? '',
       variety: map['variety'] ?? '',
       cropStage: parseStage(map['cropStage']),
@@ -109,6 +106,51 @@ class FarmModel {
       pesticideType: map['pesticideType'] ?? '',
       wateringIntensity: map['wateringIntensity'] ?? 'Sedang',
       imageUrl: map['imageUrl'],
+    );
+  }
+
+  FarmModel copyWith({
+    String? id,
+    String? farmName,
+    String? address,
+    double? latitude,
+    double? longitude,
+    String? landSize,
+    String? variety,
+    CropStage? cropStage,
+    MulchType? mulchType,
+    String? lastPesticideTime,
+    String? hostPlantsNearby,
+    bool? isMulchUsed,
+    String? plantingPattern,
+    String? pestHistory,
+    String? currentPhase,
+    bool? recentlySprayedPesticide,
+    String? pesticideType,
+    String? wateringIntensity,
+    String? imageUrl,
+  }) {
+    return FarmModel(
+      id: id ?? this.id,
+      farmName: farmName ?? this.farmName,
+      address: address ?? this.address,
+      latitude: latitude ?? this.latitude,
+      longitude: longitude ?? this.longitude,
+      landSize: landSize ?? this.landSize,
+      variety: variety ?? this.variety,
+      cropStage: cropStage ?? this.cropStage,
+      mulchType: mulchType ?? this.mulchType,
+      lastPesticideTime: lastPesticideTime ?? this.lastPesticideTime,
+      hostPlantsNearby: hostPlantsNearby ?? this.hostPlantsNearby,
+      isMulchUsed: isMulchUsed ?? this.isMulchUsed,
+      plantingPattern: plantingPattern ?? this.plantingPattern,
+      pestHistory: pestHistory ?? this.pestHistory,
+      currentPhase: currentPhase ?? this.currentPhase,
+      recentlySprayedPesticide:
+          recentlySprayedPesticide ?? this.recentlySprayedPesticide,
+      pesticideType: pesticideType ?? this.pesticideType,
+      wateringIntensity: wateringIntensity ?? this.wateringIntensity,
+      imageUrl: imageUrl ?? this.imageUrl,
     );
   }
 }

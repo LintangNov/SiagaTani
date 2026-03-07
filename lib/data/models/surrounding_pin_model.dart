@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:latlong2/latlong.dart';
 
 class SurroundingPinModel {
@@ -14,21 +13,24 @@ class SurroundingPinModel {
     required this.longitude,
   });
 
-  Map<String, dynamic> toMap() {
+  /// Serializes to a plain Map (no Firestore types).
+  Map<String, dynamic> toJson() {
     return {
       'plantType': plantType,
-      'location': GeoPoint(latitude, longitude),
-      'createdAt': FieldValue.serverTimestamp(),
+      'latitude': latitude,
+      'longitude': longitude,
     };
   }
 
-  factory SurroundingPinModel.fromMap(Map<String, dynamic> map, String documentId) {
-    GeoPoint geo = map['location'] as GeoPoint;
+  factory SurroundingPinModel.fromJson(
+    Map<String, dynamic> map,
+    String documentId,
+  ) {
     return SurroundingPinModel(
       id: documentId,
       plantType: map['plantType'] ?? 'Lainnya',
-      latitude: geo.latitude,
-      longitude: geo.longitude,
+      latitude: (map['latitude'] as num?)?.toDouble() ?? 0.0,
+      longitude: (map['longitude'] as num?)?.toDouble() ?? 0.0,
     );
   }
 

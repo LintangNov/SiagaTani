@@ -8,7 +8,7 @@ class PredictionResult {
   final String detailedAnalysis;
   final List<String> preventionSteps;
 
-  PredictionResult({
+  const PredictionResult({
     required this.pestName,
     required this.percentage,
     required this.riskLevel,
@@ -18,13 +18,17 @@ class PredictionResult {
   });
 
   String get formattedPercentage => "${(percentage * 100).toStringAsFixed(0)}%";
-  
+
   String get riskLevelString {
     switch (riskLevel) {
-      case RiskLevel.low: return "RENDAH";
-      case RiskLevel.moderate: return "SEDANG";
-      case RiskLevel.high: return "TINGGI";
-      case RiskLevel.severe: return "BAHAYA";
+      case RiskLevel.low:
+        return 'RENDAH';
+      case RiskLevel.moderate:
+        return 'SEDANG';
+      case RiskLevel.high:
+        return 'TINGGI';
+      case RiskLevel.severe:
+        return 'BAHAYA';
     }
   }
 }

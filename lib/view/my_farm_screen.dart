@@ -4,10 +4,10 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import '../controllers/dashboard_controller.dart';
-import '../services/firestore_service.dart';
-import '../models/farm_model.dart';
+import '../data/services/firestore_service.dart';
+import '../data/models/farm_model.dart';
 import 'farm_detail_screen.dart';
-import '../utils/app_theme.dart';
+import '../core/theme/app_theme.dart';
 
 class MyFarmScreen extends StatelessWidget {
   const MyFarmScreen({super.key});

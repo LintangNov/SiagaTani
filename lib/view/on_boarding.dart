@@ -3,7 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:siaga_tani/view/login_screen.dart';
 // import 'package:siaga_tani/view/main_screen.dart';
 import 'package:get/get.dart';
-import '../utils/app_theme.dart';
+import '../core/theme/app_theme.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});

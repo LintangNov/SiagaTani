@@ -5,7 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:get/get.dart';
 import 'package:siaga_tani/controllers/map_setup_controller.dart';
 import 'package:siaga_tani/controllers/farm_controller.dart';
-import '../utils/app_theme.dart';
+import '../core/theme/app_theme.dart';
 
 class QuestionnaireScreen extends StatefulWidget {
   const QuestionnaireScreen({super.key});
@@ -799,4 +799,3 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
     );
   }
 }
-

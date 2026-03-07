@@ -3,40 +3,40 @@ import 'package:google_fonts/google_fonts.dart';
 
 /// AppColors - Centralized color palette for SiagaTani
 ///
-/// Color Scheme:
-/// - Primary: #099F45 (Fresh Green - Main brand color)
-/// - Secondary: #046A38 (Dark Green - Accent & depth)
-/// - Tertiary: #55C271 (Light Green - Highlights)
+/// Color Scheme (Tropical Minimalist):
+/// - Primary: #154617 (Dark Green — brand, app bars, primary buttons)
+/// - Surface/Background: #F1F5E9 (Light Greenish Cream — scaffold)
+/// - Cards: #FFFFFF with subtle shadows
 class AppColors {
   // ============ PRIMARY COLORS ============
-  /// Main brand color - Hijau segar untuk elemen interaktif utama
-  static const Color primary = Color(0xFF099F45);
-  static const Color primaryLight = Color(0xFFE0F6E8); // Very light tint
-  static const Color primaryDark = Color(0xFF067A35); // Darker shade
+  /// Main brand color — Dark green for key interactive elements
+  static const Color primary = Color(0xFF154617);
+  static const Color primaryLight = Color(0xFFD6E7BD);
+  static const Color primaryDark = Color(0xFF0D2E10);
 
   // ============ SECONDARY COLORS ============
-  /// Dark green - Untuk aksen gelap dan depth
-  static const Color secondary = Color(0xFF046A38);
-  static const Color secondaryLight = Color(0xFF0A8C4D);
-  static const Color secondaryDark = Color(0xFF034A28);
+  /// Medium green for accents and depth
+  static const Color secondary = Color(0xFF2E7D32);
+  static const Color secondaryLight = Color(0xFF60AD5E);
+  static const Color secondaryDark = Color(0xFF005005);
 
   // ============ TERTIARY COLORS ============
-  /// Light green - Untuk highlight dan elemen terang
-  static const Color tertiary = Color(0xFF55C271);
-  static const Color tertiaryLight = Color(0xFFA8E4B8);
-  static const Color tertiaryDark = Color(0xFF3DA558);
+  /// Light green for highlights and lighter elements
+  static const Color tertiary = Color(0xFF81C784);
+  static const Color tertiaryLight = Color(0xFFB2F2B6);
+  static const Color tertiaryDark = Color(0xFF519657);
 
   // ============ NEUTRAL COLORS ============
   /// Text colors
-  static const Color textDark = Color(0xFF2C3312); // Original dark green-brown
+  static const Color textDark = Color(0xFF1B2E1C);
   static const Color textPrimary = Color(0xFF1A1A1A);
   static const Color textSecondary = Color(0xFF666666);
   static const Color textLight = Color(0xFF999999);
 
   /// Background colors
-  static const Color background = Color(0xFFF8F9FA);
+  static const Color background = Color(0xFFF1F5E9);
   static const Color backgroundLight = Color(0xFFFFFFFF);
-  static const Color backgroundDark = Color(0xFFE0E0E0);
+  static const Color backgroundDark = Color(0xFFDCE4D0);
 
   /// Surface colors
   static const Color surface = Color(0xFFFFFFFF);
@@ -44,10 +44,10 @@ class AppColors {
   static const Color surfaceDark = Color(0xFFF5F5F5);
 
   // ============ SEMANTIC COLORS ============
-  /// Success (using primary green)
-  static const Color success = Color(0xFF099F45);
-  static const Color successLight = Color(0xFFE0F6E8);
-  static const Color successDark = Color(0xFF067A35);
+  /// Success
+  static const Color success = Color(0xFF2E7D32);
+  static const Color successLight = Color(0xFFE8F5E9);
+  static const Color successDark = Color(0xFF1B5E20);
 
   /// Error
   static const Color error = Color(0xFFD32F2F);
@@ -65,24 +65,16 @@ class AppColors {
   static const Color infoDark = Color(0xFF1976D2);
 
   // ============ GRADIENT COLORS ============
-  /// Gradient for splash screen and special effects
   static const LinearGradient primaryGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [
-      Color(0xFF046A38), // Secondary
-      Color(0xFF099F45), // Primary
-      Color(0xFF55C271), // Tertiary
-    ],
+    colors: [Color(0xFF0D2E10), Color(0xFF154617), Color(0xFF2E7D32)],
   );
 
   static const LinearGradient secondaryGradient = LinearGradient(
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
-    colors: [
-      Color(0xFF099F45), // Primary
-      Color(0xFF067A35), // Primary Dark
-    ],
+    colors: [Color(0xFF154617), Color(0xFF0D2E10)],
   );
 
   // ============ SPECIAL USE COLORS ============
@@ -101,7 +93,6 @@ class AppColors {
 
 /// AppTheme - Complete theme configuration for SiagaTani
 class AppTheme {
-  // Prevent instantiation
   AppTheme._();
 
   /// Light Theme (default)
@@ -133,16 +124,16 @@ class AppTheme {
 
       // ============ APP BAR ============
       appBarTheme: AppBarTheme(
-        backgroundColor: AppColors.background,
-        foregroundColor: AppColors.textDark,
+        backgroundColor: AppColors.primary,
+        foregroundColor: Colors.white,
         elevation: 0,
         centerTitle: true,
         titleTextStyle: GoogleFonts.poppins(
           fontSize: 18,
           fontWeight: FontWeight.w600,
-          color: AppColors.textDark,
+          color: Colors.white,
         ),
-        iconTheme: const IconThemeData(color: AppColors.textDark),
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
 
       // ============ TEXT THEME ============
@@ -235,13 +226,13 @@ class AppTheme {
         ),
       ),
 
-      // ============ BUTTON THEME ============
+      // ============ BUTTON THEMES ============
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.textDark,
+          backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
-          elevation: 0,
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          elevation: 2,
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
@@ -255,8 +246,8 @@ class AppTheme {
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           foregroundColor: AppColors.primary,
-          side: const BorderSide(color: AppColors.border),
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          side: const BorderSide(color: AppColors.primary, width: 1.5),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
@@ -274,6 +265,18 @@ class AppTheme {
             fontSize: 14,
             fontWeight: FontWeight.w600,
           ),
+        ),
+      ),
+
+      // ============ FAB THEME ============
+      floatingActionButtonTheme: FloatingActionButtonThemeData(
+        backgroundColor: AppColors.primary,
+        foregroundColor: Colors.white,
+        elevation: 4,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        extendedTextStyle: GoogleFonts.poppins(
+          fontSize: 15,
+          fontWeight: FontWeight.w600,
         ),
       ),
 
@@ -314,8 +317,9 @@ class AppTheme {
       // ============ CARD THEME ============
       cardTheme: CardThemeData(
         color: AppColors.surface,
-        elevation: 0,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        elevation: 2,
+        shadowColor: AppColors.shadow,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         margin: const EdgeInsets.all(8),
       ),
 

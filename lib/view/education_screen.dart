@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../utils/app_theme.dart';
+import '../core/theme/app_theme.dart';
 
 class EducationScreen extends StatelessWidget {
   const EducationScreen({super.key});
