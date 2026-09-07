@@ -1,4 +1,4 @@
-# 🌶️ SiagaTani: Sistem Peringatan Dini & Rekomendasi Tani Berbasis AI
+# SiagaTani: Sistem Peringatan Dini & Rekomendasi Tani Berbasis AI
 
 [![Flutter Version](https://img.shields.io/badge/Flutter-v3.22+-02569B?logo=flutter&logoColor=white)](https://flutter.dev)
 [![Dart Version](https://img.shields.io/badge/Dart-v3.0+-0175C2?logo=dart&logoColor=white)](https://dart.dev)
@@ -8,9 +8,17 @@
 
 **SiagaTani** adalah aplikasi mobile inovatif berbasis Flutter yang dirancang khusus untuk mendeteksi dini risiko serangan hama dan penyakit pada komoditas pertanian (fokus utama: tanaman cabai). Proyek ini dikembangkan sebagai **Proyek Akhir Mata Kuliah Komputer dan Masyarakat (Semester 3)**, dengan tujuan memberikan solusi teknologi tepat guna yang dapat membantu petani meningkatkan produktivitas hasil panen dan meminimalkan kegagalan budidaya melalui pengambilan keputusan cerdas.
 
+## Latar Belakang & Pendekatan Solusi
+
+Melalui wawancara langsung bersama Kelompok Wanita Tani (KWT) di Caturtunggal, Sleman, DI Yogyakarta, ditemukan bahwa penanganan organisme pengganggu tanaman (khususnya cabai) masih bersifat **reaktif**, tindakan baru diambil setelah tanaman terlanjur rusak dan hama menyebar luas. Di saat yang sama, akses edukasi proteksi tanaman menemui hambatan karena petani sangat bergantung pada ketersediaan Penyuluh Pertanian Lapangan (PPL), baik lewat kunjungan berkala maupun tanya jawab via pesan WhatsApp.
+
+Untuk memutus pola tersebut, pendekatan penanganan digeser dari kuratif menjadi **pencegahan preventif**. Logika agronomi lapangan diotomatisasi melalui mesin kalkulasi risiko yang menimbang dinamika cuaca mikro, fase kerentanan komoditas, efektivitas mulsa, hingga residu pestisida. Informasi ini dipadukan dengan pemetaan spasial radius migrasi hama dari lahan tetangga, lalu dirangkum oleh model kecerdasan buatan generatif menjadi instruksi mitigasi praktis dengan gaya komunikasi layaknya seorang penyuluh pertanian.
+
+Dari pendekatan ini lahir **SiagaTani**, sebuah asisten digital berbasis *mobile* yang memfasilitasi deteksi dini dan pendampingan budidaya secara mandiri, memungkinkan petani mengambil keputusan mitigasi terukur sebelum kegagalan panen terjadi.
+
 ---
 
-## 🚀 Fitur Utama
+## Fitur Utama
 
 Aplikasi SiagaTani dilengkapi dengan modul-modul cerdas berikut:
 
@@ -40,7 +48,7 @@ Aplikasi SiagaTani dilengkapi dengan modul-modul cerdas berikut:
 
 ---
 
-## 🛠️ Arsitektur & Tech Stack
+## Arsitektur & Tech Stack
 
 Aplikasi ini dibangun menggunakan arsitektur modular yang memisahkan tanggung jawab visual, logika bisnis, dan penyedia data (*Service/Repository*):
 
@@ -54,7 +62,7 @@ Aplikasi ini dibangun menggunakan arsitektur modular yang memisahkan tanggung ja
 
 ---
 
-## 📁 Struktur Folder Project
+## Struktur Folder Project
 
 Berikut adalah struktur folder dalam direktori `lib/` yang memisahkan kode berdasarkan arsitektur MVC yang rapi:
 
@@ -100,7 +108,7 @@ lib/
 
 ---
 
-## 🛠️ Langkah Instalasi & Penggunaan
+## Langkah Instalasi & Penggunaan
 
 Ikuti langkah-langkah berikut untuk menjalankan proyek SiagaTani secara lokal pada perangkat Anda:
 
@@ -146,7 +154,7 @@ flutter run
 
 ---
 
-## 🔬 Penjelasan Singkat Mesin Prediksi (Prediction Engine)
+## Penjelasan Singkat Mesin Prediksi (Prediction Engine)
 
 Sistem rekomendasi pencegahan hama di SiagaTani tidak hanya mengandalkan insting, melainkan kalkulasi objektif yang adaptif terhadap lingkungan. Menggunakan *design pattern* **Strategy**, berkas [`prediction_service.dart`](./lib/data/services/prediction_service.dart) menerapkan kalkulasi berikut:
 
