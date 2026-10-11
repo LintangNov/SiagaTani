@@ -92,7 +92,7 @@ class AppTheme {
           foregroundColor: AppColors.accentPrimary,
           minimumSize: const Size(AppSize.touch, AppSize.touch),
           shape: buttonShape,
-          textStyle: AppText.body(size: 16, weight: FontWeight.w600),
+          textStyle: AppText.body(size: 14, weight: FontWeight.w600),
         ),
       ),
 
@@ -233,12 +233,12 @@ class AppTheme {
       titleLarge: h(20, FontWeight.w600),
       titleMedium: h(18, FontWeight.w600),
       titleSmall: h(16, FontWeight.w600),
-      bodyLarge: b(18, FontWeight.w400),
-      bodyMedium: b(16, FontWeight.w400),
-      bodySmall: b(14, FontWeight.w400, AppColors.foregroundSecondary),
-      labelLarge: b(16, FontWeight.w600),
-      labelMedium: b(14, FontWeight.w500, AppColors.foregroundSecondary),
-      labelSmall: b(12, FontWeight.w500, AppColors.foregroundTertiary),
+      bodyLarge: b(16, FontWeight.w400),
+      bodyMedium: b(14, FontWeight.w400),
+      bodySmall: b(12, FontWeight.w400, AppColors.foregroundSecondary),
+      labelLarge: b(14, FontWeight.w600),
+      labelMedium: b(12, FontWeight.w500, AppColors.foregroundSecondary),
+      labelSmall: b(11, FontWeight.w500, AppColors.foregroundTertiary),
     );
   }
 }

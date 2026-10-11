@@ -1,8 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:siaga_tani/controllers/auth_controller.dart';
+
 import '../core/theme/app_theme.dart';
+import '../core/utils/validators.dart';
+import '../widgets/common/app_back_button.dart';
+import '../widgets/common/app_button.dart';
+import '../widgets/common/app_text_field.dart';
+import '../widgets/common/error_banner.dart';
+import '../widgets/common/password_strength.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -12,224 +19,254 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
-  final AuthController authController = Get.find<AuthController>();
+  final AuthController _auth = Get.find<AuthController>();
 
-  final TextEditingController nameCtrl = TextEditingController();
-  final TextEditingController emailCtrl = TextEditingController();
-  final TextEditingController passCtrl = TextEditingController();
+  final _nameCtrl = TextEditingController();
+  final _emailCtrl = TextEditingController();
+  final _passCtrl = TextEditingController();
+  final _nameFocus = FocusNode();
+  final _emailFocus = FocusNode();
+  final _passFocus = FocusNode();
 
-  bool _isPasswordVisible = false;
+  String? _nameError;
+  String? _emailError;
+  String? _passError;
+  AuthFailure? _failure;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameFocus.addListener(() {
+      if (!_nameFocus.hasFocus) _validate(name: true);
+    });
+    _emailFocus.addListener(() {
+      if (!_emailFocus.hasFocus) _validate(email: true);
+    });
+    _passFocus.addListener(() {
+      if (!_passFocus.hasFocus) _validate(pass: true);
+    });
+  }
+
+  @override
+  void dispose() {
+    _nameCtrl.dispose();
+    _emailCtrl.dispose();
+    _passCtrl.dispose();
+    _nameFocus.dispose();
+    _emailFocus.dispose();
+    _passFocus.dispose();
+    super.dispose();
+  }
+
+  void _validate({bool name = false, bool email = false, bool pass = false}) {
+    setState(() {
+      if (name && (_nameCtrl.text.isNotEmpty || _nameError != null)) {
+        _nameError = Validators.name(_nameCtrl.text);
+      }
+      if (email && (_emailCtrl.text.isNotEmpty || _emailError != null)) {
+        _emailError = Validators.email(_emailCtrl.text);
+      }
+      if (pass && (_passCtrl.text.isNotEmpty || _passError != null)) {
+        _passError = Validators.newPassword(_passCtrl.text);
+      }
+    });
+  }
+
+  Future<void> _submit() async {
+    final nameError = Validators.name(_nameCtrl.text);
+    final emailError = Validators.email(_emailCtrl.text);
+    final passError = Validators.newPassword(_passCtrl.text);
+    setState(() {
+      _nameError = nameError;
+      _emailError = emailError;
+      _passError = passError;
+      _failure = null;
+    });
+
+    if (nameError != null) {
+      _nameFocus.requestFocus();
+      return;
+    }
+    if (emailError != null) {
+      _emailFocus.requestFocus();
+      return;
+    }
+    if (passError != null) {
+      _passFocus.requestFocus();
+      return;
+    }
+
+    FocusScope.of(context).unfocus();
+    final failure = await _auth.register(
+      _nameCtrl.text.trim(),
+      _emailCtrl.text.trim(),
+      _passCtrl.text.trim(),
+    );
+    if (mounted && failure != null) setState(() => _failure = failure);
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+        child: Obx(() {
+          final loading = _auth.isLoading.value;
+          return Column(
             children: [
-              // Back Button
-              GestureDetector(
-                onTap: () => Get.back(),
-                child: Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[100],
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(Icons.arrow_back, color: Colors.black87),
-                ),
-              ),
-
-              const SizedBox(height: 30),
-
-              Text(
-                "Buat Akun Baru",
-                style: GoogleFonts.poppins(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textDark,
-                ),
-              ),
-              Text(
-                "Bergabunglah dengan komunitas petani modern.",
-                style: GoogleFonts.poppins(
-                  fontSize: 14,
-                  color: Colors.grey[600],
-                ),
-              ),
-
-              const SizedBox(height: 30),
-
-              // Nama Lengkap
-              _buildLabel("Nama Lengkap"),
-              _buildTextField(
-                controller: nameCtrl,
-                hint: "Nama Panggilan Anda",
-                icon: Icons.person_outline,
-              ),
-              const SizedBox(height: 20),
-
-              // Email
-              _buildLabel("Email"),
-              _buildTextField(
-                controller: emailCtrl,
-                hint: "contoh@email.com",
-                icon: Icons.email_outlined,
-              ),
-              const SizedBox(height: 20),
-
-              // Password
-              _buildLabel("Kata Sandi"),
-              _buildTextField(
-                controller: passCtrl,
-                hint: "Minimal 6 karakter",
-                icon: Icons.lock_outline,
-                isPassword: true,
-              ),
-
-              const SizedBox(height: 40),
-
-              // Button Register
-              SizedBox(
-                width: double.infinity,
-                height: 55,
-                child: Obx(
-                  () => ElevatedButton(
-                    onPressed: authController.isLoading.value
-                        ? null
-                        : () {
-                            // Ambil text dan bersihkan spasi di awal/akhir
-                            String name = nameCtrl.text.trim();
-                            String email = emailCtrl.text.trim();
-                            String pass = passCtrl.text.trim();
-
-                            // 1. VALIDASI: Data Kosong
-                            if (name.isEmpty || email.isEmpty || pass.isEmpty) {
-                              Get.snackbar(
-                                "Data Belum Lengkap",
-                                "Semua kolom wajib diisi ya!",
-                                backgroundColor: Colors.red.shade50,
-                                colorText: Colors.red,
-                                icon: const Icon(
-                                  Icons.error_outline,
-                                  color: Colors.red,
-                                ),
-                              );
-                              return; // Stop, jangan lanjut
-                            }
-
-                            // 2. VALIDASI: Format Email (Pakai GetUtils)
-                            if (!GetUtils.isEmail(email)) {
-                              Get.snackbar(
-                                "Email Tidak Valid",
-                                "Coba cek lagi emailnya (contoh: nama@email.com)",
-                                backgroundColor: Colors.orange.shade50,
-                                colorText: Colors.orange.shade900,
-                                icon: const Icon(
-                                  Icons.alternate_email,
-                                  color: Colors.orange,
-                                ),
-                              );
-                              return;
-                            }
-
-                            // 3. VALIDASI: Password (Firebase wajib minimal 6 karakter)
-                            if (pass.length < 6) {
-                              Get.snackbar(
-                                "Password Lemah",
-                                "Kata sandi minimal harus 6 karakter.",
-                                backgroundColor: Colors.orange.shade50,
-                                colorText: Colors.orange.shade900,
-                                icon: const Icon(
-                                  Icons.lock_outline,
-                                  color: Colors.orange,
-                                ),
-                              );
-                              return;
-                            }
-
-                            // Kalau semua lolos, baru panggil controller
-                            authController.register(name, email, pass);
-                          },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.textDark,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      elevation: 0,
-                    ),
-                    child: authController.isLoading.value
-                        ? const CircularProgressIndicator(color: Colors.white)
-                        : Text(
-                            "Daftar",
-                            style: GoogleFonts.poppins(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                  ),
-                ),
-              ),
+              Expanded(child: _buildForm(loading)),
+              _buildBottomBar(loading),
             ],
+          );
+        }),
+      ),
+    );
+  }
+
+  Widget _buildForm(bool loading) {
+    return SingleChildScrollView(
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+      padding: const EdgeInsets.fromLTRB(
+        AppSpace.screen,
+        AppSpace.xl,
+        AppSpace.screen,
+        AppSpace.xl,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Align(
+            alignment: Alignment.centerLeft,
+            child: AppBackButton(onPressed: loading ? null : () => Get.back()),
           ),
-        ),
+          const SizedBox(height: AppSpace.xl),
+          Semantics(
+            header: true,
+            child: Text('Buat Akun Baru', style: AppText.heading()),
+          ),
+          const SizedBox(height: AppSpace.sm),
+          Text(
+            'Cukup tiga isian. Setelah itu Anda bisa langsung memakai aplikasi.',
+            style: AppText.body(),
+          ),
+          const SizedBox(height: AppSpace.xl),
+          AutofillGroup(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                AppTextField(
+                  label: 'Nama Panggilan',
+                  hint: 'Contoh: Budi',
+                  helper: 'Nama ini dipakai untuk menyapa Anda.',
+                  controller: _nameCtrl,
+                  focusNode: _nameFocus,
+                  enabled: !loading,
+                  errorText: _nameError,
+                  keyboardType: TextInputType.name,
+                  textCapitalization: TextCapitalization.words,
+                  textInputAction: TextInputAction.next,
+                  autofillHints: const [AutofillHints.nickname],
+                  onChanged: (_) {
+                    if (_nameError != null) setState(() => _nameError = null);
+                  },
+                  onSubmitted: (_) => _emailFocus.requestFocus(),
+                ),
+                const SizedBox(height: AppSpace.xl),
+                AppTextField(
+                  label: 'Email',
+                  hint: 'contoh@email.com',
+                  controller: _emailCtrl,
+                  focusNode: _emailFocus,
+                  enabled: !loading,
+                  errorText: _emailError,
+                  keyboardType: TextInputType.emailAddress,
+                  textInputAction: TextInputAction.next,
+                  autofillHints: const [AutofillHints.email],
+                  onChanged: (_) {
+                    if (_emailError != null || _failure != null) {
+                      setState(() {
+                        _emailError = null;
+                        _failure = null;
+                      });
+                    }
+                  },
+                  onSubmitted: (_) => _passFocus.requestFocus(),
+                ),
+                const SizedBox(height: AppSpace.xl),
+                AppTextField(
+                  label: 'Kata Sandi',
+                  hint: 'Minimal 6 karakter',
+                  helper:
+                      'Gunakan minimal 6 karakter. Kombinasi huruf dan angka lebih aman.',
+                  controller: _passCtrl,
+                  focusNode: _passFocus,
+                  enabled: !loading,
+                  isPassword: true,
+                  errorText: _passError,
+                  keyboardType: TextInputType.visiblePassword,
+                  textInputAction: TextInputAction.done,
+                  autofillHints: const [AutofillHints.newPassword],
+                  onChanged: (_) => setState(() => _passError = null),
+                  onSubmitted: (_) {
+                    TextInput.finishAutofillContext();
+                    _submit();
+                  },
+                ),
+                PasswordStrength(password: _passCtrl.text),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildLabel(String text) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Text(
-        text,
-        style: GoogleFonts.poppins(
-          fontSize: 14,
-          fontWeight: FontWeight.w500,
-          color: AppColors.textDark,
-        ),
-      ),
-    );
-  }
+  Widget _buildBottomBar(bool loading) {
+    final keyboardOpen = MediaQuery.of(context).viewInsets.bottom > 0;
 
-  Widget _buildTextField({
-    required TextEditingController controller,
-    required String hint,
-    required IconData icon,
-    bool isPassword = false,
-  }) {
     return Container(
-      decoration: BoxDecoration(
-        color: Colors.grey[50],
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade200),
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(
+        AppSpace.screen,
+        AppSpace.md,
+        AppSpace.screen,
+        AppSpace.sm,
       ),
-      child: TextField(
-        controller: controller,
-        obscureText: isPassword && !_isPasswordVisible,
-        decoration: InputDecoration(
-          hintText: hint,
-          hintStyle: GoogleFonts.poppins(color: Colors.grey[400]),
-          prefixIcon: Icon(icon, color: Colors.grey[400], size: 20),
-          suffixIcon: isPassword
-              ? IconButton(
-                  icon: Icon(
-                    _isPasswordVisible
-                        ? Icons.visibility
-                        : Icons.visibility_off,
-                    color: Colors.grey[400],
-                    size: 20,
+      decoration: const BoxDecoration(color: AppColors.surfacePrimary),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (_failure != null) ...[
+            ErrorBanner(
+              message: _failure!.message,
+              onDismiss: () => setState(() => _failure = null),
+              actionLabel: _failure!.emailAlreadyInUse ? 'Masuk' : null,
+              onAction: _failure!.emailAlreadyInUse ? () => Get.back() : null,
+            ),
+            const SizedBox(height: AppSpace.md),
+          ],
+          AppButton(label: 'Daftar', loading: loading, onPressed: _submit),
+          if (!keyboardOpen)
+            Wrap(
+              alignment: WrapAlignment.center,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                Text('Sudah punya akun? ', style: AppText.body(size: 14)),
+                TextButton(
+                  onPressed: loading ? null : () => Get.back(),
+                  child: Text(
+                    'Masuk',
+                    style: AppText.body(
+                      size: 14,
+                      weight: FontWeight.w700,
+                      color: AppColors.accentPrimary,
+                    ),
                   ),
-                  onPressed: () =>
-                      setState(() => _isPasswordVisible = !_isPasswordVisible),
-                )
-              : null,
-          border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(vertical: 15),
-        ),
+                ),
+              ],
+            )
+          else
+            const SizedBox(height: AppSpace.sm),
+        ],
       ),
     );
   }

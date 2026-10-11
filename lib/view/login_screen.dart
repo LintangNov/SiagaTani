@@ -1,9 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:siaga_tani/controllers/auth_controller.dart';
 import 'package:siaga_tani/view/register_screen.dart';
+
 import '../core/theme/app_theme.dart';
+import '../core/utils/validators.dart';
+import '../widgets/common/app_button.dart';
+import '../widgets/common/app_text_field.dart';
+import '../widgets/common/error_banner.dart';
+import '../widgets/common/google_button.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -13,247 +19,233 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final AuthController authController = Get.find<AuthController>();
-  final TextEditingController emailCtrl = TextEditingController();
-  final TextEditingController passCtrl = TextEditingController();
-  bool _isPasswordVisible = false;
+  final AuthController _auth = Get.find<AuthController>();
+
+  final _emailCtrl = TextEditingController();
+  final _passCtrl = TextEditingController();
+  final _emailFocus = FocusNode();
+  final _passFocus = FocusNode();
+
+  String? _emailError;
+  String? _passError;
+  AuthFailure? _failure;
+
+  @override
+  void initState() {
+    super.initState();
+    _emailFocus.addListener(() {
+      if (!_emailFocus.hasFocus) _validateEmail();
+    });
+    _passFocus.addListener(() {
+      if (!_passFocus.hasFocus) _validatePassword();
+    });
+  }
+
+  @override
+  void dispose() {
+    _emailCtrl.dispose();
+    _passCtrl.dispose();
+    _emailFocus.dispose();
+    _passFocus.dispose();
+    super.dispose();
+  }
+
+  void _validateEmail() {
+    if (_emailCtrl.text.isEmpty && _emailError == null) return;
+    setState(() => _emailError = Validators.email(_emailCtrl.text));
+  }
+
+  void _validatePassword() {
+    if (_passCtrl.text.isEmpty && _passError == null) return;
+    setState(() => _passError = Validators.passwordRequired(_passCtrl.text));
+  }
+
+  Future<void> _submit() async {
+    final emailError = Validators.email(_emailCtrl.text);
+    final passError = Validators.passwordRequired(_passCtrl.text);
+    setState(() {
+      _emailError = emailError;
+      _passError = passError;
+      _failure = null;
+    });
+
+    if (emailError != null) {
+      _emailFocus.requestFocus();
+      return;
+    }
+    if (passError != null) {
+      _passFocus.requestFocus();
+      return;
+    }
+
+    FocusScope.of(context).unfocus();
+    final failure = await _auth.login(
+      _emailCtrl.text.trim(),
+      _passCtrl.text.trim(),
+    );
+    if (mounted && failure != null) setState(() => _failure = failure);
+  }
+
+  Future<void> _googleSignIn() async {
+    setState(() => _failure = null);
+    final failure = await _auth.googleSignIn();
+    if (mounted && failure != null) setState(() => _failure = failure);
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+        child: CustomScrollView(
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+          slivers: [
+            SliverFillRemaining(
+              hasScrollBody: false,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpace.screen,
+                  AppSpace.xxxl,
+                  AppSpace.screen,
+                  AppSpace.xxl,
+                ),
+                child: Obx(() => _buildContent(_auth.isLoading.value)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildContent(bool loading) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Semantics(
+          header: true,
+          child: Text('Masuk Akun', style: AppText.heading()),
+        ),
+        const SizedBox(height: AppSpace.sm),
+        Text(
+          'Selamat datang kembali,\nPejuang Pangan!',
+          style: AppText.body(),
+        ),
+        const SizedBox(height: AppSpace.xl),
+        AutofillGroup(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              GestureDetector(
-                onTap: () => Get.back(),
-                child: Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[100],
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(Icons.arrow_back, color: Colors.black87),
-                ),
+              AppTextField(
+                label: 'Email',
+                hint: 'contoh@email.com',
+                controller: _emailCtrl,
+                focusNode: _emailFocus,
+                enabled: !loading,
+                errorText: _emailError,
+                keyboardType: TextInputType.emailAddress,
+                textInputAction: TextInputAction.next,
+                autofillHints: const [AutofillHints.email],
+                onChanged: (_) {
+                  if (_emailError != null || _failure != null) {
+                    setState(() {
+                      _emailError = null;
+                      _failure = null;
+                    });
+                  }
+                },
+                onSubmitted: (_) => _passFocus.requestFocus(),
               ),
-              const SizedBox(height: 40),
-              Text(
-                "Masuk Akun",
-                style: GoogleFonts.poppins(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textDark,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              Text(
-                "Selamat datang kembali, Pejuang Pangan!",
-                style: GoogleFonts.poppins(
-                  fontSize: 14,
-                  color: Colors.grey[600],
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 40),
-              _buildLabel("Email"),
-              _buildTextField(
-                controller: emailCtrl,
-                hint: "contoh@email.com",
-                icon: Icons.email_outlined,
-              ),
-              const SizedBox(height: 20),
-              _buildLabel("Kata Sandi"),
-              _buildTextField(
-                controller: passCtrl,
-                hint: "Masukkan kata sandi",
-                icon: Icons.lock_outline,
+              const SizedBox(height: AppSpace.xl),
+              AppTextField(
+                label: 'Kata Sandi',
+                hint: 'Masukkan kata sandi',
+                controller: _passCtrl,
+                focusNode: _passFocus,
+                enabled: !loading,
                 isPassword: true,
-              ),
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton(
-                  onPressed: () {},
-                  child: Text(
-                    "Lupa Kata Sandi?",
-                    style: GoogleFonts.poppins(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-              SizedBox(
-                width: double.infinity,
-                height: 55,
-                child: Obx(
-                  () => ElevatedButton(
-                    onPressed: authController.isLoading.value
-                        ? null
-                        : () {
-                            if (emailCtrl.text.isEmpty ||
-                                passCtrl.text.isEmpty) {
-                              Get.snackbar(
-                                "Error",
-                                "Email dan Password wajib diisi",
-                              );
-                              return;
-                            }
-                            authController.login(
-                              emailCtrl.text.trim(),
-                              passCtrl.text.trim(),
-                            );
-                          },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.textDark,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      elevation: 0,
-                    ),
-                    child: authController.isLoading.value
-                        ? const CircularProgressIndicator(color: Colors.white)
-                        : Text(
-                            "Masuk",
-                            style: GoogleFonts.poppins(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 30),
-              Row(
-                children: [
-                  Expanded(child: Divider(color: Colors.grey[300])),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 10),
-                    child: Text(
-                      "atau",
-                      style: GoogleFonts.poppins(
-                        color: Colors.grey[500],
-                        fontSize: 12,
-                      ),
-                    ),
-                  ),
-                  Expanded(child: Divider(color: Colors.grey[300])),
-                ],
-              ),
-              const SizedBox(height: 30),
-              SizedBox(
-                width: double.infinity,
-                height: 55,
-                child: OutlinedButton(
-                  onPressed: () => authController.googleSignIn(),
-                  style: OutlinedButton.styleFrom(
-                    side: BorderSide(color: Colors.grey.shade300),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Image.asset("assets/icons/google.png", height: 24),
-                      const SizedBox(width: 10),
-                      Text(
-                        "Masuk dengan Google",
-                        style: GoogleFonts.poppins(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.black87,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 40),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    "Belum punya akun? ",
-                    style: GoogleFonts.poppins(color: Colors.grey[600]),
-                  ),
-                  GestureDetector(
-                    onTap: () => Get.to(() => const RegisterScreen()),
-                    child: Text(
-                      "Daftar Sekarang",
-                      style: GoogleFonts.poppins(
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ],
+                errorText: _passError,
+                keyboardType: TextInputType.visiblePassword,
+                textInputAction: TextInputAction.done,
+                autofillHints: const [AutofillHints.password],
+                onChanged: (_) {
+                  if (_passError != null || _failure != null) {
+                    setState(() {
+                      _passError = null;
+                      _failure = null;
+                    });
+                  }
+                },
+                onSubmitted: (_) {
+                  TextInput.finishAutofillContext();
+                  _submit();
+                },
               ),
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildLabel(String text) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Text(
-        text,
-        style: GoogleFonts.poppins(
-          fontSize: 14,
-          fontWeight: FontWeight.w500,
-          color: AppColors.textDark,
+        Align(
+          alignment: Alignment.centerRight,
+          child: TextButton(
+            onPressed: loading ? null : () {},
+            child: const Text('Lupa Kata Sandi?'),
+          ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildTextField({
-    required TextEditingController controller,
-    required String hint,
-    required IconData icon,
-    bool isPassword = false,
-  }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.grey[50],
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade200),
-      ),
-      child: TextField(
-        controller: controller,
-        obscureText: isPassword && !_isPasswordVisible,
-        style: GoogleFonts.poppins(fontSize: 15),
-        decoration: InputDecoration(
-          hintText: hint,
-          hintStyle: GoogleFonts.poppins(color: Colors.grey[400]),
-          prefixIcon: Icon(icon, color: Colors.grey[400], size: 20),
-          suffixIcon: isPassword
-              ? IconButton(
-                  icon: Icon(
-                    _isPasswordVisible
-                        ? Icons.visibility
-                        : Icons.visibility_off,
-                    color: Colors.grey[400],
-                    size: 20,
+        if (_failure != null) ...[
+          ErrorBanner(
+            message: _failure!.message,
+            onDismiss: () => setState(() => _failure = null),
+          ),
+          const SizedBox(height: AppSpace.lg),
+        ],
+        AppButton(label: 'Masuk', loading: loading, onPressed: _submit),
+        const SizedBox(height: AppSpace.xl),
+        Row(
+          children: [
+            const Expanded(
+              child: Divider(color: AppColors.borderStrong, thickness: 1),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpace.lg),
+              child: Text(
+                'atau',
+                style: AppText.body(
+                  size: 14,
+                  color: AppColors.foregroundTertiary,
+                ),
+              ),
+            ),
+            const Expanded(
+              child: Divider(color: AppColors.borderStrong, thickness: 1),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpace.xl),
+        GoogleButton(onPressed: loading ? null : _googleSignIn),
+        const Spacer(),
+        const SizedBox(height: AppSpace.xl),
+        Center(
+          child: Wrap(
+            alignment: WrapAlignment.center,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              Text('Belum punya akun? ', style: AppText.body(size: 14)),
+              TextButton(
+                onPressed: loading
+                    ? null
+                    : () => Get.to(() => const RegisterScreen()),
+                child: Text(
+                  'Daftar Sekarang',
+                  style: AppText.body(
+                    size: 14,
+                    weight: FontWeight.w700,
+                    color: AppColors.accentPrimary,
                   ),
-                  onPressed: () {
-                    setState(() {
-                      _isPasswordVisible = !_isPasswordVisible;
-                    });
-                  },
-                )
-              : null,
-          border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(vertical: 15),
+                ),
+              ),
+            ],
+          ),
         ),
-      ),
+      ],
     );
   }
 }

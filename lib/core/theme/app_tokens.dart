@@ -46,7 +46,7 @@ class AppText {
   AppText._();
 
   static TextStyle heading({
-    double size = 26,
+    double size = 24,
     FontWeight weight = FontWeight.w700,
     Color color = AppColors.foregroundPrimary,
     double height = 1.2,
@@ -60,7 +60,7 @@ class AppText {
   );
 
   static TextStyle body({
-    double size = 18,
+    double size = 16,
     FontWeight weight = FontWeight.w400,
     Color color = AppColors.foregroundSecondary,
     double height = 1.5,
@@ -72,5 +72,5 @@ class AppText {
   );
 
   static TextStyle button({Color color = AppColors.onAccent}) =>
-      body(size: 18, weight: FontWeight.w600, color: color, height: 1.2);
+      body(size: 16, weight: FontWeight.w600, color: color, height: 1.2);
 }
