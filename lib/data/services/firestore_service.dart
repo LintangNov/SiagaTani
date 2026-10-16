@@ -38,6 +38,17 @@ class FirestoreService {
     });
   }
 
+  Future<void> updateFarmSpray(
+    String id,
+    String lastPesticideTime,
+    bool recentlySprayed,
+  ) async {
+    await _farmsCollection.doc(id).update({
+      'lastPesticideTime': lastPesticideTime,
+      'recentlySprayedPesticide': recentlySprayed,
+    });
+  }
+
   Future<void> deleteFarm(String id) async {
     await _farmsCollection.doc(id).delete();
   }

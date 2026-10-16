@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../core/theme/app_theme.dart';
 
-/// Tombol ikon bulat 56dp tanpa teks dan tanpa garis tepi (Button/Icon).
+/// Tombol ikon bulat dengan lingkar putih — ukuran kompak best-practice.
+/// Lingkar putih 36dp, ikon default 20dp. Dipakai di AppBar dan header.
 class IconCircleButton extends StatelessWidget {
   const IconCircleButton({
     super.key,
@@ -22,17 +23,17 @@ class IconCircleButton extends StatelessWidget {
       label: semanticLabel,
       excludeSemantics: true,
       child: Material(
-        color: AppColors.surfaceCard,
+        color: Colors.white,
         shape: const CircleBorder(),
-        elevation: 3,
+        elevation: 1.5,
         shadowColor: AppColors.shadow,
         child: InkWell(
           customBorder: const CircleBorder(),
           onTap: onPressed,
           child: SizedBox(
-            width: AppSize.touch,
-            height: AppSize.touch,
-            child: Icon(icon, size: 28, color: AppColors.foregroundPrimary),
+            width: 36,
+            height: 36,
+            child: Icon(icon, size: 20, color: AppColors.foregroundPrimary),
           ),
         ),
       ),

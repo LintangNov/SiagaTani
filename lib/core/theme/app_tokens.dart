@@ -34,6 +34,15 @@ class AppRadius {
   );
 }
 
+class AppShadow {
+  AppShadow._();
+
+  /// Bayangan halus kartu putih di atas surface.primary (tanpa stroke).
+  static const List<BoxShadow> card = [
+    BoxShadow(color: Color(0x1F1B3A28), blurRadius: 8, offset: Offset(0, 2)),
+  ];
+}
+
 class AppSize {
   AppSize._();
 

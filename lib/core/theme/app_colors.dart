@@ -39,6 +39,13 @@ class AppColors {
     colors: [Color(0xFF3F8A63), Color(0xFF215A40)],
   );
 
+  /// Latar kartu cuaca per kondisi. Kontras teks: cerah 6.97 (putih),
+  /// berawan 6.38 (putih), hujan 9.33 (putih), terik 7.54 (foregroundPrimary).
+  static const Color weatherClear = Color(0xFF1E5A9E);
+  static const Color weatherCloudy = Color(0xFF4F6173);
+  static const Color weatherRain = Color(0xFF38485C);
+  static const Color weatherHot = Color(0xFFF5C242);
+
   // ============ ALIAS NAMA LAMA ============
   static const Color primary = accentPrimary;
   static const Color primaryLight = surfaceSecondary;

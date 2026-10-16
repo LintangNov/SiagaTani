@@ -4,7 +4,7 @@ import '../../core/theme/app_theme.dart';
 
 enum AppButtonVariant { primary, secondary, danger }
 
-/// Tombol standar 56dp, radius 20, lebar penuh.
+/// Tombol standar 56dp berbentuk pil, lebar penuh.
 /// Primary = isi hijau, Secondary = garis hijau, Danger = isi merah.
 class AppButton extends StatelessWidget {
   const AppButton({
@@ -75,7 +75,7 @@ class AppButton extends StatelessWidget {
       textStyle: WidgetStatePropertyAll(AppText.button(color: fg)),
       shape: WidgetStatePropertyAll(
         RoundedRectangleBorder(
-          borderRadius: AppRadius.buttonBorder,
+          borderRadius: BorderRadius.circular(AppRadius.full),
           side: isSecondary
               ? const BorderSide(color: AppColors.accentPrimary, width: 2)
               : BorderSide.none,

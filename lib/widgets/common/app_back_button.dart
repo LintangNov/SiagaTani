@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import '../../core/theme/app_theme.dart';
+import 'icon_circle_button.dart';
 
-/// Tombol kembali persegi rounded 56x56.
+/// Tombol kembali bulat 56x56 (Button/Icon).
 class AppBackButton extends StatelessWidget {
   const AppBackButton({super.key, this.onPressed});
 
@@ -11,27 +11,10 @@ class AppBackButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Semantics(
-      button: true,
-      label: 'Kembali',
-      excludeSemantics: true,
-      child: Material(
-        color: AppColors.surfaceCard,
-        borderRadius: AppRadius.buttonBorder,
-        child: InkWell(
-          borderRadius: AppRadius.buttonBorder,
-          onTap: onPressed ?? () => Get.back(),
-          child: const SizedBox(
-            width: AppSize.touch,
-            height: AppSize.touch,
-            child: Icon(
-              Icons.arrow_back,
-              size: 28,
-              color: AppColors.foregroundPrimary,
-            ),
-          ),
-        ),
-      ),
+    return IconCircleButton(
+      icon: Icons.arrow_back,
+      semanticLabel: 'Kembali',
+      onPressed: onPressed ?? () => Get.back(),
     );
   }
 }

@@ -30,9 +30,7 @@ class AppTheme {
       outlineVariant: AppColors.borderSubtle,
     );
 
-    final buttonShape = RoundedRectangleBorder(
-      borderRadius: AppRadius.buttonBorder,
-    );
+    const buttonShape = StadiumBorder();
     const buttonSize = Size.fromHeight(AppSize.touch);
 
     return ThemeData(

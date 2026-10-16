@@ -21,7 +21,7 @@ class _MainScreenState extends State<MainScreen> {
 
   List<Widget> _buildScreens() {
     return [
-      const DashboardScreen(),
+      DashboardScreen(onSeeAllFarms: () => _controller.jumpToTab(1)),
       const MyFarmScreen(),
       const EducationScreen(),
       const ProfileScreen(),

@@ -1,271 +1,297 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:get/get.dart';
 import 'package:latlong2/latlong.dart';
-import '../controllers/dashboard_controller.dart';
-import '../data/services/firestore_service.dart';
-import '../data/models/farm_model.dart';
-import 'farm_detail_screen.dart';
-import '../core/theme/app_theme.dart';
 
-class MyFarmScreen extends StatelessWidget {
+import '../controllers/dashboard_controller.dart';
+import '../core/theme/app_theme.dart';
+import '../data/models/farm_model.dart';
+import '../data/models/farm_risk_status.dart';
+import '../data/services/firestore_service.dart';
+import 'farm_detail_screen.dart';
+import 'question.dart';
+
+class MyFarmScreen extends StatefulWidget {
   const MyFarmScreen({super.key});
 
   @override
+  State<MyFarmScreen> createState() => _MyFarmScreenState();
+}
+
+class _MyFarmScreenState extends State<MyFarmScreen>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _fabAnimController;
+  late Animation<double> _expandAnimation;
+  bool _isFabOpen = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _fabAnimController = AnimationController(
+      value: _isFabOpen ? 1.0 : 0.0,
+      duration: const Duration(milliseconds: 250),
+      vsync: this,
+    );
+    _expandAnimation = CurvedAnimation(
+      curve: Curves.fastOutSlowIn,
+      reverseCurve: Curves.easeOutQuad,
+      parent: _fabAnimController,
+    );
+  }
+
+  @override
+  void dispose() {
+    _fabAnimController.dispose();
+    super.dispose();
+  }
+
+  void _toggleFab() {
+    setState(() {
+      _isFabOpen = !_isFabOpen;
+      if (_isFabOpen) {
+        _fabAnimController.forward();
+      } else {
+        _fabAnimController.reverse();
+      }
+    });
+  }
+
+  void _closeFab() {
+    if (_isFabOpen) {
+      setState(() {
+        _isFabOpen = false;
+        _fabAnimController.reverse();
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final DashboardController controller = Get.find<DashboardController>();
+    final DashboardController controller =
+        Get.isRegistered<DashboardController>()
+        ? Get.find<DashboardController>()
+        : Get.put(DashboardController());
     final FirestoreService firestoreService = FirestoreService();
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        title: Text(
-          "Lahan Saya",
-          style: GoogleFonts.poppins(
-            color: AppColors.textDark,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        centerTitle: true,
-        automaticallyImplyLeading: false,
-      ),
-      body: StreamBuilder<List<FarmModel>>(
-        stream: controller.farmListStream,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(
-              child: CircularProgressIndicator(color: AppColors.primary),
-            );
-          }
-
-          if (snapshot.hasError) {
-            return Center(
-              child: Text("Gagal memuat data.", style: GoogleFonts.poppins()),
-            );
-          }
-
-          if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: Colors.green.shade50,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      Icons.spa_outlined,
-                      size: 60,
-                      color: AppColors.tertiary,
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  Text(
-                    "Belum ada lahan.",
-                    style: GoogleFonts.poppins(
-                      color: AppColors.textDark,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                  ),
-                  Text(
-                    "Tambah lahan pertamamu di menu Beranda.",
-                    style: GoogleFonts.poppins(color: Colors.grey),
-                  ),
-                ],
-              ),
-            );
-          }
-
-          final farms = snapshot.data!;
-
-          return ListView.separated(
-            padding: const EdgeInsets.all(20),
-            itemCount: farms.length,
-            separatorBuilder: (ctx, i) => const SizedBox(height: 20),
-            itemBuilder: (context, index) {
-              final farm = farms[index];
-              return _buildFarmCard(context, farm, firestoreService);
-            },
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _buildFarmCard(
-    BuildContext context,
-    FarmModel farm,
-    FirestoreService service,
-  ) {
-    return GestureDetector(
-      onTap: () => Get.to(() => FarmDetailScreen(), arguments: farm),
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 15,
-              offset: const Offset(0, 5),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            ClipRRect(
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(20),
-              ),
-              child: SizedBox(
-                height: 150,
-                width: double.infinity,
-                child: Stack(
-                  children: [
-                    FlutterMap(
-                      options: MapOptions(
-                        initialCenter: LatLng(farm.latitude, farm.longitude),
-                        initialZoom: 15.0,
-                        interactionOptions: const InteractionOptions(
-                          flags: InteractiveFlag.none,
-                        ),
-                      ),
-                      children: [
-                        TileLayer(
-                          urlTemplate:
-                              'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                          userAgentPackageName: 'com.example.siaga_tani',
-                        ),
-                        MarkerLayer(
-                          markers: [
-                            Marker(
-                              point: LatLng(farm.latitude, farm.longitude),
-                              child: const Icon(
-                                Icons.location_on,
-                                color: Colors.red,
-                                size: 35,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                    Container(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.center,
-                          colors: [
-                            Colors.black.withOpacity(0.2),
-                            Colors.transparent,
-                          ],
-                        ),
-                      ),
-                    ),
-                    Positioned(
-                      top: 10,
-                      right: 10,
-                      child: Material(
-                        color: Colors.white,
-                        shape: const CircleBorder(),
-                        elevation: 2,
-                        child: InkWell(
-                          customBorder: const CircleBorder(),
-                          onTap: () =>
-                              _showOptionsDialog(context, farm, service),
-                          child: const Padding(
-                            padding: EdgeInsets.all(6),
-                            child: Icon(
-                              Icons.more_horiz,
-                              size: 20,
-                              color: Colors.black87,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        child: Text(
-                          farm.farmName,
-                          style: GoogleFonts.poppins(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.textDark,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      Text(
-                        farm.landSize,
-                        style: GoogleFonts.poppins(
-                          fontSize: 12,
-                          color: Colors.grey[600],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  const Divider(height: 1, color: Colors.black12),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      _buildInfoChip(Icons.grass, farm.variety, Colors.green),
-                      const SizedBox(width: 8),
-                      _buildInfoChip(
-                        Icons.timeline,
-                        farm.currentPhase,
-                        Colors.orange,
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildInfoChip(IconData icon, String label, MaterialColor color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: color.shade50,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.shade100),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
+      backgroundColor: AppColors.surfacePrimary,
+      body: Stack(
         children: [
-          Icon(icon, size: 14, color: color.shade700),
-          const SizedBox(width: 6),
-          Text(
-            label,
-            style: GoogleFonts.poppins(
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              color: color.shade800,
+          SafeArea(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // ── Header "Lahan Saya" (Margin horizontal 24 sama rata dengan dashboard) ──
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpace.screen,
+                    AppSpace.lg,
+                    AppSpace.screen,
+                    AppSpace.sm,
+                  ),
+                  child: Text(
+                    'Lahan Saya',
+                    style: AppText.heading(
+                      size: 24,
+                      weight: FontWeight.w700,
+                      color: AppColors.foregroundPrimary,
+                    ),
+                  ),
+                ),
+
+                // ── Daftar Kartu Lahan (Padding horizontal 24) ────────
+                Expanded(
+                  child: StreamBuilder<List<FarmModel>>(
+                    stream: firestoreService.getFarms(),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const Center(
+                          child: CircularProgressIndicator(
+                            color: AppColors.accentPrimary,
+                            strokeWidth: 2.5,
+                          ),
+                        );
+                      }
+
+                      if (snapshot.hasError) {
+                        return Center(
+                          child: Text(
+                            'Gagal memuat data lahan.',
+                            style: AppText.body(
+                              size: 14,
+                              color: AppColors.foregroundSecondary,
+                            ),
+                          ),
+                        );
+                      }
+
+                      final farms = snapshot.data ?? [];
+
+                      if (farms.isEmpty) {
+                        return Center(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: AppSpace.screen,
+                            ),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(18),
+                                  decoration: const BoxDecoration(
+                                    color: AppColors.surfaceSecondary,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(
+                                    Icons.spa_outlined,
+                                    size: 42,
+                                    color: AppColors.accentPrimary,
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
+                                Text(
+                                  'Belum ada lahan',
+                                  style: AppText.heading(
+                                    size: 16,
+                                    weight: FontWeight.w700,
+                                    color: AppColors.foregroundPrimary,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  'Tekan tombol + di pojok kanan bawah untuk menambah lahan.',
+                                  textAlign: TextAlign.center,
+                                  style: AppText.body(
+                                    size: 13,
+                                    color: AppColors.foregroundSecondary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      }
+
+                      return ListView.separated(
+                        padding: const EdgeInsets.fromLTRB(
+                          AppSpace.screen,
+                          AppSpace.xs,
+                          AppSpace.screen,
+                          80,
+                        ),
+                        itemCount: farms.length,
+                        separatorBuilder: (_, __) => const SizedBox(height: 20),
+                        itemBuilder: (context, index) {
+                          final farm = farms[index];
+                          return Obx(() {
+                            final risk =
+                                controller.farmRisks[farm.id] ??
+                                const FarmRiskStatus.safe();
+                            return _buildFarmCard(context, farm, risk);
+                          });
+                        },
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // ── Backdrop gelap saat Speed-Dial terbuka ─────────────────
+          if (_isFabOpen)
+            Positioned.fill(
+              child: GestureDetector(
+                onTap: _closeFab,
+                behavior: HitTestBehavior.opaque,
+                child: Container(color: Colors.black.withValues(alpha: 0.25)),
+              ),
+            ),
+
+          // ── Floating Action Button (Right 24 agar sejajar dengan kartu) ──
+          Positioned(
+            right: AppSpace.screen,
+            bottom: 24,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                // Menu Pop-up ke atas
+                ScaleTransition(
+                  scale: _expandAnimation,
+                  alignment: Alignment.bottomRight,
+                  child: FadeTransition(
+                    opacity: _expandAnimation,
+                    child: Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: Material(
+                        elevation: 4,
+                        borderRadius: BorderRadius.circular(24),
+                        color: Colors.white,
+                        shadowColor: Colors.black.withValues(alpha: 0.2),
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(24),
+                          onTap: () {
+                            _closeFab();
+                            Get.to(() => const QuestionnaireScreen());
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 10,
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  Icons.add_location_alt_outlined,
+                                  size: 18,
+                                  color: AppColors.accentPrimary,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Tambah Lahan Baru',
+                                  style: AppText.body(
+                                    size: 13,
+                                    weight: FontWeight.w700,
+                                    color: AppColors.foregroundPrimary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+
+                // Tombol Bulat Kecil Utama (Plus Icon)
+                Material(
+                  elevation: 4,
+                  shape: const CircleBorder(),
+                  color: AppColors.accentPrimary,
+                  shadowColor: Colors.black.withValues(alpha: 0.25),
+                  child: InkWell(
+                    customBorder: const CircleBorder(),
+                    onTap: _toggleFab,
+                    child: Container(
+                      width: 48,
+                      height: 48,
+                      alignment: Alignment.center,
+                      child: AnimatedRotation(
+                        turns: _isFabOpen ? 0.125 : 0.0,
+                        duration: const Duration(milliseconds: 250),
+                        child: const Icon(
+                          Icons.add,
+                          color: Colors.white,
+                          size: 24,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -273,285 +299,237 @@ class MyFarmScreen extends StatelessWidget {
     );
   }
 
-  void _showOptionsDialog(
+  // ── Kartu Lahan Hemat Tempat (Pojok atas bar kotak, bawah rounded) ──
+  Widget _buildFarmCard(
     BuildContext context,
     FarmModel farm,
-    FirestoreService service,
+    FarmRiskStatus risk,
   ) {
-    Get.bottomSheet(
-      Container(
-        padding: const EdgeInsets.all(20),
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Colors.grey[300],
-                borderRadius: BorderRadius.circular(2),
+    final (
+      Color bannerBgColor,
+      Color statusFgColor,
+      IconData statusIcon,
+      String statusText,
+    ) = switch (risk.state) {
+      FarmRiskState.safe => (
+        const Color(0xFF28543B),
+        Colors.white,
+        Icons.check_circle_outline_rounded,
+        'Aman hari ini',
+      ),
+      FarmRiskState.watch => (
+        const Color(0xFFFDE6BD),
+        const Color(0xFF8B5E34),
+        Icons.warning_amber_rounded,
+        risk.pestName != null
+            ? 'Waspada: ${risk.pestName} ${risk.percentText ?? ''}'
+            : 'Waspada: Thrips 45%',
+      ),
+      FarmRiskState.danger => (
+        const Color(0xFFFCE4E2),
+        const Color(0xFFB3261E),
+        Icons.error_outline_rounded,
+        risk.pestName != null
+            ? 'Bahaya: ${risk.pestName} ${risk.percentText ?? ''}'
+            : 'Bahaya',
+      ),
+      FarmRiskState.loading => (
+        const Color(0xFF28543B),
+        Colors.white,
+        Icons.hourglass_empty_rounded,
+        'Memeriksa...',
+      ),
+      FarmRiskState.error => (
+        const Color(0xFFFDE6BD),
+        const Color(0xFF8B5E34),
+        Icons.cloud_off_rounded,
+        'Belum bisa dicek',
+      ),
+    };
+
+    return Container(
+      decoration: BoxDecoration(
+        color: bannerBgColor,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: AppShadow.card,
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: () => Get.to(() => const FarmDetailScreen(), arguments: farm),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // 1. Peta / Visual Lokasi (Top: rounded 16)
+              ClipRRect(
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(16),
+                ),
+                child: _buildMapPreview(farm),
               ),
-            ),
-            const SizedBox(height: 20),
-            ListTile(
-              leading: Container(
-                padding: const EdgeInsets.all(8),
+
+              // 2. Info Lahan (Putih dengan sudut bawah rounded 16)
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 12,
+                ),
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.vertical(
+                    bottom: Radius.circular(16),
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      farm.farmName,
+                      style: AppText.heading(
+                        size: 18,
+                        weight: FontWeight.w700,
+                        color: AppColors.foregroundPrimary,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 4,
+                      children: [
+                        if (farm.variety.isNotEmpty) _buildChip(farm.variety),
+                        _buildChip(
+                          _formatCropStage(farm.cropStage, farm.currentPhase),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+
+              // 3. Baris Status / Warning (Pojok atas KOTAK, pojok bawah ROUNDED 16)
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 9,
+                ),
                 decoration: BoxDecoration(
-                  color: Colors.orange.shade50,
-                  shape: BoxShape.circle,
+                  color: bannerBgColor,
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.zero,
+                    topRight: Radius.zero,
+                    bottomLeft: Radius.circular(16),
+                    bottomRight: Radius.circular(16),
+                  ),
                 ),
-                child: Icon(
-                  Icons.update,
-                  color: Colors.orange.shade700,
-                  size: 20,
-                ),
-              ),
-              title: Text(
-                "Update Fase Tanam",
-                style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
-              ),
-              subtitle: Text(
-                "Ubah fase (misal: Berbunga -> Berbuah)",
-                style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey),
-              ),
-              onTap: () {
-                Get.back();
-                _showUpdatePhaseDialog(context, farm, service);
-              },
-            ),
-            const Divider(),
-            ListTile(
-              leading: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.blue.shade50,
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(Icons.edit, color: Colors.blue.shade700, size: 20),
-              ),
-              title: Text(
-                "Ubah Nama Lahan",
-                style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
-              ),
-              onTap: () {
-                Get.back();
-                _showEditDialog(context, farm, service);
-              },
-            ),
-            ListTile(
-              leading: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.red.shade50,
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  Icons.delete_outline,
-                  color: Colors.red.shade700,
-                  size: 20,
+                child: Row(
+                  children: [
+                    Icon(statusIcon, size: 18, color: statusFgColor),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        statusText,
+                        style: AppText.body(
+                          size: 13,
+                          weight: FontWeight.w700,
+                          color: statusFgColor,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              title: Text(
-                "Hapus Lahan",
-                style: GoogleFonts.poppins(
-                  fontWeight: FontWeight.w600,
-                  color: Colors.red,
-                ),
-              ),
-              onTap: () {
-                Get.back();
-                _showDeleteConfirmation(context, farm, service);
-              },
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 
-  void _showUpdatePhaseDialog(
-    BuildContext context,
-    FarmModel farm,
-    FirestoreService service,
-  ) {
-    final phases = [
-      {"label": "Bibit", "enum": "CropStage.seedling"},
-      {"label": "Vegetatif", "enum": "CropStage.vegetative"},
-      {"label": "Berbunga", "enum": "CropStage.flowering"},
-      {"label": "Berbuah", "enum": "CropStage.fruiting"},
-      {"label": "Panen", "enum": "CropStage.harvesting"},
-    ];
+  // ── Pratinjau Peta Ringkas ─────────────────────────────────────
+  Widget _buildMapPreview(FarmModel farm) {
+    final hasCoords = farm.latitude != 0.0 && farm.longitude != 0.0;
 
-    showDialog(
-      context: context,
-      builder: (BuildContext dialogContext) {
-        return AlertDialog(
-          title: Text(
-            "Pilih Fase Baru",
-            style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
-          ),
-          content: SizedBox(
-            width: double.maxFinite,
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: phases.map((phase) {
-                  bool isSelected = farm.currentPhase == phase['label'];
-                  return Column(
-                    children: [
-                      const Divider(height: 1),
-                      ListTile(
-                        title: Text(
-                          phase['label']!,
-                          style: GoogleFonts.poppins(),
-                        ),
-                        trailing: isSelected
-                            ? Icon(Icons.check_circle, color: AppColors.primary)
-                            : null,
-                        onTap: () async {
-                          if (farm.id != null) {
-                            await service.updateFarmPhase(
-                              farm.id!,
-                              phase['label']!,
-                              phase['enum']!,
-                            );
-                            if (dialogContext.mounted) {
-                              Navigator.pop(dialogContext); // Close dialog
-                            }
-                            if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text("Fase tanaman diperbarui!"),
-                                  backgroundColor: AppColors.primary,
-                                ),
-                              );
-                            }
-                          }
-                        },
-                      ),
-                    ],
-                  );
-                }).toList(),
+    return Container(
+      height: 120,
+      width: double.infinity,
+      color: const Color(0xFFDBE5D4),
+      child: Stack(
+        children: [
+          if (hasCoords)
+            Opacity(
+              opacity: 0.55,
+              child: FlutterMap(
+                options: MapOptions(
+                  initialCenter: LatLng(farm.latitude, farm.longitude),
+                  initialZoom: 14.5,
+                  interactionOptions: const InteractionOptions(
+                    flags: InteractiveFlag.none,
+                  ),
+                ),
+                children: [
+                  TileLayer(
+                    urlTemplate:
+                        'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                    userAgentPackageName: 'com.example.siaga_tani',
+                  ),
+                ],
               ),
             ),
+          const Center(
+            child: Icon(
+              Icons.location_on_outlined,
+              color: Color(0xFF1B3A28),
+              size: 34,
+            ),
           ),
-        );
-      },
+        ],
+      ),
     );
   }
 
-  void _showEditDialog(
-    BuildContext context,
-    FarmModel farm,
-    FirestoreService service,
-  ) {
-    final TextEditingController nameCtrl = TextEditingController(
-      text: farm.farmName,
-    );
-    showDialog(
-      context: context,
-      builder: (BuildContext dialogContext) {
-        return AlertDialog(
-          title: Text(
-            "Ubah Nama",
-            style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
-          ),
-          content: TextField(
-            controller: nameCtrl,
-            decoration: const InputDecoration(
-              border: OutlineInputBorder(),
-              labelText: "Nama Lahan Baru",
-              isDense: true,
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: const Text("Batal"),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                if (nameCtrl.text.isNotEmpty && farm.id != null) {
-                  await service.updateFarmName(farm.id!, nameCtrl.text);
-                  if (dialogContext.mounted) {
-                    Navigator.pop(dialogContext); // Close dialog
-                  }
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text("Nama lahan diperbarui"),
-                        backgroundColor: AppColors.primary,
-                      ),
-                    );
-                  }
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.textDark,
-              ),
-              child: const Text(
-                "Simpan",
-                style: TextStyle(color: Colors.white),
-              ),
-            ),
-          ],
-        );
-      },
+  // ── Chip Varietas / Fase Tanam Compact ─────────────────────────
+  Widget _buildChip(String label) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: const Color(0xFFC8DBBC),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Text(
+        label,
+        style: AppText.body(
+          size: 12,
+          weight: FontWeight.w600,
+          color: const Color(0xFF1B3A28),
+          height: 1.2,
+        ),
+      ),
     );
   }
 
-  void _showDeleteConfirmation(
-    BuildContext context,
-    FarmModel farm,
-    FirestoreService service,
-  ) {
-    showDialog(
-      context: context,
-      builder: (BuildContext dialogContext) {
-        return AlertDialog(
-          title: Text(
-            "Hapus Lahan?",
-            style: GoogleFonts.poppins(
-              fontWeight: FontWeight.bold,
-              color: Colors.red,
-            ),
-          ),
-          content: Text(
-            "Anda yakin ingin menghapus '${farm.farmName}'? Data ini tidak bisa dikembalikan.",
-            style: GoogleFonts.poppins(),
-          ),
-          actions: [
-            OutlinedButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: const Text("Batal"),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                if (farm.id != null) {
-                  await service.deleteFarm(farm.id!);
-                  if (dialogContext.mounted) {
-                    Navigator.pop(dialogContext); // Close dialog
-                  }
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text("Lahan berhasil dihapus"),
-                        backgroundColor: Colors.red,
-                      ),
-                    );
-                  }
-                }
-              },
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-              child: const Text("Hapus", style: TextStyle(color: Colors.white)),
-            ),
-          ],
-        );
-      },
-    );
+  String _formatCropStage(CropStage stage, String currentPhase) {
+    if (currentPhase.trim().isNotEmpty) {
+      if (currentPhase.toLowerCase() == 'vegetatif') return 'Tumbuh Daun';
+      return currentPhase;
+    }
+    switch (stage) {
+      case CropStage.seedling:
+        return 'Bibit';
+      case CropStage.vegetative:
+        return 'Tumbuh Daun';
+      case CropStage.flowering:
+        return 'Berbunga';
+      case CropStage.fruiting:
+        return 'Berbuah';
+      case CropStage.harvesting:
+        return 'Panen';
+    }
   }
 }

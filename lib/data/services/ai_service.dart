@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../models/weather_model.dart';
@@ -12,42 +11,44 @@ class AIService {
   AIService()
     : _model = GenerativeModel(model: 'gemini-1.5-flash', apiKey: _apiKey);
 
-  Future<String> generateSmartAdvice({
+  /// Mengembalikan maksimal 3 langkah singkat. Melempar galat bila AI gagal
+  /// atau jawabannya kosong, supaya UI bisa menampilkan state gagal.
+  Future<List<String>> generateSmartSteps({
     required WeatherModel weather,
     required FarmModel farm,
     required List<PredictionResult> risks,
   }) async {
     final String riskString = risks
-        .map(
-          (r) =>
-              '- ${r.pestName} (${(r.percentage * 100).toInt()}%): ${r.shortDescription}',
-        )
+        .map((r) => '- ${r.pestName}: ${r.shortDescription}')
         .join('\n');
 
     final prompt =
         '''
-      Anda adalah asisten ahli pertanian cerdas untuk aplikasi "Siaga Tani".
-      
+      Anda adalah asisten pertanian untuk aplikasi "Siaga Tani", pengguna Anda petani cabai berusia lanjut.
+
       KONDISI SAAT INI:
-      - Cuaca: ${weather.condition}, Suhu ${weather.temperature}°C, Kelembapan ${weather.humidity}%
-      - Lahan: Varietas ${farm.variety}, Fase ${farm.currentPhase}, Mulsa ${farm.mulchType}
-      
-      HASIL PREDIKSI RISIKO HAMA:
+      - Cuaca: ${weather.condition}, suhu ${weather.temperature}°C, kelembapan ${weather.humidity}%
+      - Lahan: varietas ${farm.variety}, fase ${farm.currentPhase}
+
+      RISIKO HAMA HARI INI:
       $riskString
-      
+
       TUGAS:
-      Berikan 1 paragraf saran aksi singkat (maksimal 3 kalimat) yang sangat praktis bagi petani hari ini. 
-      Jika ada risiko tinggi, prioritaskan pencegahannya. Gunakan bahasa yang santai namun profesional seperti seorang penyuluh pertanian lapangan.
-      Jangan gunakan format Markdown (seperti **bold** atau #).
+      Tulis 3 langkah tindakan paling penting untuk hari ini. Satu langkah per baris,
+      maksimal 18 kata, kalimat perintah yang mudah dipahami.
+      Jangan beri nomor, jangan pakai format Markdown.
+      DILARANG menyebut dosis, takaran, atau merek dagang. Sebut tindakan umum saja.
     ''';
 
-    try {
-      final content = [Content.text(prompt)];
-      final response = await _model.generateContent(content);
-      return response.text ?? 'Tetap pantau kondisi lahan secara rutin!';
-    } catch (e) {
-      debugPrint('AIService error: $e');
-      return 'Gagal terhubung dengan asisten AI. Pastikan koneksi internet tersedia.';
-    }
+    final response = await _model.generateContent([Content.text(prompt)]);
+    final steps = (response.text ?? '')
+        .split('\n')
+        .map((l) => l.replaceFirst(RegExp(r'^\s*(\d+[.)]|[-•*])\s*'), '').trim())
+        .where((l) => l.isNotEmpty)
+        .take(3)
+        .toList();
+
+    if (steps.isEmpty) throw StateError('Jawaban AI kosong');
+    return steps;
   }
 }
