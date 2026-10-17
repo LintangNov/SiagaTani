@@ -13,14 +13,32 @@ class FirestoreService {
 
   // ── Farm CRUD ──────────────────────────────────────────────
 
-  Future<void> addFarm(FarmModel farm) async {
+  Future<bool> isFarmNameExists(String farmName, {String? excludeFarmId}) async {
+    final String? uid = _currentUserId;
+    if (uid == null) return false;
+
+    final trimmed = farmName.trim().toLowerCase();
+    final snapshot = await _farmsCollection
+        .where('userId', isEqualTo: uid)
+        .get();
+
+    return snapshot.docs.any((doc) {
+      if (excludeFarmId != null && doc.id == excludeFarmId) return false;
+      final data = doc.data() as Map<String, dynamic>;
+      final existing = (data['farmName'] as String? ?? '').trim().toLowerCase();
+      return existing == trimmed;
+    });
+  }
+
+  Future<String> addFarm(FarmModel farm) async {
     final String? uid = _currentUserId;
     if (uid == null) throw Exception('User belum login!');
 
     final Map<String, dynamic> data = _farmToFirestore(farm);
     data['userId'] = uid;
 
-    await _farmsCollection.add(data);
+    final DocumentReference docRef = await _farmsCollection.add(data);
+    return docRef.id;
   }
 
   Future<void> updateFarmName(String id, String newName) async {

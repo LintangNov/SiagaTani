@@ -155,7 +155,20 @@ class PredictionController extends GetxController {
     final current = farm;
     if (current?.id == null) return false;
     try {
-      await _firestoreService.updateFarmName(current!.id!, name);
+      final nameTaken = await _firestoreService.isFarmNameExists(
+        name,
+        excludeFarmId: current!.id,
+      );
+      if (nameTaken) {
+        Get.snackbar(
+          'Nama Sudah Ada',
+          'Nama lahan "$name" sudah pernah digunakan. Silakan pilih nama lain.',
+          snackPosition: SnackPosition.TOP,
+        );
+        return false;
+      }
+
+      await _firestoreService.updateFarmName(current.id!, name);
       farmRx.value = current.copyWith(farmName: name);
       return true;
     } catch (e) {

@@ -124,11 +124,11 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final primaryColor = AppColors.textDark;
-    final accentColor = AppColors.primary;
+    const primaryColor = AppColors.foregroundPrimary;
+    const accentColor = AppColors.accentPrimary;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: AppColors.surfacePrimary,
       body: Stack(
         children: [
           PageView.builder(
@@ -154,7 +154,7 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
                       const SizedBox(height: 15),
                       Text(
                         q['question'],
-                        style: GoogleFonts.poppins(
+                        style: GoogleFonts.geist(
                           fontSize: 22,
                           fontWeight: FontWeight.bold,
                           color: primaryColor,
@@ -168,7 +168,7 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
                       else if (q['type'] == 'text')
                         _buildTextInput(q, accentColor),
                       const SizedBox(height: 20),
-                      _buildNextButton(primaryColor, q['key']),
+                      _buildNextButton(accentColor, q['key']),
                     ],
                   ),
                 ),
@@ -205,17 +205,11 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: AppRadius.cardBorder,
                   border: isSelected
                       ? Border.all(color: color, width: 2)
                       : Border.all(color: Colors.transparent, width: 0),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color.fromARGB(13, 0, 0, 0),
-                      blurRadius: 4,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
+                  boxShadow: AppShadow.card,
                   image: DecorationImage(
                     image: AssetImage(opt['image']),
                     fit: BoxFit.cover,
@@ -232,17 +226,17 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
                   children: [
                     Container(
                       height: 80,
-                      decoration: BoxDecoration(
-                        borderRadius: const BorderRadius.vertical(
-                          bottom: Radius.circular(20),
+                      decoration: const BoxDecoration(
+                        borderRadius: BorderRadius.vertical(
+                          bottom: Radius.circular(AppRadius.card),
                         ),
                         gradient: LinearGradient(
                           begin: Alignment.bottomCenter,
                           end: Alignment.topCenter,
                           colors: [
                             Colors.white,
-                            const Color.fromARGB(228, 255, 255, 255),
-                            const Color.fromARGB(0, 255, 255, 255),
+                            Color.fromARGB(228, 255, 255, 255),
+                            Color.fromARGB(0, 255, 255, 255),
                           ],
                         ),
                       ),
@@ -260,7 +254,7 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
                             Padding(
                               padding: const EdgeInsets.only(right: 5),
                               child: Icon(
-                                Icons.check_circle,
+                                Icons.check_circle_rounded,
                                 color: color,
                                 size: 18,
                               ),
@@ -269,10 +263,10 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
                             child: Text(
                               opt['label'],
                               textAlign: TextAlign.center,
-                              style: GoogleFonts.poppins(
+                              style: GoogleFonts.inter(
                                 fontSize: 14,
                                 fontWeight: FontWeight.bold,
-                                color: Colors.black87,
+                                color: AppColors.foregroundPrimary,
                               ),
                             ),
                           ),
@@ -295,15 +289,25 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
       children: [
         Container(
           decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10)],
+            color: AppColors.surfaceCard,
+            borderRadius: AppRadius.inputBorder,
+            border: Border.all(color: AppColors.borderStrong),
+            boxShadow: AppShadow.card,
           ),
           child: TextField(
             controller: _farmController.nameController,
             onChanged: (val) => setState(() {}),
+            style: GoogleFonts.inter(
+              fontSize: 15,
+              fontWeight: FontWeight.w500,
+              color: AppColors.foregroundPrimary,
+            ),
             decoration: InputDecoration(
               hintText: q['hint'],
+              hintStyle: GoogleFonts.inter(
+                fontSize: 14,
+                color: AppColors.foregroundTertiary,
+              ),
               border: InputBorder.none,
               contentPadding: const EdgeInsets.all(20),
               prefixIcon: Icon(
@@ -317,30 +321,35 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: Colors.blue.shade50,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.blue.shade100),
+            color: AppColors.surfaceSecondary.withValues(alpha: 0.35),
+            borderRadius: AppRadius.inputBorder,
+            border: Border.all(color: AppColors.borderSubtle),
           ),
           child: Row(
             children: [
-              Icon(Icons.aspect_ratio, color: Colors.blue.shade700, size: 20),
+              const Icon(
+                Icons.aspect_ratio_rounded,
+                color: AppColors.foregroundSecondary,
+                size: 20,
+              ),
               const SizedBox(width: 10),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     "Estimasi Luas Lahan",
-                    style: GoogleFonts.poppins(
+                    style: GoogleFonts.inter(
                       fontSize: 10,
-                      color: Colors.blueGrey,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.foregroundSecondary,
                     ),
                   ),
                   Text(
                     "1000 m²",
-                    style: GoogleFonts.poppins(
+                    style: GoogleFonts.inter(
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
-                      color: Colors.blue.shade900,
+                      color: AppColors.foregroundPrimary,
                     ),
                   ),
                 ],
@@ -365,23 +374,17 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
               child: Container(
                 margin: const EdgeInsets.only(bottom: 12),
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
+                  horizontal: 18,
                   vertical: 16,
                 ),
                 decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
+                  color: AppColors.surfaceCard,
+                  borderRadius: AppRadius.cardBorder,
                   border: Border.all(
                     color: isSelected ? color : Colors.transparent,
                     width: 2,
                   ),
-                  boxShadow: const [
-                    BoxShadow(
-                      color: Color.fromARGB(13, 0, 0, 0),
-                      blurRadius: 4,
-                      offset: Offset(0, 4),
-                    ),
-                  ],
+                  boxShadow: AppShadow.card,
                 ),
                 child: Row(
                   children: [
@@ -391,23 +394,34 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
                         children: [
                           Text(
                             opt['label'],
-                            style: GoogleFonts.poppins(
-                              fontWeight: FontWeight.w600,
+                            style: GoogleFonts.inter(
+                              fontWeight: isSelected
+                                  ? FontWeight.bold
+                                  : FontWeight.w600,
                               fontSize: 15,
+                              color: AppColors.foregroundPrimary,
                             ),
                           ),
                           if (opt['sub'] != null)
-                            Text(
-                              opt['sub'],
-                              style: GoogleFonts.poppins(
-                                fontSize: 12,
-                                color: Colors.grey.shade500,
+                            Padding(
+                              padding: const EdgeInsets.only(top: 2),
+                              child: Text(
+                                opt['sub'],
+                                style: GoogleFonts.inter(
+                                  fontSize: 12,
+                                  color: AppColors.foregroundSecondary,
+                                ),
                               ),
                             ),
                         ],
                       ),
                     ),
-                    if (isSelected) Icon(Icons.check_circle, color: color),
+                    if (isSelected)
+                      Icon(
+                        Icons.check_circle_rounded,
+                        color: color,
+                        size: 22,
+                      ),
                   ],
                 ),
               ),
@@ -464,7 +478,7 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
     bool isLastPage = _currentPage == _questions.length - 1;
     return SizedBox(
       width: double.infinity,
-      height: 50,
+      height: AppSize.touch,
       child: Obx(() {
         bool isEnabled = false;
         if (key == 'name') {
@@ -479,16 +493,26 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
               : null,
           style: ElevatedButton.styleFrom(
             backgroundColor: color,
+            disabledBackgroundColor: color.withValues(alpha: 0.35),
+            elevation: 0,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: AppRadius.buttonBorder,
             ),
           ),
           child: _farmController.isSaving.value
-              ? const CircularProgressIndicator(color: Colors.white)
+              ? const SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2.5,
+                    color: Colors.white,
+                  ),
+                )
               : Text(
                   isLastPage ? "Selesai" : "Lanjut",
-                  style: GoogleFonts.poppins(
+                  style: GoogleFonts.inter(
                     color: Colors.white,
+                    fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -509,23 +533,36 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
   Widget _buildHeader(Color primary, Color accent) {
     return Row(
       children: [
-        IconButton(
-          icon: Icon(Icons.arrow_back, color: primary),
-          onPressed: () => _currentPage > 0
-              ? _pageController.previousPage(
-                  duration: const Duration(milliseconds: 300),
-                  curve: Curves.ease,
-                )
-              : Get.back(),
+        Material(
+          color: AppColors.surfaceCard,
+          shape: const CircleBorder(),
+          elevation: 1.5,
+          shadowColor: AppColors.shadow,
+          child: InkWell(
+            customBorder: const CircleBorder(),
+            onTap: () => _currentPage > 0
+                ? _pageController.previousPage(
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.ease,
+                  )
+                : Get.back(),
+            child: SizedBox(
+              width: 36,
+              height: 36,
+              child: Icon(Icons.arrow_back, size: 20, color: primary),
+            ),
+          ),
         ),
-        SizedBox(width: 10),
+        const SizedBox(width: 14),
         Expanded(
-          child: LinearProgressIndicator(
-            minHeight: 7,
-            borderRadius: BorderRadius.circular(30),
-            value: (_currentPage + 1) / _questions.length,
-            backgroundColor: Colors.grey[300],
-            valueColor: AlwaysStoppedAnimation<Color>(accent),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(AppRadius.full),
+            child: LinearProgressIndicator(
+              minHeight: 8,
+              value: (_currentPage + 1) / _questions.length,
+              backgroundColor: AppColors.borderSubtle,
+              valueColor: AlwaysStoppedAnimation<Color>(accent),
+            ),
           ),
         ),
       ],
@@ -554,7 +591,7 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
         const Center(
           child: Padding(
             padding: EdgeInsets.only(bottom: 40),
-            child: Icon(Icons.location_on, color: Colors.red, size: 50),
+            child: Icon(Icons.location_on, color: AppColors.danger, size: 50),
           ),
         ),
         Positioned(
@@ -564,9 +601,9 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
           child: Container(
             padding: const EdgeInsets.all(24),
             decoration: const BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
-              boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10)],
+              color: AppColors.surfaceCard,
+              borderRadius: AppRadius.sheetTop,
+              boxShadow: AppShadow.card,
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -574,9 +611,10 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
               children: [
                 Text(
                   "Lokasi Lahan Utama",
-                  style: GoogleFonts.poppins(
+                  style: GoogleFonts.geist(
                     fontWeight: FontWeight.bold,
                     fontSize: 18,
+                    color: AppColors.foregroundPrimary,
                   ),
                 ),
                 const SizedBox(height: 10),
@@ -587,26 +625,37 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
                         const SizedBox(
                           width: 15,
                           height: 15,
-                          child: CircularProgressIndicator(strokeWidth: 2),
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: AppColors.accentPrimary,
+                          ),
                         ),
                         const SizedBox(width: 10),
                         Text(
                           "Mencari alamat...",
-                          style: GoogleFonts.poppins(color: Colors.grey),
+                          style: GoogleFonts.inter(
+                            fontSize: 14,
+                            color: AppColors.foregroundSecondary,
+                          ),
                         ),
                       ],
                     );
                   }
                   return Row(
                     children: [
-                      const Icon(Icons.map, color: AppColors.primary, size: 18),
+                      const Icon(
+                        Icons.map_rounded,
+                        color: AppColors.accentPrimary,
+                        size: 18,
+                      ),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           _mapController.currentAddress.value,
-                          style: GoogleFonts.poppins(
+                          style: GoogleFonts.inter(
                             fontSize: 14,
                             fontWeight: FontWeight.w500,
+                            color: AppColors.foregroundPrimary,
                           ),
                         ),
                       ),
@@ -616,19 +665,24 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
                 const SizedBox(height: 20),
                 SizedBox(
                   width: double.infinity,
-                  height: 50,
+                  height: AppSize.touch,
                   child: ElevatedButton(
                     onPressed: () {
                       _mapController.saveMyFarmLocation(context);
                       _nextPage();
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.textDark,
+                      backgroundColor: AppColors.accentPrimary,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: AppRadius.buttonBorder,
+                      ),
                     ),
                     child: Text(
                       "Konfirmasi Lokasi",
-                      style: GoogleFonts.poppins(
+                      style: GoogleFonts.inter(
                         color: Colors.white,
+                        fontSize: 16,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -670,7 +724,7 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
                       height: 50,
                       child: const Icon(
                         Icons.location_on,
-                        color: Colors.red,
+                        color: AppColors.danger,
                         size: 50,
                       ),
                     ),
@@ -687,22 +741,29 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
           child: Container(
             padding: const EdgeInsets.all(24),
             decoration: const BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
+              color: AppColors.surfaceCard,
+              borderRadius: AppRadius.sheetTop,
+              boxShadow: AppShadow.card,
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   "Tanaman di Sekitar",
-                  style: GoogleFonts.poppins(
+                  style: GoogleFonts.geist(
                     fontWeight: FontWeight.bold,
                     fontSize: 18,
+                    color: AppColors.foregroundPrimary,
                   ),
                 ),
+                const SizedBox(height: 4),
                 Text(
                   "Tap peta untuk menandai sumber hama.",
-                  style: GoogleFonts.poppins(color: Colors.grey, fontSize: 12),
+                  style: GoogleFonts.inter(
+                    color: AppColors.foregroundSecondary,
+                    fontSize: 12,
+                  ),
                 ),
                 const SizedBox(height: 15),
                 Obx(
@@ -717,26 +778,33 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
                           Map<String, dynamic> data = entry.value;
                           return Chip(
                             label: Text(data['type']),
-                            backgroundColor: Colors.orange[50],
+                            backgroundColor:
+                                AppColors.surfaceSecondary.withValues(alpha: 0.4),
                             avatar: const Icon(
-                              Icons.grass,
+                              Icons.grass_rounded,
                               size: 14,
-                              color: Colors.orange,
+                              color: AppColors.foregroundSecondary,
                             ),
-                            labelStyle: const TextStyle(fontSize: 12),
+                            labelStyle: GoogleFonts.inter(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                              color: AppColors.foregroundPrimary,
+                            ),
                             deleteIcon: const Icon(
-                              Icons.close,
+                              Icons.close_rounded,
                               size: 16,
-                              color: Colors.red,
+                              color: AppColors.danger,
                             ),
                             onDeleted: () {
                               _mapController.surroundingData.removeAt(idx);
                               _mapController.surroundingPins.removeAt(idx);
                             },
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(20),
-                              side: BorderSide(
-                                color: Colors.orange.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(
+                                AppRadius.full,
+                              ),
+                              side: const BorderSide(
+                                color: AppColors.borderSubtle,
                               ),
                             ),
                           );
@@ -747,16 +815,21 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
                 const SizedBox(height: 15),
                 SizedBox(
                   width: double.infinity,
-                  height: 50,
+                  height: AppSize.touch,
                   child: ElevatedButton(
                     onPressed: _nextPage,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.textDark,
+                      backgroundColor: AppColors.accentPrimary,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: AppRadius.buttonBorder,
+                      ),
                     ),
                     child: Text(
                       "Lanjut",
-                      style: GoogleFonts.poppins(
+                      style: GoogleFonts.inter(
                         color: Colors.white,
+                        fontSize: 16,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -775,25 +848,26 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
     return Positioned(
       top: 50,
       left: 20,
-      child: GestureDetector(
-        onTap: () => _pageController.previousPage(
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.ease,
-        ),
-        child: Container(
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.15),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
-              ),
-            ],
+      child: Material(
+        color: AppColors.surfaceCard,
+        shape: const CircleBorder(),
+        elevation: 2,
+        shadowColor: AppColors.shadow,
+        child: InkWell(
+          customBorder: const CircleBorder(),
+          onTap: () => _pageController.previousPage(
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.ease,
           ),
-          child: const Icon(Icons.arrow_back, color: Colors.black87, size: 24),
+          child: const SizedBox(
+            width: 44,
+            height: 44,
+            child: Icon(
+              Icons.arrow_back,
+              color: AppColors.foregroundPrimary,
+              size: 22,
+            ),
+          ),
         ),
       ),
     );

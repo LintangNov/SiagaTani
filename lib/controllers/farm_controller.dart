@@ -75,9 +75,20 @@ class FarmController extends GetxController {
         mulch = MulchType.black;
       }
 
-      final String finalName = nameController.text.isEmpty
+      final String finalName = nameController.text.trim().isEmpty
           ? 'Lahan ${selectedVariety.value}'
-          : nameController.text;
+          : nameController.text.trim();
+
+      // Validasi: periksa apakah nama lahan sudah ada untuk akun ini
+      final bool nameTaken = await _firestoreService.isFarmNameExists(finalName);
+      if (nameTaken) {
+        UiUtils.showWarning(
+          'Nama lahan "$finalName" sudah pernah digunakan. Silakan gunakan nama lain.',
+          title: 'Nama Sudah Ada',
+        );
+        isSaving.value = false;
+        return;
+      }
 
       final FarmModel newFarm = FarmModel(
         farmName: finalName,
@@ -99,9 +110,10 @@ class FarmController extends GetxController {
         pesticideType: '',
       );
 
-      await _firestoreService.addFarm(newFarm);
+      final String docId = await _firestoreService.addFarm(newFarm);
+      final FarmModel savedFarm = newFarm.copyWith(id: docId);
 
-      Get.off(() => FarmDetailScreen(), arguments: newFarm);
+      Get.off(() => const FarmDetailScreen(), arguments: savedFarm);
 
       UiUtils.showSuccess(
         'Lahan berhasil disimpan! Analisis risiko sedang berjalan.',
