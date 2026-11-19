@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../core/theme/app_theme.dart';
+import '../data/services/news_service.dart';
 import '../widgets/common/app_button.dart';
 import '../widgets/common/sheet_container.dart';
 
@@ -13,83 +16,98 @@ class EducationScreen extends StatefulWidget {
 }
 
 class _EducationScreenState extends State<EducationScreen> {
+  static const _categories = [
+    'Semua',
+    'Info Hama',
+    'Penyakit',
+    'Harga',
+    'Budidaya',
+    'Panduan',
+  ];
+
+  final NewsService _newsService = NewsService();
+  final TextEditingController _searchCtrl = TextEditingController();
+
   String _selectedCategory = 'Semua';
   bool _isSearching = false;
-  final TextEditingController _searchCtrl = TextEditingController();
   String _searchQuery = '';
 
-  final List<Map<String, String>> _articles = const [
-    {
-      'title': 'Waspada! Cuaca Panas Picu Ledakan Hama Kutu Kebul',
-      'category': 'Info Hama',
-      'date': '25 Nov 2025',
-      'image':
-          'https://images.unsplash.com/photo-1591035897819-f4bdf739f446?auto=format&fit=crop&w=600&q=80',
-      'content':
-          'Cuaca panas terik dan kelembapan rendah sering memicu perkembangbiakan kutu kebul secara pesat.\n\n'
+  List<NewsArticle> _news = const [];
+  bool _newsLoading = true;
+  bool _newsFailed = false;
+
+  /// Panduan bawaan: tetap tersedia tanpa internet.
+  static const List<NewsArticle> _guides = [
+    NewsArticle(
+      title: 'Waspada Kutu Kebul Saat Cuaca Panas',
+      category: 'Panduan',
+      source: 'Tim SiagaTani',
+      icon: Icons.menu_book_outlined,
+      content:
+          'Cuaca panas dan kering mempercepat perkembangbiakan kutu kebul. Kutu ini juga menularkan virus kuning.\n\n'
           'Gejala & Pencegahan:\n'
-          '1. Periksa bagian bawah daun muda cabai, cari keberadaan serbuk putih berterbangan.\n'
+          '1. Periksa bagian bawah daun muda cabai, cari serangga putih kecil yang beterbangan.\n'
           '2. Pasang perangkap lekat kuning di sekitar bedengan setiap jarak 5 meter.\n'
           '3. Semprotkan insektisida nabati atau bahan aktif abamektin pada sore hari.\n'
           '4. Jaga kebersihan lahan dari tanaman inang liar seperti babadotan.',
-    },
-    {
-      'title': 'Cara Membuat Pestisida Nabati dari Daun Pepaya & Tembakau',
-      'category': 'Tips Tani',
-      'date': '20 Nov 2025',
-      'image':
-          'https://images.unsplash.com/photo-1530836369250-ef72a3f5cda8?auto=format&fit=crop&w=600&q=80',
-      'content':
-          'Pestisida nabati ramah lingkungan sangat efektif menekan populasi ulat grayak dan kutu daun:\n\n'
+    ),
+    NewsArticle(
+      title: 'Membuat Pestisida Nabati dari Daun Pepaya & Tembakau',
+      category: 'Panduan',
+      source: 'Tim SiagaTani',
+      icon: Icons.menu_book_outlined,
+      content:
+          'Pestisida nabati ramah lingkungan dapat membantu menekan ulat grayak dan kutu daun.\n\n'
           'Bahan & Cara Pembuatan:\n'
           '1. Tumbuk halus 1 kg daun pepaya segar dan 100 gram tembakau.\n'
           '2. Rendam dalam 10 liter air dan tambahkan 1 sendok detergen cair sebagai perekat.\n'
           '3. Diamkan selama 24 jam di tempat teduh, kemudian saring larutan.\n'
           '4. Larutkan 1 gelas larutan pekat ke dalam 1 tangki semprot (14 liter), lalu aplikasikan ke tanaman.',
-    },
-    {
-      'title': 'Mengenal Gejala Serangan Antraknosa (Patek) pada Buah',
-      'category': 'Penyakit',
-      'date': '18 Nov 2025',
-      'image':
-          'https://images.unsplash.com/photo-1589923188900-85dae523342b?auto=format&fit=crop&w=600&q=80',
-      'content':
-          'Antraknosa disebabkan oleh jamur Colletotrichum yang menyerang saat kelembapan udara tinggi:\n\n'
+    ),
+    NewsArticle(
+      title: 'Mengenal Gejala Antraknosa (Patek) pada Buah',
+      category: 'Panduan',
+      source: 'Tim SiagaTani',
+      icon: Icons.menu_book_outlined,
+      content:
+          'Antraknosa disebabkan jamur Colletotrichum yang menyerang saat daun dan buah lama basah. Sporanya menyebar lewat percikan air hujan.\n\n'
           'Ciri & Penanganan:\n'
-          '1. Gejala awal berupa bercak melingkar cekung kehitaman pada buah cabai matang.\n'
+          '1. Gejala awal berupa bercak melingkar cekung kehitaman pada buah cabai.\n'
           '2. Petik dan buang buah yang terkena patek jauh dari area lahan.\n'
-          '3. Kurangi pemupukan nitrogen berlebih di musim penghujan, perbanyak unsur kalsium dan kalium.\n'
-          '4. Aplikasikan fungisida berbahan aktif tembaga hidroksida atau mankozeb secara rutin.',
-    },
-    {
-      'title': 'Panduan Pemasangan Mulsa Plastik Hitam Perak untuk Cabai',
-      'category': 'Tips Tani',
-      'date': '15 Nov 2025',
-      'image':
-          'https://images.unsplash.com/photo-1500937386664-56d1dfef3854?auto=format&fit=crop&w=600&q=80',
-      'content':
-          'Pemasangan mulsa MPHP secara tepat memaksimalkan pertumbuhan vegetatif cabai:\n\n'
+          '3. Kurangi pemupukan nitrogen berlebih di musim hujan, perbanyak unsur kalsium dan kalium.\n'
+          '4. Aplikasikan fungisida berbahan aktif tembaga hidroksida atau mankozeb sebelum hujan.',
+    ),
+    NewsArticle(
+      title: 'Memasang Mulsa Plastik Hitam Perak untuk Cabai',
+      category: 'Panduan',
+      source: 'Tim SiagaTani',
+      icon: Icons.menu_book_outlined,
+      content:
+          'Pemasangan mulsa hitam perak yang tepat membantu pertumbuhan cabai dan mengurangi hama.\n\n'
           'Langkah Praktis:\n'
-          '1. Pasang mulsa saat matahari terik agar plastik memuai dan lentur ditarik kencang.\n'
+          '1. Pasang mulsa saat matahari terik agar plastik memuai dan bisa ditarik kencang.\n'
           '2. Kunci tepi mulsa menggunakan pasak bambu berbentuk U pada jarak 50 cm.\n'
-          '3. Buat lubang tanam dengan pelubang arang panas dengan jarak tanam 50 x 60 cm.\n'
-          '4. Pantulan perak menghalau hama serangga dan menjaga suhu perakaran tetap stabil.',
-    },
+          '3. Buat lubang tanam dengan jarak tanam 50 x 60 cm.\n'
+          '4. Sisi perak menghadap ke atas. Pantulannya membingungkan Thrips dan kutu kebul.',
+    ),
+    NewsArticle(
+      title: 'Pemupukan Berimbang Menghadapi Cuaca Ekstrem',
+      category: 'Panduan',
+      source: 'Tim SiagaTani',
+      icon: Icons.menu_book_outlined,
+      content:
+          'Saat cuaca berganti-ganti antara hujan dan panas ekstrem, pemupukan berimbang menentukan daya tahan tanaman cabai:\n\n'
+          '1. Gunakan pupuk organik matang (kompos/kohe) sebagai pupuk dasar sebelum bedengan ditutup mulsa.\n'
+          '2. Berikan pupuk kalsium berkala untuk memperkuat dinding sel buah sehingga tidak mudah terserang antraknosa.\n'
+          '3. Pastikan saluran drainase berfungsi agar perakaran tidak terendam lebih dari 2 jam.',
+    ),
   ];
 
-  static const Map<String, String> _headlineArticle = {
-    'title': 'Subsidi Pupuk & Pola Tanam Berimbang Menghadapi Cuaca Ekstrem',
-    'badge': 'ARTIKEL PILIHAN',
-    'category': 'Tips Tani',
-    'date': '26 Nov 2025',
-    'image':
-        'https://images.unsplash.com/photo-1625246333195-78d9c38ad449?auto=format&fit=crop&w=800&q=80',
-    'content':
-        'Menghadapi anomali cuaca hujan dan panas ekstrem, pemupukan berimbang sangat menentukan daya tahan tanaman cabai:\n\n'
-        '1. Kombinasikan pupuk organik matang (kompos/kohe) sebagai pupuk dasar sebelum bedengan ditutup mulsa.\n'
-        '2. Berikan pupuk kalsium berkala untuk memperkuat dinding sel tanaman sehingga tidak mudah pecah terserang antraknosa.\n'
-        '3. Pastikan saluran drainase berfungsi optimal agar perakaran tidak terendam lebih dari 2 jam.',
-  };
+  @override
+  void initState() {
+    super.initState();
+    _loadNews();
+  }
 
   @override
   void dispose() {
@@ -97,21 +115,40 @@ class _EducationScreenState extends State<EducationScreen> {
     super.dispose();
   }
 
-  List<Map<String, String>> _filteredArticles() {
-    return _articles.where((item) {
+  Future<void> _loadNews({bool force = false}) async {
+    setState(() {
+      _newsLoading = true;
+      _newsFailed = false;
+    });
+    try {
+      final items = await _newsService.fetchChiliNews(force: force);
+      if (!mounted) return;
+      setState(() => _news = items);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _newsFailed = true);
+    } finally {
+      if (mounted) setState(() => _newsLoading = false);
+    }
+  }
+
+  List<NewsArticle> _filtered() {
+    final all = [..._news, ..._guides];
+    final q = _searchQuery.toLowerCase();
+    return all.where((item) {
       final matchesCategory =
-          _selectedCategory == 'Semua' ||
-          item['category']!.toLowerCase() == _selectedCategory.toLowerCase();
-      final matchesSearch =
-          _searchQuery.isEmpty ||
-          item['title']!.toLowerCase().contains(_searchQuery.toLowerCase());
+          _selectedCategory == 'Semua' || item.category == _selectedCategory;
+      final matchesSearch = q.isEmpty || item.title.toLowerCase().contains(q);
       return matchesCategory && matchesSearch;
     }).toList();
   }
 
   @override
   Widget build(BuildContext context) {
-    final list = _filteredArticles();
+    final list = _filtered();
+    final showHeadline = !_isSearching && _selectedCategory == 'Semua';
+    final headline = showHeadline && list.isNotEmpty ? list.first : null;
+    final rest = headline == null ? list : list.skip(1).toList();
 
     return Scaffold(
       backgroundColor: AppColors.surfacePrimary,
@@ -129,10 +166,9 @@ class _EducationScreenState extends State<EducationScreen> {
                 style: AppText.body(
                   size: 14,
                   color: AppColors.foregroundPrimary,
-                  // height: ,
                 ),
                 decoration: InputDecoration(
-                  hintText: 'Cari artikel edukasi...',
+                  hintText: 'Cari berita atau panduan...',
                   hintStyle: AppText.body(
                     size: 14,
                     color: AppColors.foregroundTertiary,
@@ -152,7 +188,6 @@ class _EducationScreenState extends State<EducationScreen> {
                 ),
               ),
         actions: [
-          // Tombol search/close — lingkar putih kompak
           Padding(
             padding: const EdgeInsets.only(right: AppSpace.screen),
             child: Material(
@@ -187,149 +222,219 @@ class _EducationScreenState extends State<EducationScreen> {
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // ── Headline Card (Margin horizontal 24 sama seperti dashboard) ──
-            if (!_isSearching && _selectedCategory == 'Semua')
-              _buildHeadline(_headlineArticle),
+      body: RefreshIndicator(
+        color: AppColors.accentPrimary,
+        onRefresh: () => _loadNews(force: true),
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (headline != null) _buildHeadline(headline),
 
-            const SizedBox(height: 12),
+              const SizedBox(height: 12),
 
-            // ── Horizontal Chips Kategori (Padding horizontal 24) ────
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: AppSpace.screen),
-              child: Row(
-                children: [
-                  _buildCategoryChip('Semua'),
-                  _buildCategoryChip('Info Hama'),
-                  _buildCategoryChip('Tips Tani'),
-                  _buildCategoryChip('Penyakit'),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 16),
-
-            // ── Judul Bagian "Terbaru Hari Ini" (Padding horizontal 24) ──
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpace.screen),
-              child: Text(
-                'Terbaru Hari Ini',
-                style: AppText.heading(
-                  size: 17,
-                  weight: FontWeight.w700,
-                  color: AppColors.foregroundPrimary,
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpace.screen,
+                ),
+                child: Row(
+                  children: [for (final c in _categories) _buildCategoryChip(c)],
                 ),
               ),
-            ),
-            const SizedBox(height: 10),
 
-            // ── Daftar Kartu Berita / Artikel (Padding horizontal 24) ──
-            if (list.isEmpty)
+              const SizedBox(height: 16),
+
               Padding(
                 padding: const EdgeInsets.symmetric(
                   horizontal: AppSpace.screen,
-                  vertical: 32,
                 ),
-                child: Center(
-                  child: Text(
-                    'Tidak ada artikel yang cocok.',
-                    style: AppText.body(
-                      size: 14,
-                      color: AppColors.foregroundSecondary,
-                    ),
+                child: Text(
+                  _selectedCategory == 'Panduan'
+                      ? 'Panduan Budidaya'
+                      : 'Berita Cabai Terkini',
+                  style: AppText.heading(
+                    size: 17,
+                    weight: FontWeight.w700,
+                    color: AppColors.foregroundPrimary,
                   ),
                 ),
-              )
-            else
-              ListView.builder(
-                physics: const NeverScrollableScrollPhysics(),
-                shrinkWrap: true,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpace.screen,
-                ),
-                itemCount: list.length,
-                itemBuilder: (context, index) {
-                  return _buildNewsCard(list[index]);
-                },
               ),
-            const SizedBox(height: 24),
-          ],
+              const SizedBox(height: 10),
+
+              if (_selectedCategory != 'Panduan') _buildNewsStatus(),
+
+              if (rest.isEmpty && !_newsLoading)
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpace.screen,
+                    vertical: 32,
+                  ),
+                  child: Center(
+                    child: Text(
+                      'Tidak ada artikel yang cocok.',
+                      style: AppText.body(
+                        size: 14,
+                        color: AppColors.foregroundSecondary,
+                      ),
+                    ),
+                  ),
+                )
+              else
+                ListView.builder(
+                  physics: const NeverScrollableScrollPhysics(),
+                  shrinkWrap: true,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpace.screen,
+                  ),
+                  itemCount: rest.length,
+                  itemBuilder: (context, index) => _buildNewsCard(rest[index]),
+                ),
+              const SizedBox(height: 24),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  // ── Kartu Headline Bergambar (Margin horizontal 24) ─────────────
-  Widget _buildHeadline(Map<String, String> item) {
+  /// Baris status pemuatan berita (memuat / gagal). Panduan tetap tampil.
+  Widget _buildNewsStatus() {
+    if (_newsLoading) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 16),
+        child: Center(
+          child: SizedBox(
+            width: 24,
+            height: 24,
+            child: CircularProgressIndicator(
+              strokeWidth: 2.5,
+              color: AppColors.accentPrimary,
+            ),
+          ),
+        ),
+      );
+    }
+    if (!_newsFailed) return const SizedBox.shrink();
+    return Container(
+      margin: const EdgeInsets.fromLTRB(
+        AppSpace.screen,
+        0,
+        AppSpace.screen,
+        12,
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: AppColors.warningBg,
+        borderRadius: AppRadius.cardBorder,
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.wifi_off_rounded, size: 18, color: AppColors.warning),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              'Berita belum bisa dimuat. Panduan di bawah tetap bisa dibaca.',
+              style: AppText.body(size: 12, color: AppColors.warning),
+            ),
+          ),
+          TextButton(
+            onPressed: () => _loadNews(force: true),
+            child: Text(
+              'Coba lagi',
+              style: AppText.body(
+                size: 12,
+                weight: FontWeight.w700,
+                color: AppColors.warning,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _dateLabel(DateTime? d) {
+    if (d == null) return '';
+    final diff = DateTime.now().difference(d);
+    if (diff.inMinutes < 60) return '${diff.inMinutes.clamp(1, 59)} menit lalu';
+    if (diff.inHours < 24) return '${diff.inHours} jam lalu';
+    if (diff.inDays < 7) return '${diff.inDays} hari lalu';
+    return DateFormat('d MMM yyyy', 'id_ID').format(d);
+  }
+
+  String _metaLabel(NewsArticle a) {
+    final date = _dateLabel(a.date);
+    return date.isEmpty ? a.source : '${a.source} · $date';
+  }
+
+  // ── Kartu Headline ─────────────────────────────────────────────
+  Widget _buildHeadline(NewsArticle item) {
     return GestureDetector(
-      onTap: () => _openArticleDetail(item),
+      onTap: () => _openArticle(item),
       child: Container(
         margin: const EdgeInsets.symmetric(
           horizontal: AppSpace.screen,
           vertical: 4,
         ),
-        height: 168,
+        constraints: const BoxConstraints(minHeight: 150),
         width: double.infinity,
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           borderRadius: AppRadius.cardBorder,
-          image: DecorationImage(
-            image: NetworkImage(item['image']!),
-            fit: BoxFit.cover,
-          ),
+          gradient: AppColors.mainCardGradient,
           boxShadow: AppShadow.card,
         ),
-        child: Container(
-          decoration: BoxDecoration(
-            borderRadius: AppRadius.cardBorder,
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                Colors.transparent,
-                const Color(0xFF1B3A28).withValues(alpha: 0.9),
-              ],
-            ),
-          ),
-          padding: const EdgeInsets.all(14),
-          alignment: Alignment.bottomLeft,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: AppColors.accentPrimary,
-                  borderRadius: AppRadius.cardBorder,
-                ),
-                child: Text(
-                  item['badge'] ?? 'ARTIKEL PILIHAN',
-                  style: AppText.body(
-                    size: 10,
-                    weight: FontWeight.w700,
-                    color: Colors.white,
-                    height: 1.1,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 3,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.18),
+                    borderRadius: AppRadius.cardBorder,
+                  ),
+                  child: Text(
+                    item.isGuide ? 'PANDUAN PILIHAN' : 'BERITA TERBARU',
+                    style: AppText.body(
+                      size: 10,
+                      weight: FontWeight.w700,
+                      color: Colors.white,
+                      height: 1.1,
+                    ),
                   ),
                 ),
+                const Spacer(),
+                Icon(item.icon, color: Colors.white70, size: 22),
+              ],
+            ),
+            const SizedBox(height: 14),
+            Text(
+              item.title,
+              style: AppText.heading(
+                size: 18,
+                weight: FontWeight.w700,
+                color: Colors.white,
+                height: 1.25,
               ),
-              const SizedBox(height: 6),
-              Text(
-                item['title']!,
-                style: AppText.heading(
-                  size: 18,
-                  weight: FontWeight.w700,
-                  color: Colors.white,
-                  height: 1.25,
-                ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ],
-          ),
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              _metaLabel(item),
+              style: AppText.body(size: 12, color: Colors.white70),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
         ),
       ),
     );
@@ -340,11 +445,7 @@ class _EducationScreenState extends State<EducationScreen> {
     final bool isActive = _selectedCategory == label;
 
     return GestureDetector(
-      onTap: () {
-        setState(() {
-          _selectedCategory = label;
-        });
-      },
+      onTap: () => setState(() => _selectedCategory = label),
       child: Container(
         margin: const EdgeInsets.only(right: 8),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
@@ -372,8 +473,8 @@ class _EducationScreenState extends State<EducationScreen> {
     );
   }
 
-  // ── Kartu Berita / Artikel (80x80 thumbnail kiri) ───────────────
-  Widget _buildNewsCard(Map<String, String> article) {
+  // ── Kartu Berita / Panduan ─────────────────────────────────────
+  Widget _buildNewsCard(NewsArticle article) {
     return Container(
       margin: const EdgeInsets.only(bottom: 15),
       decoration: BoxDecoration(
@@ -385,29 +486,23 @@ class _EducationScreenState extends State<EducationScreen> {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: () => _openArticleDetail(article),
+          onTap: () => _openArticle(article),
           splashColor: AppColors.accentPrimary.withValues(alpha: 0.08),
           child: Padding(
             padding: const EdgeInsets.all(10),
             child: Row(
               children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(18),
-                  child: Image.network(
-                    article['image']!,
-                    width: 76,
-                    height: 76,
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => Container(
-                      width: 76,
-                      height: 76,
-                      color: AppColors.surfaceSecondary,
-                      child: const Icon(
-                        Icons.image_not_supported_outlined,
-                        color: AppColors.foregroundSecondary,
-                        size: 24,
-                      ),
-                    ),
+                Container(
+                  width: 64,
+                  height: 64,
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceSecondary,
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                  child: Icon(
+                    article.icon,
+                    color: AppColors.accentPrimary,
+                    size: 28,
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -416,7 +511,7 @@ class _EducationScreenState extends State<EducationScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        article['category']!,
+                        article.category,
                         style: AppText.body(
                           size: 12,
                           weight: FontWeight.w700,
@@ -425,7 +520,7 @@ class _EducationScreenState extends State<EducationScreen> {
                       ),
                       const SizedBox(height: 3),
                       Text(
-                        article['title']!,
+                        article.title,
                         style: AppText.heading(
                           size: 15,
                           weight: FontWeight.w600,
@@ -436,22 +531,14 @@ class _EducationScreenState extends State<EducationScreen> {
                         overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 6),
-                      Row(
-                        children: [
-                          const Icon(
-                            Icons.calendar_today_outlined,
-                            size: 12,
-                            color: AppColors.foregroundTertiary,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            article['date']!,
-                            style: AppText.body(
-                              size: 11,
-                              color: AppColors.foregroundTertiary,
-                            ),
-                          ),
-                        ],
+                      Text(
+                        _metaLabel(article),
+                        style: AppText.body(
+                          size: 11,
+                          color: AppColors.foregroundTertiary,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ],
                   ),
@@ -464,8 +551,8 @@ class _EducationScreenState extends State<EducationScreen> {
     );
   }
 
-  // ── Modal Lembar Baca Detail Artikel ───────────────────────────
-  void _openArticleDetail(Map<String, String> item) {
+  // ── Detail ─────────────────────────────────────────────────────
+  void _openArticle(NewsArticle item) {
     Get.bottomSheet(
       SheetContainer(
         child: SingleChildScrollView(
@@ -486,7 +573,7 @@ class _EducationScreenState extends State<EducationScreen> {
                       borderRadius: AppRadius.cardBorder,
                     ),
                     child: Text(
-                      item['category'] ?? 'Artikel',
+                      item.category,
                       style: AppText.body(
                         size: 12,
                         weight: FontWeight.w700,
@@ -506,33 +593,48 @@ class _EducationScreenState extends State<EducationScreen> {
               ),
               const SizedBox(height: 8),
               Text(
-                item['title']!,
+                item.title,
                 style: AppText.heading(
                   size: 18,
                   weight: FontWeight.w700,
                   height: 1.3,
                 ),
               ),
-              if (item['date'] != null) ...[
-                const SizedBox(height: 4),
-                Text(
-                  item['date']!,
-                  style: AppText.body(
-                    size: 12,
-                    color: AppColors.foregroundTertiary,
-                  ),
-                ),
-              ],
-              const SizedBox(height: 14),
+              const SizedBox(height: 4),
               Text(
-                item['content'] ?? '',
+                _metaLabel(item),
                 style: AppText.body(
-                  size: 14,
-                  color: AppColors.foregroundSecondary,
-                  height: 1.55,
+                  size: 12,
+                  color: AppColors.foregroundTertiary,
                 ),
               ),
+              const SizedBox(height: 14),
+              if (item.content != null)
+                Text(
+                  item.content!,
+                  style: AppText.body(
+                    size: 14,
+                    color: AppColors.foregroundSecondary,
+                    height: 1.55,
+                  ),
+                )
+              else
+                Text(
+                  'Berita ini berasal dari ${item.source}. Buka situs aslinya untuk membaca selengkapnya.',
+                  style: AppText.body(
+                    size: 14,
+                    color: AppColors.foregroundSecondary,
+                    height: 1.55,
+                  ),
+                ),
               const SizedBox(height: 20),
+              if (item.url != null) ...[
+                AppButton(
+                  label: 'Baca di ${item.source}',
+                  onPressed: () => _openUrl(item.url!),
+                ),
+                const SizedBox(height: 10),
+              ],
               AppButton.secondary(label: 'Tutup', onPressed: () => Get.back()),
             ],
           ),
@@ -540,5 +642,15 @@ class _EducationScreenState extends State<EducationScreen> {
       ),
       isScrollControlled: true,
     );
+  }
+
+  Future<void> _openUrl(String url) async {
+    final ok = await launchUrl(
+      Uri.parse(url),
+      mode: LaunchMode.externalApplication,
+    );
+    if (!ok) {
+      Get.snackbar('Gagal membuka', 'Tautan berita tidak dapat dibuka.');
+    }
   }
 }
